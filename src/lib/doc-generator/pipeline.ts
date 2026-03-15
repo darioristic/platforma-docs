@@ -11,6 +11,8 @@ import { generateEventMdx } from "./generators/event-mdx-generator";
 import { generateArchitectureMdx } from "./generators/architecture-mdx-generator";
 import { generateChangelogMdx } from "./generators/changelog-mdx-generator";
 import { generateDocsMdx } from "./generators/docs-mdx-generator";
+import { loadState, saveState } from "./generation-state";
+import { detectChanges, CATEGORY_TO_PARSER, ALL_PARSERS, type ParserName } from "./change-detector";
 import type { GeneratedFile } from "./types";
 import fsSync from "fs";
 import { promises as fs } from "fs";
@@ -23,6 +25,9 @@ export interface GenerationResult {
   filesGenerated: number;
   errors: string[];
   services: string[];
+  mode: "full" | "incremental";
+  parsersRun: string[];
+  staleFilesRemoved: number;
 }
 
 interface NavItem {
@@ -44,6 +49,64 @@ async function writeGeneratedFiles(files: GeneratedFile[]): Promise<void> {
   }
 }
 
+async function removeStaleFiles(
+  previousFiles: string[],
+  currentFiles: string[],
+  parsersRun: Set<ParserName>,
+  outputDir: string
+): Promise<string[]> {
+  const currentSet = new Set(currentFiles);
+  const removed: string[] = [];
+
+  for (const prev of previousFiles) {
+    // Determine category from file path
+    const rel = path.relative(outputDir, prev);
+    const category = rel.split(path.sep)[0];
+    const parser = CATEGORY_TO_PARSER[category];
+
+    // Only clean files for parsers that actually ran
+    if (parser && parsersRun.has(parser) && !currentSet.has(prev)) {
+      try {
+        await fs.unlink(prev);
+        removed.push(prev);
+        console.log(`[pipeline] Removed stale: ${rel}`);
+      } catch {
+        // File already gone, ignore
+      }
+    }
+  }
+
+  return removed;
+}
+
+/**
+ * Scan output directory for all existing .mdx files (for nav rebuild).
+ */
+async function scanExistingFiles(outputDir: string): Promise<GeneratedFile[]> {
+  const files: GeneratedFile[] = [];
+
+  async function walk(dir: string) {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.name.endsWith(".mdx")) {
+        const content = await fs.readFile(full, "utf-8");
+        files.push({ path: full, content });
+      }
+    }
+  }
+
+  await walk(outputDir);
+  return files;
+}
+
 /**
  * Build navigation JSON from generated files for sidebar integration.
  */
@@ -57,10 +120,9 @@ function buildGeneratedNav(files: GeneratedFile[], outputDir: string): NavSectio
 
     if (parts.length < 2) continue;
 
-    const category = parts[0]; // api, models, events, architecture, changelog
+    const category = parts[0];
     const slug = parts.slice(0, -1).join("/") + "/" + path.basename(parts[parts.length - 1], ".mdx");
 
-    // Extract title from frontmatter
     const titleMatch = file.content.match(/^title:\s*"?([^"\n]+)"?/m);
     const title = titleMatch ? titleMatch[1] : path.basename(file.path, ".mdx");
 
@@ -102,7 +164,10 @@ export async function runGenerationPipeline(options: {
   token?: string;
   outputDir: string;
   changelogSince?: string;
+  changedFiles?: string[];
+  force?: boolean;
 }): Promise<GenerationResult> {
+  const startTime = Date.now();
   const errors: string[] = [];
   const allFiles: GeneratedFile[] = [];
   const services: string[] = [];
@@ -129,97 +194,126 @@ export async function runGenerationPipeline(options: {
       filesGenerated: 0,
       errors: [`Failed to clone/pull repository: ${message}`],
       services: [],
+      mode: "full",
+      parsersRun: [],
+      staleFilesRemoved: 0,
     };
   }
 
-  // Step 2: Run all parsers + generators (continue on failure)
+  // Step 2: Load previous state and detect what changed
+  const previousState = await loadState();
+  const detection = await detectChanges({
+    webhookFiles: options.changedFiles,
+    gitClient: git,
+    lastCommitHash: previousState?.lastCommitHash,
+    force: options.force,
+  });
 
-  // OpenAPI / Controllers
-  try {
-    console.log("[pipeline] Parsing API controllers...");
-    const apiServices = parseServiceApis(repoDir);
-    for (const svc of apiServices) {
-      services.push(svc.serviceName);
-      console.log(`  Found ${svc.endpoints.length} endpoints in ${svc.serviceName}`);
+  const { parsersToRun } = detection;
+  const parsersRunArray = [...parsersToRun];
+
+  console.log(`[pipeline] ${detection.mode.toUpperCase()} mode: ${detection.reason}`);
+  if (detection.mode === "incremental") {
+    const skipped = ALL_PARSERS.filter((p) => !parsersToRun.has(p));
+    if (skipped.length > 0) {
+      console.log(`[pipeline] Skipping parsers: [${skipped.join(", ")}]`);
     }
-    const apiFiles = generateApiMdx(apiServices, options.outputDir);
-    allFiles.push(...apiFiles);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    errors.push(`OpenAPI parser failed: ${message}`);
-    console.error(`[pipeline] OpenAPI error: ${message}`);
   }
 
-  // TypeORM Entities
-  try {
-    console.log("[pipeline] Parsing entities...");
-    const entityServices = parseAllEntities(repoDir);
-    const mongooseSchemas = parseMongooseSchemas(repoDir);
-    console.log(`  Found ${entityServices.length} entity groups, ${mongooseSchemas.length} Mongoose schemas`);
-    const modelFiles = generateModelMdx(entityServices, mongooseSchemas, options.outputDir);
-    allFiles.push(...modelFiles);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    errors.push(`Entity parser failed: ${message}`);
-    console.error(`[pipeline] Entity error: ${message}`);
+  // Step 3: Run only affected parsers + generators
+
+  if (parsersToRun.has("openapi")) {
+    try {
+      console.log("[pipeline] Parsing API controllers...");
+      const apiServices = parseServiceApis(repoDir);
+      for (const svc of apiServices) {
+        services.push(svc.serviceName);
+        console.log(`  Found ${svc.endpoints.length} endpoints in ${svc.serviceName}`);
+      }
+      const apiFiles = generateApiMdx(apiServices, options.outputDir);
+      allFiles.push(...apiFiles);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`OpenAPI parser failed: ${message}`);
+      console.error(`[pipeline] OpenAPI error: ${message}`);
+    }
   }
 
-  // Kafka Events
-  try {
-    console.log("[pipeline] Parsing events...");
-    const eventSystem = parseEventSystem(repoDir);
-    console.log(`  Found ${eventSystem.domains.length} event domains`);
-    const eventFiles = generateEventMdx(eventSystem, options.outputDir);
-    allFiles.push(...eventFiles);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    errors.push(`Event parser failed: ${message}`);
-    console.error(`[pipeline] Event error: ${message}`);
+  if (parsersToRun.has("entities")) {
+    try {
+      console.log("[pipeline] Parsing entities...");
+      const entityServices = parseAllEntities(repoDir);
+      const mongooseSchemas = parseMongooseSchemas(repoDir);
+      console.log(`  Found ${entityServices.length} entity groups, ${mongooseSchemas.length} Mongoose schemas`);
+      const modelFiles = generateModelMdx(entityServices, mongooseSchemas, options.outputDir);
+      allFiles.push(...modelFiles);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Entity parser failed: ${message}`);
+      console.error(`[pipeline] Entity error: ${message}`);
+    }
   }
 
-  // Dependencies + Architecture
-  try {
-    console.log("[pipeline] Parsing dependencies...");
-    const depGraph = parseDependencyGraph(repoDir);
-    const archMd = fsSync.existsSync(path.join(repoDir, "ARCHITECTURE.md"))
-      ? fsSync.readFileSync(path.join(repoDir, "ARCHITECTURE.md"), "utf-8")
-      : null;
-    console.log(`  Found ${depGraph.packages.length} packages, ${depGraph.internalDeps.length} internal deps`);
-    const archFiles = generateArchitectureMdx(depGraph, archMd, options.outputDir);
-    allFiles.push(...archFiles);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    errors.push(`Dependency parser failed: ${message}`);
-    console.error(`[pipeline] Dependency error: ${message}`);
+  if (parsersToRun.has("events")) {
+    try {
+      console.log("[pipeline] Parsing events...");
+      const eventSystem = parseEventSystem(repoDir);
+      console.log(`  Found ${eventSystem.domains.length} event domains`);
+      const eventFiles = generateEventMdx(eventSystem, options.outputDir);
+      allFiles.push(...eventFiles);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Event parser failed: ${message}`);
+      console.error(`[pipeline] Event error: ${message}`);
+    }
   }
 
-  // Docs folder (markdown documentation from cloud-factory/docs/)
-  try {
-    console.log("[pipeline] Parsing docs/ folder...");
-    const docFiles = await parseDocsFolder(repoDir);
-    console.log(`  Found ${docFiles.length} documentation files`);
-    const docsGenerated = generateDocsMdx(docFiles, options.outputDir);
-    allFiles.push(...docsGenerated);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    errors.push(`Docs parser failed: ${message}`);
-    console.error(`[pipeline] Docs error: ${message}`);
+  if (parsersToRun.has("dependencies")) {
+    try {
+      console.log("[pipeline] Parsing dependencies...");
+      const depGraph = parseDependencyGraph(repoDir);
+      const archMd = fsSync.existsSync(path.join(repoDir, "ARCHITECTURE.md"))
+        ? fsSync.readFileSync(path.join(repoDir, "ARCHITECTURE.md"), "utf-8")
+        : null;
+      console.log(`  Found ${depGraph.packages.length} packages, ${depGraph.internalDeps.length} internal deps`);
+      const archFiles = generateArchitectureMdx(depGraph, archMd, options.outputDir);
+      allFiles.push(...archFiles);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Dependency parser failed: ${message}`);
+      console.error(`[pipeline] Dependency error: ${message}`);
+    }
   }
 
-  // Changelog
-  try {
-    console.log("[pipeline] Parsing changelog...");
-    const entries = await parseChangelog(repoDir, options.changelogSince);
-    console.log(`  Found ${entries.length} commits`);
-    const changelogFiles = generateChangelogMdx(entries, options.outputDir);
-    allFiles.push(...changelogFiles);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    errors.push(`Changelog parser failed: ${message}`);
-    console.error(`[pipeline] Changelog error: ${message}`);
+  if (parsersToRun.has("docs")) {
+    try {
+      console.log("[pipeline] Parsing docs/ folder...");
+      const docFiles = await parseDocsFolder(repoDir);
+      console.log(`  Found ${docFiles.length} documentation files`);
+      const docsGenerated = generateDocsMdx(docFiles, options.outputDir);
+      allFiles.push(...docsGenerated);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Docs parser failed: ${message}`);
+      console.error(`[pipeline] Docs error: ${message}`);
+    }
   }
 
-  // Step 3: Write all generated files
+  if (parsersToRun.has("changelog")) {
+    try {
+      console.log("[pipeline] Parsing changelog...");
+      const entries = await parseChangelog(repoDir, options.changelogSince);
+      console.log(`  Found ${entries.length} commits`);
+      const changelogFiles = generateChangelogMdx(entries, options.outputDir);
+      allFiles.push(...changelogFiles);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Changelog parser failed: ${message}`);
+      console.error(`[pipeline] Changelog error: ${message}`);
+    }
+  }
+
+  // Step 4: Write generated files
   try {
     console.log(`[pipeline] Writing ${allFiles.length} files...`);
     await writeGeneratedFiles(allFiles);
@@ -228,9 +322,32 @@ export async function runGenerationPipeline(options: {
     errors.push(`Failed to write files: ${message}`);
   }
 
-  // Step 4: Write generated navigation JSON for sidebar
+  // Step 5: Clean up stale files
+  let staleFilesRemoved = 0;
+  if (previousState?.generatedFiles) {
+    try {
+      const currentFilePaths = allFiles.map((f) => f.path);
+      const removed = await removeStaleFiles(
+        previousState.generatedFiles,
+        currentFilePaths,
+        parsersToRun,
+        options.outputDir
+      );
+      staleFilesRemoved = removed.length;
+      if (staleFilesRemoved > 0) {
+        console.log(`[pipeline] Removed ${staleFilesRemoved} stale files`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Stale file cleanup failed: ${message}`);
+    }
+  }
+
+  // Step 6: Rebuild navigation from ALL existing files on disk
+  // (includes files from parsers that didn't run this cycle)
   try {
-    const generatedNav = buildGeneratedNav(allFiles, options.outputDir);
+    const allExistingFiles = await scanExistingFiles(options.outputDir);
+    const generatedNav = buildGeneratedNav(allExistingFiles, options.outputDir);
     const navJsonPath = path.join(process.cwd(), "src", "lib", "generated-nav.json");
     await fs.writeFile(navJsonPath, JSON.stringify(generatedNav, null, 2), "utf-8");
     console.log(`[pipeline] Navigation JSON written with ${generatedNav.length} sections`);
@@ -239,7 +356,25 @@ export async function runGenerationPipeline(options: {
     errors.push(`Failed to write navigation: ${message}`);
   }
 
-  console.log(`[pipeline] Done! ${allFiles.length} files, ${errors.length} errors`);
+  // Step 7: Save generation state
+  try {
+    // Collect all file paths on disk for next run's stale detection
+    const allExisting = await scanExistingFiles(options.outputDir);
+    await saveState({
+      lastCommitHash: commitHash,
+      lastRunAt: timestamp,
+      lastRunDurationMs: Date.now() - startTime,
+      parsersRun: parsersRunArray,
+      generatedFiles: allExisting.map((f) => f.path),
+    });
+    console.log(`[pipeline] State saved (commit: ${commitHash.slice(0, 8)})`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    errors.push(`Failed to save generation state: ${message}`);
+  }
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`[pipeline] Done in ${duration}s! ${allFiles.length} files, ${errors.length} errors (${detection.mode})`);
 
   return {
     success: errors.length === 0,
@@ -248,5 +383,8 @@ export async function runGenerationPipeline(options: {
     filesGenerated: allFiles.length,
     errors,
     services: [...new Set(services)],
+    mode: detection.mode,
+    parsersRun: parsersRunArray,
+    staleFilesRemoved,
   };
 }

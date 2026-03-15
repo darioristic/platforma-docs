@@ -37,6 +37,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No repo URL" }, { status: 400 });
   }
 
+  // Extract changed files from webhook payload commits
+  const changedFiles: string[] = [];
+  if (Array.isArray(payload.commits)) {
+    for (const commit of payload.commits) {
+      const added = commit.added as string[] | undefined;
+      const modified = commit.modified as string[] | undefined;
+      const removed = commit.removed as string[] | undefined;
+      changedFiles.push(...(added ?? []), ...(modified ?? []), ...(removed ?? []));
+    }
+  }
+  const uniqueChangedFiles = [...new Set(changedFiles)];
+
   const startedAt = new Date().toISOString();
   setGenerationStatus({ status: "running", startedAt });
 
@@ -44,6 +56,7 @@ export async function POST(request: NextRequest) {
     repoUrl,
     token: process.env.GITHUB_TOKEN,
     outputDir: path.join(process.cwd(), "src", "content", "generated"),
+    changedFiles: uniqueChangedFiles,
   })
     .then((result) => {
       setGenerationStatus({

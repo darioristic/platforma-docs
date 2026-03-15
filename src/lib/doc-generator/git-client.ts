@@ -78,6 +78,12 @@ export class GitClient {
     return this.git.diff([fromHash, toHash, "--stat"]);
   }
 
+  async getChangedFiles(fromHash: string, toHash: string = "HEAD"): Promise<string[]> {
+    this.git = simpleGit(this.repoPath);
+    const diff = await this.git.diff([fromHash, toHash, "--name-only"]);
+    return diff.split("\n").filter(Boolean);
+  }
+
   getRepoPath(): string {
     return this.repoPath;
   }
