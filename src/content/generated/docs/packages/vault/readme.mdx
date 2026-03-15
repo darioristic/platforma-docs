@@ -1,0 +1,93 @@
+---
+title: "@cloud-factory/vault"
+description: "Documentation: @cloud-factory/vault"
+section: "docs"
+category: "packages"
+auto_generated: true
+source: "docs/packages/vault/README.md"
+last_synced: "2026-03-15T22:20:40.542Z"
+---
+
+<Callout type="info">
+Imported from `docs/packages/vault/README.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# @cloud-factory/vault
+
+NestJS module for HashiCorp Vault integration. Reads/writes secrets from the KV v2 engine with support for secret watching via polling.
+
+## Installation
+
+```json
+"@cloud-factory/vault": "*"
+```
+
+## Key Exports
+
+- **`CloudFactoryVaultModule`** -- Global dynamic module for Vault configuration.
+- **`VaultService`** -- Service for reading, writing, and watching secrets.
+- **`loadVaultSecrets`** -- Factory function for loading secrets during app bootstrap.
+- **`getConfigFromVault`** -- Config provider for injecting Vault secrets into NestJS config.
+- **Types:** `VaultModuleConfig`, `SecretChangedEvent`
+
+## Usage
+
+### Register in AppModule
+
+```typescript
+import { CloudFactoryVaultModule } from '@cloud-factory/vault';
+import { ConfigService } from '@nestjs/config';
+
+@Module({
+  imports: [
+    CloudFactoryVaultModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        vaultAddr: config.get('VAULT_ADDR'),
+        vaultToken: config.get('VAULT_TOKEN'),
+        enabled: config.get('VAULT_ENABLED') === 'true',
+        mountPath: 'secret', // KV v2 mount path
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Read and write secrets
+
+```typescript
+import { VaultService } from '@cloud-factory/vault';
+
+@Injectable()
+export class DbConfigService {
+  constructor(private vault: VaultService) {}
+
+  async getDatabaseUrl(): Promise<string> {
+    // Reads from: secret/data/cloud-factory/database
+    const secrets = await this.vault.getSecret('database');
+    return secrets['DATABASE_URL'];
+  }
+
+  async rotateCredentials(newCreds: Record<string, string>) {
+    await this.vault.putSecret('database', newCreds);
+  }
+}
+```
+
+### Watch for secret changes
+
+```typescript
+await this.vault.watchSecret('database', 60_000); // poll every 60s
+
+const unsubscribe = this.vault.onSecretChanged('database', (event) => {
+  console.log('Changed keys:', event.changedKeys);
+  // event.previousValues, event.newValues available
+});
+
+// Later: unsubscribe() and this.vault.stopWatching('database')
+```
+
+## Peer Dependencies
+
+`@nestjs/common`, `@nestjs/core`

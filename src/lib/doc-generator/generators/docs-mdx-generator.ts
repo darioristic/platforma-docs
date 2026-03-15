@@ -36,6 +36,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   api: "API Documentation",
   runbooks: "Runbooks",
   adr: "Architecture Decision Records",
+  packages: "Packages",
 };
 
 function categoryLabel(category: string): string {

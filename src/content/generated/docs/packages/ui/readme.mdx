@@ -1,0 +1,77 @@
+---
+title: "@cloud-factory/ui"
+description: "Documentation: @cloud-factory/ui"
+section: "docs"
+category: "packages"
+auto_generated: true
+source: "docs/packages/ui/README.md"
+last_synced: "2026-03-15T22:20:40.542Z"
+---
+
+<Callout type="info">
+Imported from `docs/packages/ui/README.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# @cloud-factory/ui
+
+Shared React component library, API client with BFF proxy, and state management utilities for all frontend apps.
+
+## Installation
+
+```json
+"@cloud-factory/ui": "*"
+```
+
+## Key Exports
+
+### API Client
+
+| Export                                                                                                    | Description                                                        |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `ApiClient`                                                                                               | Fetch-based HTTP client with automatic token refresh via BFF proxy |
+| `identityApi`, `orderApi`, `productApi`, `provisioningApi`, `billingApi`, `notificationApi`, `supportApi` | Pre-configured per-service clients                                 |
+| `configureApiClient(\{ onSessionExpired \})`                                                                | Set custom session-expiry handler                                  |
+
+### Hooks and State
+
+| Export                                   | Description                                                          |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| `useTableState(options?)`                | Table state hook with debounced search, filters, sorting, pagination |
+| `applyClientSideProcessing(data, state)` | Client-side filter/sort/paginate helper                              |
+| `useNotificationStore`                   | Zustand store for toast notifications                                |
+| `createAuthStore()`                      | Factory for per-app auth Zustand store                               |
+
+### UI Components (Radix-based)
+
+Accordion, Avatar, Badge, Breadcrumb, Button, Card, Checkbox, Command, Dialog, Drawer, DropdownMenu, Input, Label, Progress, RadioGroup, Select, Separator, Sheet, Skeleton, Slider, Switch, Table, Tabs, Textarea, Toggle, ToggleGroup, Tooltip, Toaster (Sonner)
+
+### Utilities
+
+| Export                       | Description                                     |
+| ---------------------------- | ----------------------------------------------- |
+| `cn(...classes)`             | Tailwind class merger (clsx + tailwind-merge)   |
+| `extractErrorMessage(error)` | Safely extract error message strings            |
+| `DataTable`                  | Generic sortable/paginated data table component |
+| `ErrorState`                 | Standard error display component                |
+| `createSecurityHeaders()`    | CSP and security headers for `next.config.js`   |
+
+## Usage
+
+### API calls through BFF proxy
+
+```typescript
+import { orderApi } from '@cloud-factory/ui';
+
+const orders = await orderApi.get<Order[]>('/orders');
+await orderApi.post('/orders', { productId, quantity: 1 });
+```
+
+### Table state management
+
+```tsx
+import { useTableState, DataTable } from '@cloud-factory/ui';
+
+const [state, actions] = useTableState({ defaultSortBy: 'createdAt' });
+
+<DataTable data={items} columns={columns} state={state} actions={actions} />;
+```

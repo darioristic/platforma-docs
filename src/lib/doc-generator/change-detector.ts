@@ -37,6 +37,8 @@ const PATH_RULES: Array<{ pattern: RegExp; parsers: ParserName[] }> = [
   { pattern: /^package\.json$/, parsers: ["dependencies"] },
   { pattern: /^ARCHITECTURE\.md$/, parsers: ["dependencies"] },
   { pattern: /^docs\//, parsers: ["docs"] },
+  { pattern: /^packages\/[^/]+\/README\.md$/, parsers: ["docs"] },
+  { pattern: /^services\/[^/]+\/README\.md$/, parsers: ["docs"] },
 ];
 
 /** Map output directory category back to the parser that generates it */

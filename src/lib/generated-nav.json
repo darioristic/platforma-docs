@@ -31,6 +31,50 @@
         "href": "/generated/docs/index"
       },
       {
+        "title": "@cloud-factory/api-contracts",
+        "href": "/generated/docs/packages/api-contracts/readme"
+      },
+      {
+        "title": "@cloud-factory/auth-guard",
+        "href": "/generated/docs/packages/auth-guard/readme"
+      },
+      {
+        "title": "@cloud-factory/cache",
+        "href": "/generated/docs/packages/cache/readme"
+      },
+      {
+        "title": "@cloud-factory/common",
+        "href": "/generated/docs/packages/common/readme"
+      },
+      {
+        "title": "@cloud-factory/idempotency",
+        "href": "/generated/docs/packages/idempotency/readme"
+      },
+      {
+        "title": "@cloud-factory/kafka",
+        "href": "/generated/docs/packages/kafka/readme"
+      },
+      {
+        "title": "@cloud-factory/mcp-server",
+        "href": "/generated/docs/packages/mcp-server/readme"
+      },
+      {
+        "title": "@cloud-factory/resilience",
+        "href": "/generated/docs/packages/resilience/readme"
+      },
+      {
+        "title": "@cloud-factory/tracing",
+        "href": "/generated/docs/packages/tracing/readme"
+      },
+      {
+        "title": "@cloud-factory/ui",
+        "href": "/generated/docs/packages/ui/readme"
+      },
+      {
+        "title": "@cloud-factory/vault",
+        "href": "/generated/docs/packages/vault/readme"
+      },
+      {
         "title": "Cloud Factory - Platform Page Content",
         "href": "/generated/docs/platform_page_content"
       },

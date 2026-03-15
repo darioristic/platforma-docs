@@ -30,3 +30,5 @@ next-env.d.ts
 # but repo-cache is not
 .generation-state.json
 .repo-cache
+.vercel
+.env*.local

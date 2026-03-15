@@ -1,0 +1,89 @@
+---
+title: "@cloud-factory/kafka"
+description: "Documentation: @cloud-factory/kafka"
+section: "docs"
+category: "packages"
+auto_generated: true
+source: "docs/packages/kafka/README.md"
+last_synced: "2026-03-15T22:20:40.542Z"
+---
+
+<Callout type="info">
+Imported from `docs/packages/kafka/README.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# @cloud-factory/kafka
+
+Kafka producer/consumer modules for NestJS with DLQ support, event typing, and OpenTelemetry trace propagation.
+
+## Installation
+
+```json
+"@cloud-factory/kafka": "*"
+```
+
+## Key Exports
+
+| Export                                     | Description                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `KafkaModule`                              | Global producer module (`.forRoot()`, `.forRootAsync()`, `.forService()`) |
+| `KafkaConsumerModule`                      | Consumer module with retry and DLQ                                        |
+| `KafkaProducerService`                     | Emit typed events to Kafka topics                                         |
+| `KafkaConsumerService`                     | Consume messages with automatic retry                                     |
+| `DlqProducerService` / `DlqHandlerService` | Dead-letter queue publish and replay                                      |
+| `BaseEventsService`                        | Abstract base class for domain event services                             |
+| `CloudFactoryEvent`                        | Typed event envelope with actor, tenant, correlation ID                   |
+| `*_TOPICS`                                 | Pre-defined topic constants per domain (ORDER, BILLING, etc.)             |
+| `CONSUMER_GROUPS`                          | Standard consumer group configurations                                    |
+| `KafkaHealthIndicator`                     | Health check for Terminus                                                 |
+
+## Usage
+
+### Register the producer
+
+```typescript
+import { KafkaModule } from '@cloud-factory/kafka';
+
+@Module({
+  imports: [KafkaModule.forService('order-service')],
+})
+export class AppModule {}
+```
+
+### Emit events
+
+```typescript
+import { BaseEventsService, ORDER_TOPICS } from '@cloud-factory/kafka';
+
+@Injectable()
+export class OrderEventsService extends BaseEventsService {
+  constructor(kafkaProducer: KafkaProducerService) {
+    super(kafkaProducer, 'OrderEvents');
+  }
+
+  async orderCreated(order: Order, actor: EventActor) {
+    return this.emitEvent(order, {
+      topic: ORDER_TOPICS.ORDER_CREATED,
+      eventType: 'order.created',
+      tenantId: order.tenantId,
+      actor,
+    });
+  }
+}
+```
+
+### Consume with DLQ
+
+```typescript
+import { KafkaConsumerModule, DlqHandlerModule } from '@cloud-factory/kafka';
+
+@Module({
+  imports: [
+    KafkaConsumerModule.forRootAsync({
+      /* ... */
+    }),
+    DlqHandlerModule,
+  ],
+})
+export class ConsumerModule {}
+```
