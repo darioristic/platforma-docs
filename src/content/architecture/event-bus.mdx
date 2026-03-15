@@ -1,0 +1,104 @@
+---
+title: "Event Bus"
+description: "Event-driven architecture and message flow"
+section: "architecture"
+order: 3
+---
+
+# Event Bus
+
+The event bus is the backbone of PLATFORMA's inter-service communication. All state changes are published as events, enabling loose coupling between services and supporting async workflows.
+
+## Architecture
+
+PLATFORMA uses NATS JetStream as the event bus, providing:
+
+- **At-least-once delivery** — Events are persisted and redelivered on failure
+- **Consumer groups** — Multiple instances of a service share the workload
+- **Replay** — Historical events can be replayed for recovery or debugging
+- **Filtering** — Consumers subscribe to specific event patterns
+
+## Event Structure
+
+All events follow a consistent envelope format:
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "order.provisioned",
+  "version": "1.0",
+  "tenant_id": "ten_xyz789",
+  "timestamp": "2026-03-15T10:05:22Z",
+  "source": "provisioning-service",
+  "data": {
+    "order_id": "ord_xyz789",
+    "resources": [
+      { "id": "res_vm_001", "type": "virtual_machine", "status": "running" }
+    ]
+  },
+  "metadata": {
+    "correlation_id": "req_abc123",
+    "trace_id": "trace_def456"
+  }
+}
+```
+
+## Event Categories
+
+### Order Events
+| Event | Published When |
+|-------|---------------|
+| `order.created` | New order submitted |
+| `order.validated` | Order passes validation |
+| `order.processing` | Provisioning workflow started |
+| `order.provisioned` | All resources ready |
+| `order.failed` | Provisioning failed |
+| `order.cancelled` | Order cancelled |
+
+### Resource Events
+| Event | Published When |
+|-------|---------------|
+| `resource.created` | Resource provisioned |
+| `resource.updated` | Resource configuration changed |
+| `resource.status_changed` | Resource status transition |
+| `resource.deleted` | Resource terminated |
+
+### Billing Events
+| Event | Published When |
+|-------|---------------|
+| `invoice.generated` | Invoice created for billing period |
+| `invoice.paid` | Payment received |
+| `invoice.overdue` | Payment past due date |
+| `usage.recorded` | Usage data point recorded |
+| `usage.threshold_reached` | Usage nearing limit |
+
+## Consumer Patterns
+
+### Direct Processing
+A service directly processes events to update its own state:
+
+```
+order.created → Billing Service → Create subscription record
+```
+
+### Event Choreography
+Multiple services react to the same event independently:
+
+```
+order.provisioned → Billing Service  → Activate subscription
+                  → Notification Svc → Send welcome email
+                  → Monitoring Svc   → Configure alerts
+```
+
+### Saga Pattern
+Long-running workflows coordinate across services:
+
+```
+order.created → Provisioning → resource.created → DNS Setup → dns.configured → Monitoring → order.provisioned
+```
+
+If any step fails, compensating events undo previous steps.
+
+<Callout type="tip">
+Use correlation IDs to trace an event through the entire system. Every event in a workflow shares the same `correlation_id`, making debugging straightforward.
+</Callout>

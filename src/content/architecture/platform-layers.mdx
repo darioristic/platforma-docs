@@ -1,0 +1,73 @@
+---
+title: "Platform Layers"
+description: "Detailed breakdown of PLATFORMA's layered architecture"
+section: "architecture"
+order: 2
+---
+
+# Platform Layers
+
+PLATFORMA follows a strict layered architecture where each layer has clear responsibilities and interfaces. Dependencies flow downward — upper layers depend on lower layers, never the reverse.
+
+## Layer 1: Presentation
+
+The presentation layer consists of web applications that provide user interfaces for different personas:
+
+- **Customer Portal** — Self-service portal for end customers to browse products, place orders, view invoices, and manage resources
+- **Admin Dashboard** — Internal dashboard for platform operators to manage tenants, monitor infrastructure, and handle support
+- **Partner Portal** — White-label portal for resellers and partners
+
+All portals are built as single-page applications that communicate exclusively through the API layer. This ensures:
+- Consistent behavior across all interfaces
+- Any UI can be replaced without affecting business logic
+- Third-party integrations have the same capabilities as first-party UIs
+
+## Layer 2: API Gateway
+
+The gateway is the single entry point for all external traffic:
+
+```
+Client → API Gateway → Service Router → Backend Service
+```
+
+**Responsibilities:**
+- **Authentication** — Validates API keys and OAuth tokens
+- **Rate limiting** — Enforces per-client and per-route limits
+- **Request routing** — Maps URL paths to backend services
+- **Load balancing** — Distributes traffic across service instances
+- **Response caching** — Caches GET responses with configurable TTL
+- **Analytics** — Records request metrics for monitoring
+
+## Layer 3: Business Logic
+
+Core services that implement platform functionality:
+
+### Order Service
+Manages the full order lifecycle from creation through fulfillment. Validates orders against the product catalog, calculates pricing, and coordinates with the provisioning service.
+
+### Catalog Service
+Maintains the product catalog with pricing rules, availability constraints, and configuration schemas. Supports versioning — product changes don't affect existing subscriptions.
+
+### Billing Service
+Handles usage metering, invoice generation, and payment processing. Integrates with external payment gateways (Stripe, direct bank transfers) and supports multiple currencies.
+
+### Identity Service
+Manages authentication (API keys, OAuth, SSO), authorization (RBAC with resource-level policies), and tenant administration.
+
+## Layer 4: Infrastructure
+
+Infrastructure adapters that abstract cloud provider APIs:
+
+| Adapter | Providers |
+|---------|----------|
+| **Compute** | OpenStack Nova, Kubernetes, bare metal IPMI |
+| **Network** | OpenStack Neutron, Cilium, OVN |
+| **Storage** | Ceph, OpenStack Cinder, local NVMe |
+| **DNS** | PowerDNS, Cloudflare, AWS Route 53 |
+| **Monitoring** | Prometheus, Grafana, custom exporters |
+
+Each adapter implements a common interface, allowing the provisioning service to orchestrate resources without knowing the underlying provider.
+
+<Callout type="info">
+Adding support for a new cloud provider only requires implementing the adapter interface — no changes to business logic or API layer are needed.
+</Callout>

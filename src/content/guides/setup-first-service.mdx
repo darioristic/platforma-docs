@@ -1,0 +1,124 @@
+---
+title: "Set Up Your First Service"
+description: "End-to-end guide to creating and deploying your first cloud service"
+section: "guides"
+order: 1
+---
+
+# Set Up Your First Service
+
+This guide walks you through creating a product in the catalog, configuring pricing, and deploying it as a customer-facing cloud service.
+
+<Callout type="info">
+Before starting, make sure you have admin access to PLATFORMA and have completed the [Quickstart](/getting-started/quickstart) guide.
+</Callout>
+
+<Steps>
+<Step title="Define a product in the catalog">
+
+Create a new product that defines the cloud service you want to offer:
+
+```typescript
+const product = await client.products.create({
+  name: "Web Hosting — Standard",
+  sku: "web-hosting-std",
+  description: "Standard web hosting with 4 vCPU, 16GB RAM, 100GB SSD",
+  category: "compute",
+  specs: {
+    cpu_cores: 4,
+    memory_gb: 16,
+    disk_gb: 100,
+    disk_type: "ssd",
+  },
+  regions: ["eu-west-1", "us-east-1"],
+  status: "active",
+});
+```
+
+</Step>
+
+<Step title="Configure pricing">
+
+Set up pricing rules for the product:
+
+```typescript
+await client.pricing.create({
+  product_id: product.id,
+  model: "recurring",
+  billing_cycle: "monthly",
+  tiers: [
+    { up_to: 1, unit_price: 79.99 },
+    { up_to: 10, unit_price: 69.99 },
+    { up_to: null, unit_price: 59.99 }, // 10+ units
+  ],
+  currency: "EUR",
+});
+```
+
+</Step>
+
+<Step title="Create a provisioning template">
+
+Define the infrastructure template that will be applied when customers order this product:
+
+```typescript
+await client.templates.create({
+  product_id: product.id,
+  provider: "openstack",
+  steps: [
+    { action: "create_instance", params: { flavor: "m1.medium", image: "ubuntu-22.04" } },
+    { action: "attach_volume", params: { size_gb: 100, type: "ssd" } },
+    { action: "assign_floating_ip" },
+    { action: "configure_monitoring", params: { alerts: ["cpu", "memory", "disk"] } },
+  ],
+});
+```
+
+</Step>
+
+<Step title="Test with a trial order">
+
+Place a test order to verify the end-to-end flow:
+
+```typescript
+const order = await client.orders.create({
+  customer_id: "cust_internal_test",
+  items: [{ product_id: product.id, quantity: 1 }],
+  metadata: { environment: "test" },
+});
+
+// Wait for provisioning
+const result = await client.orders.waitForCompletion(order.id, {
+  timeout: 300_000, // 5 minutes
+});
+
+console.log(result.status); // "provisioned"
+```
+
+</Step>
+
+<Step title="Publish to the portal">
+
+Make the service available to customers through the self-service portal:
+
+```typescript
+await client.portal.catalog.publish({
+  product_id: product.id,
+  featured: true,
+  description_html: "<p>High-performance web hosting...</p>",
+});
+```
+
+</Step>
+</Steps>
+
+## Next Steps
+
+<CardGrid cols={2}>
+  <Card title="Configure Billing" href="/guides/configure-billing" icon="Receipt">
+    Set up automated invoicing for your service
+  </Card>
+  <Card title="Product Catalog API" href="/api-reference/portals/list-portals" icon="Code">
+    Full API reference for product management
+  </Card>
+</CardGrid>

@@ -1,0 +1,275 @@
+---
+title: "Notification Service API"
+description: "Auto-generated API reference for notification-service"
+section: "api"
+service: "notification-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Notification Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 17
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Notifications
+
+### Send notification (service-to-service only)
+
+<ApiEndpoint method="POST" path="/notifications/send" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateNotificationDto`
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    —
+  </Param>
+  <Param name="userId" type="string" required>
+    —
+  </Param>
+  <Param name="type" type="NotificationType" required>
+    —
+  </Param>
+  <Param name="eventType" type="string" required>
+    —
+  </Param>
+  <Param name="subject" type="string" required>
+    —
+  </Param>
+  <Param name="body" type="string" required>
+    —
+  </Param>
+  <Param name="metadata" type="Recordstring, unknown">
+    —
+  </Param>
+  <Param name="emailTo" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List notifications for current user (paginated)
+
+<ApiEndpoint method="GET" path="/notifications" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="page" type="number">
+    query parameter
+  </Param>
+  <Param name="limit" type="number">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get unread notification count
+
+<ApiEndpoint method="GET" path="/notifications/unread" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Mark a notification as read
+
+<ApiEndpoint method="PATCH" path="/notifications/:id/read" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Mark all notifications as read
+
+<ApiEndpoint method="PATCH" path="/notifications/read-all" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Delete a notification
+
+<ApiEndpoint method="DELETE" path="/notifications/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Preferences
+
+### List notification preferences for current user
+
+<ApiEndpoint method="GET" path="/notifications/preferences" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Update notification preference for an event type
+
+<ApiEndpoint method="PUT" path="/notifications/preferences/:eventType" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="eventType" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdatePreferenceInput`
+
+<ParamTable>
+  <Param name="emailEnabled" type="boolean">
+    —
+  </Param>
+  <Param name="inAppEnabled" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+## Templates
+
+### List all email templates
+
+<ApiEndpoint method="GET" path="/templates" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="category" type="string">
+    query parameter
+  </Param>
+  <Param name="active" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get branding for current tenant
+
+<ApiEndpoint method="GET" path="/templates/branding/current" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Update branding for current tenant
+
+<ApiEndpoint method="PUT" path="/templates/branding/current" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `UpdateBrandingDto`
+
+<ParamTable>
+  <Param name="logoUrl" type="string">
+    —
+  </Param>
+  <Param name="primaryColor" type="string">
+    —
+  </Param>
+  <Param name="secondaryColor" type="string">
+    —
+  </Param>
+  <Param name="footerText" type="string">
+    —
+  </Param>
+  <Param name="replyToAddress" type="string">
+    —
+  </Param>
+  <Param name="companyName" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Get a specific email template
+
+<ApiEndpoint method="GET" path="/templates/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update an email template
+
+<ApiEndpoint method="PUT" path="/templates/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Render a Handlebars template preview
+
+<ApiEndpoint method="POST" path="/templates/preview" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Send a test email for a template
+
+<ApiEndpoint method="POST" path="/templates/:id/send-test" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `SendTestEmailDto`
+
+<ParamTable>
+  <Param name="toEmail" type="string" required>
+    —
+  </Param>
+  <Param name="variables" type="Recordstring, unknown">
+    —
+  </Param>
+</ParamTable>
+
+---
+

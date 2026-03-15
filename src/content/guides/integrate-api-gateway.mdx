@@ -1,0 +1,106 @@
+---
+title: "Integrate API Gateway"
+description: "Set up and configure the PLATFORMA API Gateway"
+section: "guides"
+order: 4
+---
+
+# Integrate API Gateway
+
+The PLATFORMA API Gateway provides rate limiting, authentication, routing, and analytics for your service APIs. This guide covers setting up the gateway for your services.
+
+<Steps>
+<Step title="Create a gateway instance">
+
+```typescript
+const gateway = await client.gateway.create({
+  name: "production-gateway",
+  cluster_id: "cls_eu01",
+  domain: "api.yourservice.com",
+  tls: {
+    mode: "auto", // Auto-provision Let's Encrypt certificates
+  },
+});
+```
+
+</Step>
+
+<Step title="Define API routes">
+
+Map incoming requests to your backend services:
+
+```typescript
+await client.gateway.routes.create({
+  gateway_id: gateway.id,
+  routes: [
+    {
+      path: "/api/v1/users/*",
+      backend: { service: "user-service", port: 8080 },
+      methods: ["GET", "POST", "PUT", "DELETE"],
+    },
+    {
+      path: "/api/v1/orders/*",
+      backend: { service: "order-service", port: 8080 },
+      methods: ["GET", "POST"],
+    },
+    {
+      path: "/api/v1/products/*",
+      backend: { service: "catalog-service", port: 8080 },
+      methods: ["GET"],
+      cache: { ttl: 300 }, // Cache for 5 minutes
+    },
+  ],
+});
+```
+
+</Step>
+
+<Step title="Configure rate limiting">
+
+Apply rate limiting policies per route or globally:
+
+```typescript
+await client.gateway.policies.create({
+  gateway_id: gateway.id,
+  type: "rate_limit",
+  config: {
+    global: { requests_per_minute: 10000 },
+    per_client: { requests_per_minute: 100 },
+    per_route: {
+      "/api/v1/orders/*": { requests_per_minute: 50 },
+    },
+  },
+});
+```
+
+</Step>
+
+<Step title="Enable API key authentication">
+
+Require API keys for access:
+
+```typescript
+await client.gateway.policies.create({
+  gateway_id: gateway.id,
+  type: "authentication",
+  config: {
+    method: "api_key",
+    header: "X-API-Key",
+    validate_against: "platforma_keys", // Use PLATFORMA's key management
+  },
+});
+```
+
+</Step>
+</Steps>
+
+## Monitoring
+
+The gateway automatically collects metrics:
+
+- Request count, latency (p50, p95, p99)
+- Error rates by status code
+- Bandwidth usage
+- Top clients and routes
+
+Access these via the [Monitoring API](/api-reference/infrastructure/clusters) or the PLATFORMA dashboard.

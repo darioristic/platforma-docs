@@ -1,0 +1,89 @@
+---
+title: "Subscriptions"
+description: "Manage recurring subscriptions"
+section: "api-reference"
+order: 2
+method: "GET"
+endpoint: "/v1/billing/subscriptions"
+---
+
+# Subscriptions
+
+<ApiEndpoint method="GET" path="/v1/billing/subscriptions" auth="Bearer token">
+  List all subscriptions for a tenant.
+</ApiEndpoint>
+
+## Query Parameters
+
+<ParamTable>
+  <Param name="customer_id" type="string">
+    Filter by customer.
+  </Param>
+  <Param name="status" type="string">
+    Filter by status: `active`, `paused`, `cancelled`, `expired`.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "data": [
+    {
+      "id": "sub_abc123",
+      "customer_id": "cust_def456",
+      "product_id": "prod_vm_medium",
+      "status": "active",
+      "quantity": 5,
+      "billing_cycle": "monthly",
+      "unit_price": 149.99,
+      "next_billing_date": "2026-04-01T00:00:00Z",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 12,
+    "has_more": false
+  }
+}`}
+</ResponseExample>
+
+## Create Subscription
+
+<ApiEndpoint method="POST" path="/v1/billing/subscriptions" auth="Bearer token">
+  Create a new recurring subscription.
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="customer_id" type="string" required>
+    The customer to create the subscription for.
+  </Param>
+  <Param name="product_id" type="string" required>
+    Product from the catalog.
+  </Param>
+  <Param name="quantity" type="integer" required>
+    Number of units.
+  </Param>
+  <Param name="billing_cycle" type="string" required>
+    Billing frequency: `monthly`, `quarterly`, `annual`.
+  </Param>
+  <Param name="start_date" type="string">
+    When the subscription should start (defaults to now).
+  </Param>
+</ParamTable>
+
+<ResponseExample status={201}>
+{`{
+  "data": {
+    "id": "sub_new789",
+    "customer_id": "cust_def456",
+    "product_id": "prod_vm_medium",
+    "status": "active",
+    "quantity": 3,
+    "billing_cycle": "monthly",
+    "unit_price": 149.99,
+    "next_billing_date": "2026-04-15T00:00:00Z",
+    "created_at": "2026-03-15T10:00:00Z"
+  }
+}`}
+</ResponseExample>

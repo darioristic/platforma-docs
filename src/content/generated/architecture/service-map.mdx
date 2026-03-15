@@ -1,0 +1,653 @@
+---
+title: "Service Map"
+description: "Overview of all microservices, packages, and applications"
+section: "architecture"
+auto_generated: true
+last_synced: "2026-03-15T15:39:29.783Z"
+---
+
+# Service Map
+
+<Callout type="info">
+Auto-generated from package.json files. Last synced: 2026-03-15
+</Callout>
+
+## Architecture Overview
+
+# Cloud Factory - Arhitektura Platforme
+
+**Verzija:** 3.5 | **Datum:** 1. Mart 2026
+
+## 2. API Gateway (nginx :8880)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          NGINX API GATEWAY                                  │
+│                          Ports: 80 (HTTP→301), 443 (HTTPS)                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─── Rate Limiting Zones ──────────────────────────────────────────────┐   │
+│  │  auth_login:    5 req/s  burst=3  nodelay  (POST /auth/login)       │   │
+│  │  auth_register: 2 req/s  burst=2  nodelay  (POST /auth/register)   │   │
+│  │  api_general:  30 req/s  burst=20 nodelay  (all other /api/*)      │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─── Security Headers ────────────────────────────────────────────────┐   │
+│  │  X-Frame-Options: SAMEORIGIN                                        │   │
+│  │  X-Content-Type-Options: nosniff                                    │   │
+│  │  X-XSS-Protection: 1; mode=block                                   │   │
+│  │  Strict-Transport-Security: max-age=31536000; includeSubDomains    │   │
+│  │  X-Request-ID: $request_id                                          │   │
+│  │  Content-Security-Policy: self + OAuth origins                      │   │
+│  │  Referrer-Policy: strict-origin-when-cross-origin                  │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─── Routes ──────────────────────────────────────────────────────────┐   │
+│  │  GET  /health                     → nginx (200 ok)                  │   │
+│  │  POST /api/identity/auth/login    → identity:3003  [auth_login]    │   │
+│  │  POST /api/identity/auth/register → identity:3003  [auth_register] │   │
+│  │  /api/identity/*                  → identity:3003  [api_general]   │   │
+│  │  /api/products/*                  → product:3001   [api_general]   │   │
+│  │  /api/orders/*                    → order:3002     [api_general]   │   │
+│  │  /api/provisioning/*              → provision:3004 [api_general]   │   │
+│  │  /api/billing/*                   → billing:3005   [api_general]   │   │
+│  │  /api/billing/webhooks/*          → billing:3005   [NO LIMIT]     │   │
+│  │  /api/notifications/*             → notif:3006     [api_general]   │   │
+│  │  /api/support/*                   → support:3007   [api_general]   │   │
+│  │  /ws/notifications/*              → notif:3006     [WebSocket]    │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Proxy: connect=10s, send=30s, read=60s | Body max: 10MB                   │
+│  WebSocket: read_timeout=86400s (24h) | Upgrade + Connection headers       │
+│  CORS: Methods=GET,POST,PUT,PATCH,DELETE | Credentials=true | Max-Age=86400│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Services Layer (Mikroservisi)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           SERVICES LAYER (NestJS)                           │
+│                     Sve na TypeScript, URI versioning /v1                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐                  │
+│  │   Identity Service      │  │   Product Service       │                  │
+│  │   :3003                 │  │   :3001                 │                  │
+│  │                         │  │                         │                  │
+│  │   ● JWT Auth (15m+7d)   │  │   ● CRUD Products      │                  │
+│  │   ● MFA/TOTP            │  │   ● Pricing Plans      │                  │
+│  │   ● Account Lockout     │  │   ● Search/Filter      │                  │
+│  │   ● RBAC (Guards)       │  │                         │                  │
+│  │   ● Audit Logs          │  │   DB: MongoDB           │                  │
+│  │   ● API Keys            │  │   Cache: Redis 300s     │                  │
+│  │   ● OAuth Ready         │  └─────────────────────────┘                  │
+│  │                         │                                                │
+│  │   DB: PostgreSQL        │  ┌─────────────────────────┐                  │
+│  │       (schema:identity) │  │   Order Service         │                  │
+│  │   Cache: Redis 900s     │  │   :3002                 │                  │
+│  │   Throttle: Redis       │  │                         │                  │
+│  └─────────────────────────┘  │   ● Order State Machine │                  │
+│                                │     9 statusa           │                  │
+│  ┌─────────────────────────┐  │   ● Optimistic Locking  │                  │
+│  │  Provisioning Service   │  │   ● Fulfillment Saga    │                  │
+│  │  :3004                  │  │   ● Timeline Tracking   │                  │
+│  │                         │  │                         │                  │
+│  │  ● 4-Step Workflow      │  │   DB: PostgreSQL        │                  │
+│  │    1. Allocate          │  │       (schema:orders)   │                  │
+│  │    2. Configure         │  │   Cache: Redis 60s      │                  │
+│  │    3. Activate          │  │   Kafka: Producer+      │                  │
+│  │    4. Verify            │  │          Consumer       │                  │
+│  │  ● Rollback Support     │  └─────────────────────────┘                  │
+│  │  ● Retry Count          │                                                │
+│  │                         │  ┌─────────────────────────┐                  │
+│  │  DB: PostgreSQL         │  │  Billing Integration    │                  │
+│  │      (schema:provision) │  │  :3005                  │                  │
+│  │  Cache: Redis 30s       │  │                         │                  │
+│  │  Kafka: Producer+       │  │  ● Stripe Integration   │                  │
+│  │         Consumer        │  │  ● Invoice State Machine│                  │
+│  └─────────────────────────┘  │  ● Usage Metering       │                  │
+│                                │  ● Subscriptions        │                  │
+│  ┌─────────────────────────┐  │  ● Refunds/Credits      │                  │
+│  │  Notification Service   │  │  ● PDF Generation       │                  │
+│  │  :3006                  │  │                         │                  │
+│  │                         │  │  DB: PostgreSQL         │                  │
+│  │  ● Socket.IO WebSocket  │  │      (schema:billing)  │                  │
+│  │    /notifications ns    │  │  Cache: Redis 300s      │                  │
+│  │  ● In-App + Email       │  │  Kafka: Producer+       │                  │
+│  │  ● Templates            │  │         Consumer        │                  │
+│  │  ● Preferences          │  │  External: Stripe API   │                  │
+│  │  ● Redis Pub/Sub        │  └─────────────────────────┘                  │
+│  │                         │                                                │
+│  │  DB: PostgreSQL         │  ┌─────────────────────────┐                  │
+│  │      (schema:notif)     │  │  Support Service        │                  │
+│  │  Cache: Redis 300s      │  │  :3007                  │                  │
+│  │  Kafka: Consumer        │  │                         │                  │
+│  │  SMTP: Outbound         │  │  ● Ticket Management    │                  │
+│  └─────────────────────────┘  │  ● Comments/Attachments │                  │
+│                                │  ● SLA Tracking         │                  │
+│                                │                         │                  │
+│                                │  DB: PostgreSQL         │                  │
+│                                │      (schema:support)  │                  │
+│                                │  Cache: Redis 300s      │                  │
+│                                │  Kafka: Producer        │                  │
+│                                └─────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Kafka Event Bus
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      KAFKA EVENT BUS (:9092)                                │
+│                  Confluent CP 7.5 + Zookeeper                               │
+│                  41 topics across 6 domains                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Topic Format: cloud-factory.{domain}.{event}.v1                           │
+│   Envelope: CloudFactoryEvent<T> (eventId, correlationId, tenantId, ...)   │
+│                                                                             │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    EVENT FLOW (Saga Pattern)                         │   │
+│  │                                                                      │   │
+│  │   Order Service                                                      │   │
+│  │       │                                                              │   │
+│  │       ├─ order.created ────────────────────────► Notification Svc    │   │
+│  │       ├─ order.payment-confirmed ──────────────► Billing Svc         │   │
+│  │       ├─ order.provisioning-started ───────────► Provisioning Svc    │   │
+│  │       │                                                              │   │
+│  │   Provisioning Service                                               │   │
+│  │       │                                                              │   │
+│  │       ├─ provisioning.step-completed ──────────► Order Svc           │   │
+│  │       ├─ provisioning.service-activated ───────► Billing Svc         │   │
+│  │       ├─ provisioning.completed ───────────────► Order Svc           │   │
+│  │       │                                  ├─────► Billing Svc         │   │
+│  │       │                                  └─────► Notification Svc    │   │
+│  │       ├─ provisioning.failed ──────────────────► Order Svc           │   │
+│  │       │                                                              │   │
+│  │   Billing Service                                                    │   │
+│  │       │                                                              │   │
+│  │       ├─ billing.invoice-generated ────────────► Notification Svc    │   │
+│  │       ├─ billing.payment-received ─────────────► Notification Svc    │   │
+│  │       ├─ billing.refund-completed ─────────────► Order Svc           │   │
+│  │       │                                                              │   │
+│  │   Support Service                                                    │   │
+│  │       │                                                              │   │
+│  │       ├─ support.ticket-created ───────────────► Notification Svc    │   │
+│  │       ├─ support.comment-added ────────────────► Notification Svc    │   │
+│  │       └─ support.ticket-resolved ──────────────► Notification Svc    │   │
+│  │                                                                      │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    DEAD LETTER QUEUE (DLQ)                           │   │
+│  │  ● Failed messages after retry exhaustion → DLQ topic               │   │
+│  │  ● Default: 3 retries, 1s→30s backoff (2x multiplier)              │   │
+│  │  ● Critical: 5 retries, 500ms→60s                                  │   │
+│  │  ● Non-critical: 2 retries, 2s→10s                                 │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Order Fulfillment Saga
+
+```
+  Customer                Order Svc          Provisioning Svc       Billing Svc
+     │                       │                      │                    │
+     │  Create Order         │                      │                    │
+     ├──────────────────────►│                      │                    │
+     │                       │                      │                    │
+     │  Confirm Payment      │                      │                    │
+     ├──────────────────────►│                      │                    │
+     │                       │ PROVISIONING_STARTED  │                    │
+     │                       ├─────────────────────►│                    │
+     │                       │                      │                    │
+     │                       │                      │ 1. Allocate        │
+     │                       │  STEP_COMPLETED      │ 2. Configure       │
+     │                       │◄─────────────────────┤ 3. Activate        │
+     │                       │                      │ 4. Verify          │
+     │                       │                      │                    │
+     │                       │                      │ SERVICE_ACTIVATED   │
+     │                       │                      ├───────────────────►│
+     │                       │                      │                    │
+     │                       │  COMPLETED           │                    │
+     │                       │◄─────────────────────┤                    │
+     │                       │                      │                    │
+     │                       │  FULFILLED           │                    │
+     │                       ├──────────────────────┼───────────────────►│
+     │                       │                      │                    │
+     │  Order Complete!      │                      │                    │
+     │◄──────────────────────┤                      │                    │
+```
+
+---
+
+## 5. Data Layer
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           DATA LAYER                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────────────────────────┐  ┌─────────────────────────────┐     │
+│  │     PostgreSQL 16 (:5432)        │  │    MongoDB 7.0 (:27017)     │     │
+│  │     DB: cloud_factory            │  │    DB: products             │     │
+│  │                                  │  │                             │     │
+│  │  ┌────────────────────────────┐  │  │  ┌───────────────────────┐  │     │
+│  │  │ Schema: identity           │  │  │  │ Collection: products  │  │     │
+│  │  │  ├ users                   │  │  │  │  ├ SKU, name, price   │  │     │
+│  │  │  ├ tenants                 │  │  │  │  ├ category, attrs    │  │     │
+│  │  │  ├ roles                   │  │  │  │  └ status, timestamps │  │     │
+│  │  │  ├ api_keys                │  │  │  │                       │  │     │
+│  │  │  ├ oauth_accounts          │  │  │  │ Collection: pricing   │  │     │
+│  │  │  └ audit_logs              │  │  │  │  └ plans, tiers       │  │     │
+│  │  └────────────────────────────┘  │  │  └───────────────────────┘  │     │
+│  │                                  │  └─────────────────────────────┘     │
+│  │  ┌────────────────────────────┐  │                                      │
+│  │  │ Schema: orders             │  │  ┌─────────────────────────────┐     │
+│  │  │  ├ orders (version col)    │  │  │     Redis 7 (:6379)         │     │
+│  │  │  ├ order_items             │  │  │                             │     │
+│  │  │  └ saga_states             │  │  │  ● Session/Cache Store     │     │
+│  │  └────────────────────────────┘  │  │    identity: TTL 900s      │     │
+│  │                                  │  │    product:  TTL 300s      │     │
+│  │  ┌────────────────────────────┐  │  │    order:    TTL 60s       │     │
+│  │  │ Schema: provisioning       │  │  │    provision: TTL 30s      │     │
+│  │  │  └ provisioning_requests   │  │  │    billing:  TTL 300s      │     │
+│  │  └────────────────────────────┘  │  │    notif:    TTL 300s      │     │
+│  │                                  │  │    support:  TTL 300s      │     │
+│  │  ┌────────────────────────────┐  │  │                             │     │
+│  │  │ Schema: billing            │  │  │  ● Rate Limit (Throttle)   │     │
+│  │  │  ├ invoices                │  │  │  ● Notification Pub/Sub    │     │
+│  │  │  ├ invoice_line_items      │  │  └─────────────────────────────┘     │
+│  │  │  ├ stripe_customers        │  │                                      │
+│  │  │  ├ payment_methods         │  │                                      │
+│  │  │  ├ subscriptions           │  │                                      │
+│  │  │  ├ usage_records           │  │                                      │
+│  │  │  ├ pricing_rules           │  │                                      │
+│  │  │  ├ refunds                 │  │                                      │
+│  │  │  └ credit_notes            │  │                                      │
+│  │  └────────────────────────────┘  │                                      │
+│  │                                  │                                      │
+│  │  ┌────────────────────────────┐  │                                      │
+│  │  │ Schema: notifications      │  │                                      │
+│  │  │  ├ notifications           │  │                                      │
+│  │  │  ├ notification_prefs      │  │                                      │
+│  │  │  └ notification_templates  │  │                                      │
+│  │  └────────────────────────────┘  │                                      │
+│  │                                  │                                      │
+│  │  ┌────────────────────────────┐  │                                      │
+│  │  │ Schema: support            │  │                                      │
+│  │  │  ├ tickets                 │  │                                      │
+│  │  │  ├ ticket_comments         │  │                                      │
+│  │  │  ├ ticket_attachments      │  │                                      │
+│  │  │  └ ticket_sla              │  │                                      │
+│  │  └────────────────────────────┘  │                                      │
+│  └──────────────────────────────────┘                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. Shared Packages (Monorepo)
+
+```
+packages/
+├── api-contracts        @cloud-factory/api-contracts
+│   └── Shared DTOs, TypeScript interfaces, Zod validacija
+│
+├── auth-guard           @cloud-factory/auth-guard
+│   └── JwtAuthGuard, RolesGuard, TenantGuard, CloudFactoryAuthModule
+│
+├── cache                @cloud-factory/cache
+│   └── CloudFactoryCacheModule — Redis cache abstraction
+│
+├── common               @cloud-factory/common
+│   ├── CloudFactoryLoggerModule (Pino JSON)
+│   ├── MetricsModule + metricsEndpoint() (Prometheus)
+│   ├── CorrelationIdMiddleware
+│   ├── MetricsMiddleware
+│   └── SharedInfrastructureModule
+│
+├── kafka                @cloud-factory/kafka
+│   ├── KafkaModule, KafkaProducerService, KafkaConsumerService
+│   ├── Topic constants (ORDER, PROVISIONING, BILLING, IDENTITY, NOTIFICATION, SUPPORT)
+│   ├── Consumer group constants
+│   ├── CloudFactoryEvent<T> envelope schema
+│   └── DLQ: DlqProducerService, DlqHandlerService
+│
+├── kafka-consumers      @cloud-factory/kafka-consumers
+│   └── Higher-level consumer abstractions
+│
+├── tracing              @cloud-factory/tracing
+│   └── OpenTelemetry tracing, pinoTraceMixin for log correlation
+│
+├── vault                @cloud-factory/vault
+│   ├── VaultService (HashiCorp Vault KV v2 — read/write/health)
+│   ├── CloudFactoryVaultModule.forRootAsync()
+│   └── getConfigFromVault() helper (Vault → ENV → Default fallback)
+│
+└── resilience           @cloud-factory/resilience
+    ├── CircuitBreakerService (CLOSED → OPEN → HALF_OPEN state machine)
+    ├── @CircuitBreaker() decorator
+    ├── RetryInterceptor (exponential backoff + jitter)
+    └── Prometheus metrics (circuit_breaker_state, trips_total, retry_attempts)
+```
+
+---
+
+## 7. CI/CD Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CI/CD PIPELINE (GitHub Actions)                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ci.yml (push main/develop, PRs)                                            │
+│  ═══════════════════════════════                                            │
+│                                                                             │
+│  ┌──────────────┐  ┌──────────┐                                            │
+│  │security-audit│  │   lint   │                                            │
+│  │  npm audit   │  │ lint +   │                                            │
+│  │  critical    │  │ typecheck│                                            │
+│  └──────────────┘  └─────┬────┘                                            │
+│                          │                                                  │
+│                    ┌─────▼────┐                                             │
+│                    │  build   │                                             │
+│                    │ turbo    │                                             │
+│                    └─────┬────┘                                             │
+│                          │                                                  │
+│          ┌───────────────┼───────────────┬──────────────────┐              │
+│          │               │               │                  │              │
+│  ┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐ ┌────────▼─────┐       │
+│  │ unit-tests   │ │  frontend-  │ │ integration-│ │  migration-  │       │
+│  │  vitest +    │ │  tests      │ │ tests       │ │  check       │       │
+│  │  codecov     │ │  admin-     │ │ PG+Mongo+   │ │  run→revert  │       │
+│  │              │ │  platform   │ │ Redis       │ │  →re-run     │       │
+│  └──────────────┘ └──────┬──────┘ └─────────────┘ └──────────────┘       │
+│                          │                                                  │
+│                    ┌─────▼────┐                                             │
+│                    │ e2e-tests│                                             │
+│                    │Playwright│                                             │
+│                    │Chromium  │                                             │
+│                    └──────────┘                                             │
+│                                                                             │
+│  deploy.yml (push main, manual dispatch)                                    │
+│  ═══════════════════════════════════════                                    │
+│                                                                             │
+│  ┌────────────────┐                                                        │
+│  │ build-and-push │  Matrix: 8 images → ghcr.io                           │
+│  │ Docker images  │  Tags: SHA, branch, semver, latest                    │
+│  └───────┬────────┘                                                        │
+│          │                                                                  │
+│  ┌───────▼────────┐                                                        │
+│  │ run-migrations │  TypeORM: identity, orders, provisioning, billing      │
+│  └───────┬────────┘                                                        │
+│          │                                                                  │
+│  ┌───────▼────────┐                                                        │
+│  │deploy-staging  │  staging.cloudfactory.example.com                      │
+│  └───────┬────────┘                                                        │
+│          │                                                                  │
+│  ┌───────▼────────┐                                                        │
+│  │ k6 load test   │  Smoke test against staging                            │
+│  └───────┬────────┘                                                        │
+│          │                                                                  │
+│  ┌───────▼────────┐                                                        │
+│  │deploy-prod     │  Manual trigger only                                   │
+│  └────────────────┘  cloudfactory.example.com                              │
+│                                                                             │
+│  pr-check.yml               │  security-scan.yml                           │
+│  ═══════════                │  ══════════════                               │
+│  ● Bundle size report       │  ● Weekly Monday 06:00 UTC                   │
+│  ● Trivy security scan      │  ● OWASP Dependency Check                   │
+│  ● PR auto-comment          │  ● License compliance (GPL/AGPL block)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 8. Docker Compose Stack
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     DOCKER COMPOSE (cloud-network)                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Infrastructure                                                             │
+│  ──────────────                                                            │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│  │ PostgreSQL 16│ │  MongoDB 7.0 │ │   Redis 7    │ │   Kafka      │      │
+│  │  :5432       │ │  :27017      │ │  :6379       │ │  :9092       │      │
+│  │  alpine      │ │  root:admin  │ │  alpine      │ │  CP 7.5.0    │      │
+│  │              │ │              │ │  no auth     │ │  + Zookeeper │      │
+│  │  Vol:        │ │  Vol:        │ │              │ │  :2181       │      │
+│  │  postgres_   │ │  mongo_      │ │              │ │              │      │
+│  │  data        │ │  data        │ │              │ │              │      │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘      │
+│                                                                             │
+│  Services                                                                   │
+│  ────────                                                                  │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│  │identity  │ │product   │ │order     │ │provision │ │billing   │        │
+│  │:3003     │ │:3001     │ │:3002     │ │:3004     │ │:3005     │        │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘        │
+│  ┌──────────┐ ┌──────────┐                                                │
+│  │notif     │ │support   │                                                │
+│  │:3006     │ │:3007     │                                                │
+│  └──────────┘ └──────────┘                                                │
+│                                                                             │
+│  Frontend                                                                   │
+│  ────────                                                                  │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐             │
+│  │public-web│ │admin     │ │customer  │ │   API Gateway    │             │
+│  │:3000     │ │:3100     │ │:3200     │ │   :80 / :443     │             │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 9. Test Infrastruktura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        TEST INFRASTRUCTURE                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Backend (7 servisa × unit testovi)                                         │
+│  ──────────────────────────────────                                        │
+│  Framework: Vitest | Coverage threshold: 60%                                │
+│  259 test/spec fajlova ukupno (~35% pokrivanje)                            │
+│                                                                             │
+│  Frontend (3 aplikacije)                                                    │
+│  ───────────────────────                                                   │
+│  Framework: Vitest + @testing-library/react + jsdom                         │
+│  Coverage thresholds: 40% statements, 35% branches, 40% functions/lines    │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  Components:     DataTable (17), EmptyState (4), ErrorState (6),   │   │
+│  │                  TableSkeleton (3), Sidebar (9),                    │   │
+│  │                  NotificationCenter (14)                            │   │
+│  │  Hooks:          use-table-state (19)                               │   │
+│  │  Stores:         auth-store, notification-store (15)                │   │
+│  │  Lib:            rbac (10), api-client (38), use-api               │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  E2E (Playwright, 11 spec fajlova)                                          │
+│  ─────────────────────────────────                                         │
+│  Projects: public-web, admin-platform, customer-portal, mobile              │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  admin-platform/auth.spec.ts      - Login, validation, redirect    │   │
+│  │  admin-platform/gateway.spec.ts   - Health, CORS, security, 429   │   │
+│  │  (+ public-web specs, customer-portal specs)                       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 10. Security Model
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          SECURITY MODEL                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Authentication                                                             │
+│  ──────────────                                                            │
+│  ● JWT Access Token (15 min) + Refresh Token (7 days)                      │
+│  ● bcrypt hashing (12 rounds)                                               │
+│  ● MFA/TOTP ready (QR code generation)                                      │
+│  ● Account lockout: 5 failed attempts → 30 min lock                        │
+│  ● OAuth ready (Google, Microsoft, GitHub origins in CSP)                   │
+│                                                                             │
+│  Authorization (RBAC)                                                       │
+│  ────────────────────                                                      │
+│  ● Role Groups: ADMIN, FINANCE, SALES, OPS, SECURITY, PRODUCT             │
+│  ● Backend: @Roles() decorator + RolesGuard                                │
+│  ● Frontend: canAccessPath() + conditional sidebar                         │
+│  ● Tenant isolation: TenantGuard on all requests                           │
+│                                                                             │
+│  API Security                                                               │
+│  ────────────                                                              │
+│  ● Rate limiting: 5/s auth, 2/s register, 30/s general                    │
+│  ● API Key authentication (separate from JWT)                              │
+│  ● Per-service throttle (20-30 req/min per IP)                             │
+│  ● Stripe webhook signature verification (raw body)                        │
+│                                                                             │
+│  Transport Security                                                         │
+│  ──────────────────                                                        │
+│  ● TLS 1.2/1.3 at gateway                                                  │
+│  ● HSTS: max-age=31536000; includeSubDomains                              │
+│  ● CSP, X-Frame-Options, X-Content-Type-Options                           │
+│  ● Referrer-Policy, Permissions-Policy                                     │
+│  ● X-Request-ID correlation                                                │
+│                                                                             │
+│  Resilience                                                                 │
+│  ──────────                                                                │
+│  ● Circuit Breaker: @cloud-factory/resilience paket                        │
+│    (CLOSED → OPEN → HALF_OPEN sa konfigurabilnim threshold-om)             │
+│  ● Retry: Exponential backoff sa jitter-om                                 │
+│  ● Primenjen na: Stripe API (billing-integration)                          │
+│  ● TODO: Rollout na sve servise (Sprint 9.3)                               │
+│                                                                             │
+│  Secrets Management                                                         │
+│  ─────────────────                                                         │
+│  ● HashiCorp Vault: @cloud-factory/vault paket                             │
+│  ● VaultService: KV v2 read/write/health                                   │
+│  ● Docker Vault: config.hcl + init-secrets.sh za dev                       │
+│  ● TODO: ConfigModule adapter, migracija sa .env (Sprint 9.2)              │
+│                                                                             │
+│  CI/CD Security                                                             │
+│  ──────────────                                                            │
+│  ● npm audit (critical on CI, high on PR)                                  │
+│  ● Trivy filesystem scan → GitHub Security (SARIF)                         │
+│  ● OWASP Dependency Check (weekly, failOnCVSS=9)                          │
+│  ● License compliance (GPL-3.0/AGPL-3.0 blocked)                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Port Mapa
+
+| Port  | Servis                                    | Tip            |
+| ----- | ----------------------------------------- | -------------- |
+| 80    | API Gateway (HTTP → HTTPS redirect)       | Infrastructure |
+| 443   | API Gateway (HTTPS)                       | Infrastructure |
+| 3000  | Public Web (Next.js)                      | Frontend       |
+| 3001  | Product Service (NestJS)                  | Backend        |
+| 3002  | Order Service (NestJS)                    | Backend        |
+| 3003  | Identity Service (NestJS)                 | Backend        |
+| 3004  | Provisioning Service (NestJS)             | Backend        |
+| 3005  | Billing Integration (NestJS)              | Backend        |
+| 3006  | Notification Service (NestJS + Socket.IO) | Backend        |
+| 3007  | Support Service (NestJS)                  | Backend        |
+| 3100  | Admin Platform (Next.js)                  | Frontend       |
+| 3200  | Customer Portal (Vite SPA)                | Frontend       |
+| 5432  | PostgreSQL 16                             | Database       |
+| 6379  | Redis 7                                   | Cache/PubSub   |
+| 9092  | Kafka (external)                          | Event Bus      |
+| 27017 | MongoDB 7.0                               | Database       |
+| 29092 | Kafka (internal)                          | Event Bus      |
+
+---
+
+## Dijagram Zavisnosti (ko poziva koga)
+
+```
+                    ┌──────────┐
+                    │ Identity │ ◄── Svi servisi validiraju JWT
+                    │  :3003   │     (indirektno kroz auth-guard paket)
+                    └──────────┘
+
+  ┌──────────┐     ┌──────────┐     ┌──────────┐
+  │ Product  │     │  Order   │────►│Provision │
+  │  :3001   │     │  :3002   │     │  :3004   │
+  └──────────┘     └─────┬────┘     └─────┬────┘
+                         │                │
+                         │    ┌───────────┘
+                         ▼    ▼
+                    ┌──────────┐     ┌──────────┐     ┌──────────┐
+                    │ Billing  │     │  Notif   │     │ Support  │
+                    │  :3005   │────►│  :3006   │◄────│  :3007   │
+                    └─────┬────┘     └──────────┘     └──────────┘
+                          │               ▲
+                          │               │
+                          └───────────────┘
+                        (Kafka events → notifications)
+
+  Legenda:
+  ──────► Kafka event flow (async)
+  Svi servisi koriste: @cloud-factory/common, auth-guard, cache, kafka, resilience
+```
+
+---
+
+## Razvoj i Roadmap
+
+Za detaljan plan daljeg razvoja pogledati: [PLAN_RAZVOJA_v3.md](docs/PLAN_RAZVOJA_v3.md)
+
+
+---
+
+## Services
+
+| Service | Port | Internal Dependencies |
+|---------|------|-----------------------|
+| **@cloud Factory/billing Integration** | 3005 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/idempotency`, `@cloud-factory/kafka`, `@cloud-factory/resilience`, `@cloud-factory/tracing` |
+| **@cloud Factory/identity Service** | 3003 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/idempotency`, `@cloud-factory/kafka`, `@cloud-factory/tracing` |
+| **@cloud Factory/notification Service** | 3006 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/kafka`, `@cloud-factory/tracing`, `@cloud-factory/vault` |
+| **@cloud Factory/order Service** | 3002 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/idempotency`, `@cloud-factory/kafka`, `@cloud-factory/tracing` |
+| **@cloud Factory/product Service** | 3001 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/kafka`, `@cloud-factory/tracing` |
+| **@cloud Factory/provisioning Service** | 3004 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/idempotency`, `@cloud-factory/kafka`, `@cloud-factory/tracing` |
+| **@cloud Factory/reporting Service** | 3008 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/idempotency`, `@cloud-factory/kafka`, `@cloud-factory/resilience`, `@cloud-factory/tracing` |
+| **@cloud Factory/support Service** | 3007 | `@cloud-factory/api-contracts`, `@cloud-factory/auth-guard`, `@cloud-factory/cache`, `@cloud-factory/common`, `@cloud-factory/idempotency`, `@cloud-factory/kafka`, `@cloud-factory/tracing` |
+
+## Shared Packages
+
+| Package | Used By |
+|---------|--------|
+| **@cloud-factory/api-contracts** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/notification-service`, `@cloud-factory/order-service`, `@cloud-factory/product-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service`, `@cloud-factory/admin-platform`, `@cloud-factory/customer-portal` |
+| **@cloud-factory/auth-guard** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/notification-service`, `@cloud-factory/order-service`, `@cloud-factory/product-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service`, `@cloud-factory/common` |
+| **@cloud-factory/cache** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/notification-service`, `@cloud-factory/order-service`, `@cloud-factory/product-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service`, `@cloud-factory/common` |
+| **@cloud-factory/common** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/notification-service`, `@cloud-factory/order-service`, `@cloud-factory/product-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service`, `@cloud-factory/kafka`, `@cloud-factory/admin-platform`, `@cloud-factory/customer-portal` |
+| **@cloud-factory/idempotency** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/order-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service` |
+| **@cloud-factory/kafka** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/notification-service`, `@cloud-factory/order-service`, `@cloud-factory/product-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service` |
+| **@cloud-factory/resilience** | `@cloud-factory/billing-integration`, `@cloud-factory/reporting-service`, `@cloud-factory/cache`, `@cloud-factory/common` |
+| **@cloud-factory/tracing** | `@cloud-factory/billing-integration`, `@cloud-factory/identity-service`, `@cloud-factory/notification-service`, `@cloud-factory/order-service`, `@cloud-factory/product-service`, `@cloud-factory/provisioning-service`, `@cloud-factory/reporting-service`, `@cloud-factory/support-service`, `@cloud-factory/kafka` |
+| **@cloud-factory/ui** | `@cloud-factory/admin-platform`, `@cloud-factory/customer-portal`, `gridddd` |
+| **@cloud-factory/vault** | `@cloud-factory/notification-service`, `@cloud-factory/common` |
+
+## Frontend Applications
+
+| Application | Internal Dependencies |
+|-------------|-----------------------|
+| **@cloud Factory/admin Platform** | `@cloud-factory/api-contracts`, `@cloud-factory/common`, `@cloud-factory/ui` |
+| **@cloud Factory/customer Portal** | `@cloud-factory/api-contracts`, `@cloud-factory/common`, `@cloud-factory/ui` |
+| **Gridddd** | `@cloud-factory/ui` |
+

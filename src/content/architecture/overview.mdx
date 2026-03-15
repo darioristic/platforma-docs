@@ -1,0 +1,75 @@
+---
+title: "Architecture Overview"
+description: "High-level architecture of the PLATFORMA platform"
+section: "architecture"
+order: 1
+---
+
+# Architecture Overview
+
+PLATFORMA is designed as a modular, event-driven platform with clear separation between business logic, infrastructure orchestration, and presentation layers.
+
+## Design Principles
+
+- **Multi-tenant by default** — Every component is designed for tenant isolation from the ground up
+- **Event-driven** — All state changes propagate through the event bus, enabling loose coupling
+- **API-first** — Every capability is accessible through the REST API before any UI is built
+- **Infrastructure-agnostic** — Supports OpenStack, Kubernetes, bare metal, and hybrid deployments
+- **Horizontally scalable** — Stateless services that scale independently
+
+## Platform Architecture
+
+The platform is organized into four primary layers:
+
+### 1. Presentation Layer
+Customer portals, admin dashboards, and partner interfaces. All UIs communicate exclusively through the API layer — there is no direct database access from the frontend.
+
+### 2. API Layer
+The REST API gateway handles authentication, rate limiting, request routing, and response formatting. It serves as the single entry point for all external interactions.
+
+### 3. Business Logic Layer
+Core domain services that implement order management, billing, product catalog, identity management, and provisioning workflows. Services communicate through the event bus.
+
+### 4. Infrastructure Layer
+Drivers and adapters for cloud providers (OpenStack, Kubernetes), monitoring systems, and external integrations. This layer abstracts provider-specific APIs behind a unified interface.
+
+## Service Architecture
+
+Each domain is implemented as an independent service:
+
+| Service | Responsibility |
+|---------|---------------|
+| **Order Service** | Order lifecycle, validation, fulfillment tracking |
+| **Catalog Service** | Product definitions, pricing rules, availability |
+| **Billing Service** | Usage metering, invoice generation, payment processing |
+| **Provisioning Service** | Workflow execution, resource lifecycle management |
+| **Identity Service** | Authentication, authorization, tenant management |
+| **Gateway Service** | API routing, rate limiting, analytics |
+| **Notification Service** | Email, webhook, and in-app notifications |
+| **Monitoring Service** | Metrics collection, alerting, dashboards |
+
+## Data Flow
+
+A typical order flow:
+
+1. Customer places order through Portal → **API Gateway**
+2. Gateway authenticates and routes to → **Order Service**
+3. Order Service validates and publishes `order.created` → **Event Bus**
+4. Provisioning Service picks up event → executes workflow → provisions resources
+5. Provisioning publishes `order.provisioned` → **Event Bus**
+6. Billing Service creates subscription, Notification Service sends email
+
+<CardGrid cols={2}>
+  <Card title="Platform Layers" href="/architecture/platform-layers" icon="Layers">
+    Deep dive into each architecture layer
+  </Card>
+  <Card title="Event Bus" href="/architecture/event-bus" icon="Zap">
+    How events flow through the system
+  </Card>
+  <Card title="Data Model" href="/architecture/data-model" icon="Database">
+    Core entities and relationships
+  </Card>
+  <Card title="Security Model" href="/architecture/security-model" icon="Shield">
+    Authentication, authorization, and encryption
+  </Card>
+</CardGrid>

@@ -1,0 +1,63 @@
+---
+title: "Networks"
+description: "Manage virtual networks"
+section: "api-reference"
+order: 3
+method: "GET"
+endpoint: "/v1/infrastructure/networks"
+---
+
+# Networks
+
+<ApiEndpoint method="GET" path="/v1/infrastructure/networks" auth="Bearer token">
+  List all virtual networks.
+</ApiEndpoint>
+
+## Query Parameters
+
+<ParamTable>
+  <Param name="cluster_id" type="string">
+    Filter by cluster.
+  </Param>
+  <Param name="type" type="string">
+    Filter by type: `private`, `public`, `management`.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "data": [
+    {
+      "id": "net_abc123",
+      "name": "production-network",
+      "cluster_id": "cls_eu01",
+      "type": "private",
+      "cidr": "10.0.0.0/16",
+      "gateway": "10.0.0.1",
+      "dns_servers": ["10.0.0.2", "10.0.0.3"],
+      "subnets": [
+        {
+          "id": "subnet_001",
+          "name": "web-tier",
+          "cidr": "10.0.1.0/24",
+          "available_ips": 230
+        },
+        {
+          "id": "subnet_002",
+          "name": "data-tier",
+          "cidr": "10.0.2.0/24",
+          "available_ips": 251
+        }
+      ],
+      "status": "active",
+      "created_at": "2025-12-01T00:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 8,
+    "has_more": false
+  }
+}`}
+</ResponseExample>

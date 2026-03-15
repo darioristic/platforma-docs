@@ -1,0 +1,196 @@
+---
+title: "Reporting Service Data Model"
+description: "Database schema for reporting-service (schema: reporting)"
+section: "models"
+auto_generated: true
+last_synced: "2026-03-15T15:39:29.769Z"
+---
+
+# Reporting Service Data Model
+
+<Callout type="info">
+Auto-generated from TypeORM entity definitions. Last synced: 2026-03-15
+</Callout>
+
+**Database schema:** `reporting`
+
+## CustomerHealthScore
+
+**Table:** `customer_health_scores`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `customerId` | `uuid` | No | - | - | - |
+| `score` | `int` | No | - | - | 50 |
+| `factors` | `jsonb` | No | - | - | - |
+| `riskLevel` | `varchar` | No | - | - | - |
+| `computedAt` | `timestamptz` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+---
+
+## FocusCostRecord
+
+**Table:** `focus_cost_records`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `billingAccountId` | `uuid` | No | - | - | - |
+| `billingPeriodStart` | `timestamptz` | No | - | - | - |
+| `billingPeriodEnd` | `timestamptz` | No | - | - | - |
+| `chargeCategory` | `varchar` | No | - | - | - |
+| `chargeClass` | `varchar` | Yes | - | - | - |
+| `consumedQuantity` | `decimal` | No | - | - | 0 |
+| `consumedUnit` | `varchar` | No | - | - | - |
+| `contractedCost` | `decimal` | No | - | - | 0 |
+| `contractedUnitPrice` | `decimal` | No | - | - | 0 |
+| `effectiveCost` | `decimal` | No | - | - | 0 |
+| `listCost` | `decimal` | No | - | - | 0 |
+| `listUnitPrice` | `decimal` | No | - | - | 0 |
+| `pricingCategory` | `varchar` | No | - | - | - |
+| `provider` | `varchar` | No | - | - | - |
+| `regionId` | `varchar` | No | - | - | - |
+| `availabilityZone` | `varchar` | Yes | - | - | - |
+| `resourceId` | `varchar` | No | - | - | - |
+| `resourceName` | `varchar` | No | - | - | - |
+| `resourceType` | `varchar` | No | - | - | - |
+| `serviceCategory` | `varchar` | No | - | - | - |
+| `serviceName` | `varchar` | No | - | - | - |
+| `skuId` | `varchar` | No | - | - | - |
+| `subAccountId` | `varchar` | No | - | - | - |
+| `subAccountName` | `varchar` | No | - | - | - |
+| `tags` | `jsonb` | No | - | - | - |
+| `usageQuantity` | `decimal` | No | - | - | 0 |
+| `usageUnit` | `varchar` | No | - | - | - |
+| `invoiceId` | `uuid` | Yes | - | - | - |
+| `orderId` | `uuid` | Yes | - | - | - |
+| `subscriptionId` | `uuid` | Yes | - | - | - |
+| `sourceEventId` | `varchar` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+
+---
+
+## ProvisioningSummary
+
+**Table:** `provisioning_summaries`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `period` | `varchar` | No | - | - | - |
+| `periodStart` | `timestamptz` | No | - | - | - |
+| `periodEnd` | `timestamptz` | No | - | - | - |
+| `totalRequests` | `int` | No | - | - | 0 |
+| `completedRequests` | `int` | No | - | - | 0 |
+| `failedRequests` | `int` | No | - | - | 0 |
+| `averageTimeMinutes` | `decimal` | No | - | - | 0 |
+| `successRate` | `decimal` | No | - | - | 0 |
+| `slaComplianceRate` | `decimal` | No | - | - | 0 |
+| `byResourceType` | `jsonb` | No | - | - | - |
+| `computedAt` | `timestamptz` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+---
+
+## ReportDefinition
+
+**Table:** `report_definitions`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `name` | `varchar` | No | - | - | - |
+| `reportType` | `varchar` | No | - | - | - |
+| `format` | `varchar` | No | - | - | - |
+| `frequency` | `varchar` | No | - | - | - |
+| `parameters` | `jsonb` | No | - | - | - |
+| `recipients` | `jsonb` | No | - | - | [] |
+| `enabled` | `boolean` | No | - | - | true |
+| `lastRunAt` | `timestamptz` | Yes | - | - | - |
+| `nextRunAt` | `timestamptz` | Yes | - | - | - |
+| `createdBy` | `varchar` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+---
+
+## ReportExecution
+
+**Table:** `report_executions`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `reportDefinitionId` | `uuid` | Yes | - | - | - |
+| `reportType` | `varchar` | No | - | - | - |
+| `format` | `varchar` | No | - | - | - |
+| `parameters` | `jsonb` | No | - | - | - |
+| `status` | `varchar` | No | - | - | PENDING |
+| `filePath` | `varchar` | Yes | - | - | - |
+| `fileSize` | `bigint` | Yes | - | - | - |
+| `error` | `varchar` | Yes | - | - | - |
+| `completedAt` | `timestamptz` | Yes | - | - | - |
+| `triggeredBy` | `varchar` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+---
+
+## RevenueSummary
+
+**Table:** `revenue_summaries`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `period` | `varchar` | No | - | - | - |
+| `periodStart` | `timestamptz` | No | - | - | - |
+| `periodEnd` | `timestamptz` | No | - | - | - |
+| `mrr` | `decimal` | No | - | - | 0 |
+| `arr` | `decimal` | No | - | - | 0 |
+| `newMrr` | `decimal` | No | - | - | 0 |
+| `expansionMrr` | `decimal` | No | - | - | 0 |
+| `contractionMrr` | `decimal` | No | - | - | 0 |
+| `churnedMrr` | `decimal` | No | - | - | 0 |
+| `totalRevenue` | `decimal` | No | - | - | 0 |
+| `revenueByProduct` | `jsonb` | No | - | - | - |
+| `revenueBySegment` | `jsonb` | No | - | - | - |
+| `activeSubscriptions` | `int` | No | - | - | 0 |
+| `newSubscriptions` | `int` | No | - | - | 0 |
+| `cancelledSubscriptions` | `int` | No | - | - | 0 |
+| `churnRate` | `decimal` | No | - | - | 0 |
+| `currency` | `varchar` | No | - | - | EUR |
+| `computedAt` | `timestamptz` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+---
+
+## UsageFact
+
+**Table:** `usage_facts`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `domain` | `varchar` | No | - | - | - |
+| `eventType` | `varchar` | No | - | - | - |
+| `sourceEventId` | `varchar` | No | - | - | - |
+| `correlationId` | `varchar` | Yes | - | - | - |
+| `payload` | `jsonb` | No | - | - | - |
+| `eventTimestamp` | `timestamptz` | No | - | - | - |
+| `receivedAt` | `Date` | No | - | - | - |
+
+---
+

@@ -1,0 +1,86 @@
+---
+title: "Clusters"
+description: "Manage infrastructure clusters"
+section: "api-reference"
+order: 1
+method: "GET"
+endpoint: "/v1/infrastructure/clusters"
+---
+
+# Clusters
+
+<ApiEndpoint method="GET" path="/v1/infrastructure/clusters" auth="Bearer token">
+  List all infrastructure clusters.
+</ApiEndpoint>
+
+## Query Parameters
+
+<ParamTable>
+  <Param name="region" type="string">
+    Filter by region (e.g., `eu-west-1`, `us-east-1`).
+  </Param>
+  <Param name="type" type="string">
+    Filter by type: `kubernetes`, `openstack`, `bare_metal`.
+  </Param>
+  <Param name="status" type="string">
+    Filter by status: `active`, `provisioning`, `maintenance`, `degraded`.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "data": [
+    {
+      "id": "cls_eu01",
+      "name": "EU West Production",
+      "type": "kubernetes",
+      "region": "eu-west-1",
+      "status": "active",
+      "version": "1.29.2",
+      "node_count": 12,
+      "capacity": {
+        "cpu_cores": 192,
+        "memory_gb": 768,
+        "storage_tb": 48,
+        "cpu_used_percent": 62,
+        "memory_used_percent": 71
+      },
+      "created_at": "2025-06-15T00:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 4,
+    "has_more": false
+  }
+}`}
+</ResponseExample>
+
+## Create Cluster
+
+<ApiEndpoint method="POST" path="/v1/infrastructure/clusters" auth="Bearer token">
+  Provision a new infrastructure cluster.
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    Human-readable cluster name.
+  </Param>
+  <Param name="type" type="string" required>
+    Cluster type: `kubernetes`, `openstack`, `bare_metal`.
+  </Param>
+  <Param name="region" type="string" required>
+    Target region.
+  </Param>
+  <Param name="node_count" type="integer" required>
+    Initial number of worker nodes.
+  </Param>
+  <Param name="node_size" type="string" required>
+    Node specification: `small`, `medium`, `large`, `xlarge`.
+  </Param>
+</ParamTable>
+
+<Callout type="warning">
+Cluster provisioning typically takes 5-15 minutes. Use webhooks or poll the cluster status endpoint to track progress.
+</Callout>

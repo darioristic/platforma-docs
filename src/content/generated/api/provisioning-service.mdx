@@ -1,0 +1,1242 @@
+---
+title: "Provisioning Service API"
+description: "Auto-generated API reference for provisioning-service"
+section: "api"
+service: "provisioning-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Provisioning Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 68
+
+---
+
+## Provisioning Analytics
+
+### Get provisioning analytics and metrics
+
+<ApiEndpoint method="GET" path="/provisioning/analytics" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+## Approvals
+
+### GET /approvals/pending
+
+<ApiEndpoint method="GET" path="/approvals/pending">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="limit" type="string">
+    query parameter
+  </Param>
+  <Param name="offset" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### GET /approvals/request/:provisioningRequestId
+
+<ApiEndpoint method="GET" path="/approvals/request/:provisioningRequestId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="provisioningRequestId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### POST /approvals/:provisioningRequestId/approve
+
+<ApiEndpoint method="POST" path="/approvals/:provisioningRequestId/approve">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="provisioningRequestId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `adminId: string; comment?: string;`
+
+<ParamTable>
+  <Param name="adminId" type="string" required>
+    —
+  </Param>
+  <Param name="comment" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### POST /approvals/:provisioningRequestId/reject
+
+<ApiEndpoint method="POST" path="/approvals/:provisioningRequestId/reject">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="provisioningRequestId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `adminId: string; comment?: string;`
+
+<ParamTable>
+  <Param name="adminId" type="string" required>
+    —
+  </Param>
+  <Param name="comment" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### GET /approvals/rules
+
+<ApiEndpoint method="GET" path="/approvals/rules">
+</ApiEndpoint>
+
+---
+
+### POST /approvals/rules
+
+<ApiEndpoint method="POST" path="/approvals/rules">
+</ApiEndpoint>
+
+**Request Body:** `name: string; description?: string; condition: ApprovalCondition; tenantId?: string; priority?: number;`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="condition" type="ApprovalCondition" required>
+    —
+  </Param>
+  <Param name="tenantId" type="string">
+    —
+  </Param>
+  <Param name="priority" type="number">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### PATCH /approvals/rules/:id
+
+<ApiEndpoint method="PATCH" path="/approvals/rules/:id">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `Partial name: string; description: string; condition: ApprovalCondition; tenantId: string; status: ApprovalRuleStatus; priority: number;`
+
+<ParamTable>
+  <Param name="name" type="string">
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="condition" type="ApprovalCondition">
+    —
+  </Param>
+  <Param name="tenantId" type="string">
+    —
+  </Param>
+  <Param name="status" type="ApprovalRuleStatus">
+    —
+  </Param>
+  <Param name="priority" type="number">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### DELETE /approvals/rules/:id
+
+<ApiEndpoint method="DELETE" path="/approvals/rules/:id">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Clusters
+
+### List all infrastructure clusters
+
+<ApiEndpoint method="GET" path="/clusters" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="type" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get cluster by ID
+
+<ApiEndpoint method="GET" path="/clusters/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Register a new infrastructure cluster
+
+<ApiEndpoint method="POST" path="/clusters" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateClusterDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="type" type="ClusterType" required>
+    —
+  </Param>
+  <Param name="region" type="string" required>
+    —
+  </Param>
+  <Param name="authUrl" type="string">
+    —
+  </Param>
+  <Param name="apiUrl" type="string">
+    —
+  </Param>
+  <Param name="projectName" type="string">
+    —
+  </Param>
+  <Param name="domainName" type="string">
+    —
+  </Param>
+  <Param name="credentialsRef" type="string">
+    —
+  </Param>
+  <Param name="supportedResourceTypes" type="string[]">
+    —
+  </Param>
+  <Param name="isDefault" type="boolean">
+    —
+  </Param>
+  <Param name="provisioningEnabled" type="boolean">
+    —
+  </Param>
+  <Param name="capacity" type="Recordstring, number">
+    —
+  </Param>
+  <Param name="metadata" type="Recordstring, unknown">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Update cluster configuration
+
+<ApiEndpoint method="PATCH" path="/clusters/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateClusterDto`
+
+<ParamTable>
+  <Param name="name" type="string">
+    —
+  </Param>
+  <Param name="region" type="string">
+    —
+  </Param>
+  <Param name="authUrl" type="string">
+    —
+  </Param>
+  <Param name="apiUrl" type="string">
+    —
+  </Param>
+  <Param name="projectName" type="string">
+    —
+  </Param>
+  <Param name="domainName" type="string">
+    —
+  </Param>
+  <Param name="credentialsRef" type="string">
+    —
+  </Param>
+  <Param name="supportedResourceTypes" type="string[]">
+    —
+  </Param>
+  <Param name="isDefault" type="boolean">
+    —
+  </Param>
+  <Param name="provisioningEnabled" type="boolean">
+    —
+  </Param>
+  <Param name="capacity" type="Recordstring, number">
+    —
+  </Param>
+  <Param name="metadata" type="Recordstring, unknown">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Remove a cluster
+
+<ApiEndpoint method="DELETE" path="/clusters/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Test connection to cluster infrastructure
+
+<ApiEndpoint method="POST" path="/clusters/:id/test-connection" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## DNS
+
+### List DNS zones for the current tenant
+
+<ApiEndpoint method="GET" path="/dns/zones">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Create a new DNS zone
+
+<ApiEndpoint method="POST" path="/dns/zones">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `CreateZoneDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="type" type="DnsZoneType">
+    —
+  </Param>
+  <Param name="dnssecEnabled" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Get DNS zone details
+
+<ApiEndpoint method="GET" path="/dns/zones/:zoneId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update DNS zone settings
+
+<ApiEndpoint method="PATCH" path="/dns/zones/:zoneId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateZoneDto`
+
+<ParamTable>
+  <Param name="dnssecEnabled" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a DNS zone and all its records
+
+<ApiEndpoint method="DELETE" path="/dns/zones/:zoneId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Verify NS delegation for the zone
+
+<ApiEndpoint method="POST" path="/dns/zones/:zoneId/verify">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Export zone in BIND format
+
+<ApiEndpoint method="GET" path="/dns/zones/:zoneId/export">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### List records in a DNS zone
+
+<ApiEndpoint method="GET" path="/dns/zones/:zoneId/records">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+  <Param name="type" type="DnsRecordType">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Create a DNS record
+
+<ApiEndpoint method="POST" path="/dns/zones/:zoneId/records">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `CreateRecordDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="type" type="DnsRecordType" required>
+    —
+  </Param>
+  <Param name="content" type="string" required>
+    —
+  </Param>
+  <Param name="ttl" type="number">
+    —
+  </Param>
+  <Param name="priority" type="number">
+    —
+  </Param>
+  <Param name="disabled" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Bulk create/update/delete records
+
+<ApiEndpoint method="POST" path="/dns/zones/:zoneId/records/bulk">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `BulkRecordsDto`
+
+<ParamTable>
+  <Param name="operations" type="BulkRecordOperation[]" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Get a specific DNS record
+
+<ApiEndpoint method="GET" path="/dns/zones/:zoneId/records/:recordId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+  <Param name="recordId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update a DNS record
+
+<ApiEndpoint method="PATCH" path="/dns/zones/:zoneId/records/:recordId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+  <Param name="recordId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateRecordDto`
+
+<ParamTable>
+  <Param name="content" type="string">
+    —
+  </Param>
+  <Param name="ttl" type="number">
+    —
+  </Param>
+  <Param name="priority" type="number">
+    —
+  </Param>
+  <Param name="disabled" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a DNS record
+
+<ApiEndpoint method="DELETE" path="/dns/zones/:zoneId/records/:recordId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="zoneId" type="string" required>
+    path parameter
+  </Param>
+  <Param name="recordId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Set reverse DNS (PTR) for an IP
+
+<ApiEndpoint method="POST" path="/dns/rdns">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `ip: string; hostname: string;`
+
+<ParamTable>
+  <Param name="ip" type="string" required>
+    —
+  </Param>
+  <Param name="hostname" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Get reverse DNS for an IP
+
+<ApiEndpoint method="GET" path="/dns/rdns/:ip">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="ip" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Remove reverse DNS for an IP
+
+<ApiEndpoint method="DELETE" path="/dns/rdns/:ip">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    query parameter
+  </Param>
+  <Param name="ip" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### List all DNS zones across tenants (admin)
+
+<ApiEndpoint method="GET" path="/dns/admin/zones">
+</ApiEndpoint>
+
+---
+
+### Get DNS statistics (admin)
+
+<ApiEndpoint method="GET" path="/dns/admin/stats">
+</ApiEndpoint>
+
+---
+
+### List zone templates (admin)
+
+<ApiEndpoint method="GET" path="/dns/admin/templates">
+</ApiEndpoint>
+
+---
+
+### Create a zone template (admin)
+
+<ApiEndpoint method="POST" path="/dns/admin/templates">
+</ApiEndpoint>
+
+**Request Body:** `name: string; description: string; records:  name: string; type: string; content: string; ttl: number; priority?: number; [];`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="description" type="string" required>
+    —
+  </Param>
+  <Param name="records" type="name: string; type: string; content: string; ttl: number; priority?: number; []" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a zone template (admin)
+
+<ApiEndpoint method="DELETE" path="/dns/admin/templates/:templateId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="templateId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Provisioning
+
+### Create a new provisioning request
+
+<ApiEndpoint method="POST" path="/provisioning/requests" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateProvisioningRequestDto`
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    —
+  </Param>
+  <Param name="orderId" type="string" required>
+    —
+  </Param>
+  <Param name="orderItemId" type="string" required>
+    —
+  </Param>
+  <Param name="resourceType" type="ResourceType" required>
+    —
+  </Param>
+  <Param name="specification" type="ResourceSpecificationDto" required>
+    —
+  </Param>
+  <Param name="metadata" type="Recordstring, unknown">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Get provisioning statistics (counts by status and resource type)
+
+<ApiEndpoint method="GET" path="/provisioning/stats" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get provisioning worker status (admin)
+
+<ApiEndpoint method="GET" path="/provisioning/worker-status" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Check health of all registered cloud providers
+
+<ApiEndpoint method="GET" path="/provisioning/providers/health" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### List active service instances
+
+<ApiEndpoint method="GET" path="/provisioning/instances" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="status" type="string" required>
+    query parameter
+  </Param>
+  <Param name="limit" type="string">
+    query parameter
+  </Param>
+  <Param name="offset" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### List all provisioning requests (paginated)
+
+<ApiEndpoint method="GET" path="/provisioning/requests" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="limit" type="string">
+    query parameter
+  </Param>
+  <Param name="offset" type="string">
+    query parameter
+  </Param>
+  <Param name="clusterId" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get real-time metrics for a service
+
+<ApiEndpoint method="GET" path="/provisioning/requests/:id/metrics" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get audit trail for a provisioning request
+
+<ApiEndpoint method="GET" path="/provisioning/requests/:id/audit" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get a provisioning request by ID
+
+<ApiEndpoint method="GET" path="/provisioning/requests/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get provisioning requests by order ID
+
+<ApiEndpoint method="GET" path="/provisioning/requests/order/:orderId" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="orderId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Start provisioning a request
+
+<ApiEndpoint method="POST" path="/provisioning/requests/:id/start" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Advance to the next step
+
+<ApiEndpoint method="POST" path="/provisioning/requests/:id/advance" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `AdvanceStepDto`
+
+<ParamTable>
+  <Param name="output" type="Recordstring, unknown">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Mark request as failed
+
+<ApiEndpoint method="POST" path="/provisioning/requests/:id/fail" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `FailRequestDto`
+
+<ParamTable>
+  <Param name="code" type="string" required>
+    —
+  </Param>
+  <Param name="message" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Suspend (stop) a service
+
+<ApiEndpoint method="POST" path="/provisioning/requests/:id/suspend" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Reactivate (restart) a suspended service
+
+<ApiEndpoint method="POST" path="/provisioning/requests/:id/reactivate" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Complete a manual provisioning request with admin-provided access details
+
+<ApiEndpoint method="PATCH" path="/provisioning/requests/:id/manual-complete" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `ManualCompleteDto`
+
+<ParamTable>
+  <Param name="ipAddress" type="string">
+    —
+  </Param>
+  <Param name="hostname" type="string">
+    —
+  </Param>
+  <Param name="credentials" type="Recordstring, string">
+    —
+  </Param>
+  <Param name="endpoints" type="Recordstring, string">
+    —
+  </Param>
+  <Param name="notes" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Retry a failed provisioning request
+
+<ApiEndpoint method="POST" path="/provisioning/requests/:id/retry" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Delete (deprovision) a service
+
+<ApiEndpoint method="DELETE" path="/provisioning/requests/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Quotas
+
+### GET /quotas
+
+<ApiEndpoint method="GET" path="/quotas">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### GET /quotas/:id
+
+<ApiEndpoint method="GET" path="/quotas/:id">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### PUT /quotas/:tenantId/:resourceType
+
+<ApiEndpoint method="PUT" path="/quotas/:tenantId/:resourceType">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    path parameter
+  </Param>
+  <Param name="resourceType" type="ResourceType" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `limits: QuotaLimits;`
+
+<ParamTable>
+  <Param name="limits" type="QuotaLimits" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### DELETE /quotas/:id
+
+<ApiEndpoint method="DELETE" path="/quotas/:id">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### GET /quotas/usage/:tenantId
+
+<ApiEndpoint method="GET" path="/quotas/usage/:tenantId">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Webhooks
+
+### Register a new webhook
+
+<ApiEndpoint method="POST" path="/webhooks" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateWebhookDto`
+
+<ParamTable>
+  <Param name="url" type="string" required>
+    —
+  </Param>
+  <Param name="events" type="ProvisioningEventType[]" required>
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="headers" type="Recordstring, string">
+    —
+  </Param>
+  <Param name="metadata" type="Recordstring, unknown">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List all webhooks for tenant
+
+<ApiEndpoint method="GET" path="/webhooks" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get webhook details
+
+<ApiEndpoint method="GET" path="/webhooks/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update webhook (optionally rotate secret)
+
+<ApiEndpoint method="PATCH" path="/webhooks/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateWebhookDto`
+
+<ParamTable>
+  <Param name="active" type="boolean">
+    —
+  </Param>
+  <Param name="rotateSecret" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a webhook
+
+<ApiEndpoint method="DELETE" path="/webhooks/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Send a test delivery to this webhook
+
+<ApiEndpoint method="POST" path="/webhooks/:id/test" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### List delivery history for a webhook
+
+<ApiEndpoint method="GET" path="/webhooks/:id/deliveries" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+  <Param name="query" type="QueryDeliveriesDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+

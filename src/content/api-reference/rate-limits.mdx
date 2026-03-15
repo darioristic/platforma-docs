@@ -1,0 +1,60 @@
+---
+title: "Rate Limits"
+description: "API rate limiting policies and best practices"
+section: "api-reference"
+order: 3
+---
+
+# Rate Limits
+
+PLATFORMA enforces rate limits to ensure fair usage and platform stability. Limits vary by authentication method and endpoint category.
+
+## Default Limits
+
+| Authentication | Requests/Minute | Burst |
+|---------------|----------------|-------|
+| Test API Keys | 100 | 20 |
+| Live API Keys | 1,000 | 200 |
+| OAuth Tokens | 500 | 100 |
+| Admin Tokens | 2,000 | 400 |
+
+## Rate Limit Headers
+
+Every API response includes rate limit information:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 987
+X-RateLimit-Reset: 1710500400
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests per window |
+| `X-RateLimit-Remaining` | Remaining requests in current window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+
+## Rate Limit Exceeded
+
+When you exceed the rate limit, you'll receive a `429 Too Many Requests` response:
+
+<ResponseExample status={429}>
+{`{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Too many requests. Please retry after 32 seconds.",
+    "retry_after": 32
+  }
+}`}
+</ResponseExample>
+
+## Best Practices
+
+<Callout type="tip">
+Implement exponential backoff with jitter when you receive 429 responses. Start with 1 second and double on each retry, up to a maximum of 60 seconds.
+</Callout>
+
+- **Cache responses** where possible to reduce API calls
+- **Use webhooks** instead of polling for status changes
+- **Batch requests** using bulk endpoints when available
+- **Monitor usage** via the `X-RateLimit-Remaining` header

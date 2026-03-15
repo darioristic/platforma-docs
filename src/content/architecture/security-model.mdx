@@ -1,0 +1,106 @@
+---
+title: "Security Model"
+description: "Authentication, authorization, encryption, and security practices"
+section: "architecture"
+order: 6
+---
+
+# Security Model
+
+Security is built into every layer of PLATFORMA. This document covers the authentication, authorization, encryption, and operational security practices.
+
+## Authentication
+
+### API Keys
+- Keys are hashed (bcrypt) before storage — plaintext is never stored
+- Key prefixes (`pk_live_`, `pk_test_`) allow identification without exposing the key
+- Keys can be scoped to specific operations and have configurable expiration
+
+### OAuth 2.0 / OIDC
+- Authorization Code flow with PKCE for web applications
+- Client Credentials flow for service-to-service communication
+- JWT tokens with short expiration (1 hour) and refresh token rotation
+
+### SSO Integration
+- SAML 2.0 and OpenID Connect support
+- Automatic user provisioning from identity providers
+- Group-to-role mapping for automated access management
+
+## Authorization
+
+PLATFORMA uses a hybrid RBAC + ABAC (Attribute-Based Access Control) model:
+
+### Role-Based Access Control
+Built-in roles provide baseline permissions:
+
+| Role | Capabilities |
+|------|-------------|
+| `admin` | Full access to all resources and settings |
+| `operator` | Manage infrastructure, view billing |
+| `developer` | Manage orders and resources, no billing access |
+| `viewer` | Read-only access to all resources |
+| `billing` | Manage billing and invoices only |
+
+### Resource-Level Policies
+Fine-grained policies can restrict access by:
+
+- **Resource type** — e.g., only access to Kubernetes clusters
+- **Resource attributes** — e.g., only clusters in `eu-west-1`
+- **Time** — e.g., maintenance windows only
+- **Network** — e.g., internal IP ranges only
+
+```json
+{
+  "effect": "allow",
+  "actions": ["infrastructure:manage"],
+  "resources": ["cluster:cls_eu*"],
+  "conditions": {
+    "ip_range": ["10.0.0.0/8"],
+    "time_window": { "start": "06:00", "end": "22:00", "timezone": "Europe/Berlin" }
+  }
+}
+```
+
+## Encryption
+
+### Data at Rest
+- All databases encrypted with AES-256
+- Object storage encrypted with per-tenant keys
+- Secrets managed through HashiCorp Vault
+
+### Data in Transit
+- TLS 1.3 for all external connections
+- mTLS for internal service-to-service communication
+- Certificate rotation via automatic ACME (Let's Encrypt)
+
+### Key Management
+- Tenant encryption keys stored in Vault with automatic rotation
+- API keys hashed with bcrypt (cost factor 12)
+- Passwords never stored — only hashes via Argon2id
+
+## Audit Logging
+
+Every API request and administrative action is logged:
+
+```json
+{
+  "timestamp": "2026-03-15T10:00:00Z",
+  "tenant_id": "ten_xyz789",
+  "user_id": "usr_abc123",
+  "action": "infrastructure.clusters.create",
+  "resource": "cls_eu01",
+  "result": "success",
+  "ip_address": "203.0.113.42",
+  "user_agent": "platforma-sdk/1.0"
+}
+```
+
+Audit logs are:
+- Immutable — written to append-only storage
+- Retained for a minimum of 2 years
+- Searchable via the Audit API
+- Exportable for compliance reporting
+
+<Callout type="info">
+PLATFORMA is designed to be compliant with SOC 2 Type II, ISO 27001, and GDPR. Contact your account manager for compliance documentation.
+</Callout>

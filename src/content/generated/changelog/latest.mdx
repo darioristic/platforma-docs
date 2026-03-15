@@ -1,0 +1,132 @@
+---
+title: "Changelog"
+description: "Recent changes and updates to the platform"
+section: "changelog"
+auto_generated: true
+last_synced: "2026-03-15T15:39:32.115Z"
+---
+
+# Changelog
+
+<Callout type="info">
+Auto-generated from git commit history. Last synced: 2026-03-15
+</Callout>
+
+**Total commits:** 101
+
+## Features
+
+- <Badge variant="POST">feat</Badge> add DNS management with PowerDNS provider, zones, records, and rDNS (product-service, provisioning-service) — `bead8eea` 2026-03-15
+- <Badge variant="POST">feat</Badge> add reporting analytics UI to admin platform — `5785e47d` 2026-03-15
+- <Badge variant="POST">feat</Badge> add reporting-service to admin monitoring page — `39090aec` 2026-03-15
+- <Badge variant="POST">feat</Badge> add reporting-service with FOCUS 1.0 cost/usage reporting (reporting-service) — `79353789` 2026-03-15
+- <Badge variant="POST">feat</Badge> **public-web**: add Rybbit analytics tracking script — `665e9233` 2026-03-13
+- <Badge variant="POST">feat</Badge> **admin-platform**: add suspend/reactivate/start/retry to machines page — `ae3cc6fe` 2026-03-13
+- <Badge variant="POST">feat</Badge> **admin-platform**: add dedicated cluster machines page with delete — `20f385db` 2026-03-13
+- <Badge variant="POST">feat</Badge> **admin**: add "View Machines" to cluster detail panel (provisioning-service) — `046f643c` 2026-03-13
+- <Badge variant="POST">feat</Badge> **admin-platform**: add logs page (force add due to gitignore) — `f2f45988` 2026-03-11
+- <Badge variant="POST">feat</Badge> **admin-platform**: add logs page and fix dashboard link — `e00abf7e` 2026-03-11
+- <Badge variant="POST">feat</Badge> provisioning architecture phases 2-6 + webhooks (billing-integration, identity-service, notification-service, order-service, provisioning-service, support-service) — `7b4e4674` 2026-03-11
+- <Badge variant="POST">feat</Badge> add provisioningEnabled toggle to clusters (provisioning-service) — `e7502f65` 2026-03-11
+- <Badge variant="POST">feat</Badge> Sentry frontend integration, i18n admin-platform, analytics endpoints, Grafana dashboards (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `00eebe05` 2026-03-11
+- <Badge variant="POST">feat</Badge> OpenShift seed support — parameterized URLs, oc exec DB access, Kafka topic fix — `654ea39c` 2026-03-10
+- <Badge variant="POST">feat</Badge> admin UI overhaul, support ticket comments, customer filtering, tenant guard improvements (identity-service, order-service, support-service) — `2e29fb1b` 2026-03-10
+- <Badge variant="POST">feat</Badge> API module — RFC 7807 errors, per-tenant rate limiting, partner OAuth2, gateway validation (identity-service) — `8c6854ee` 2026-03-10
+- <Badge variant="POST">feat</Badge> selective builds — only build services with actual code changes — `97256e7e` 2026-03-10
+- <Badge variant="POST">feat</Badge> lightweight Tekton triggers — use oc start-build instead of PipelineRuns — `da3f0602` 2026-03-10
+- <Badge variant="POST">feat</Badge> dashboard service health warnings + products UI improvements — `a7144e50` 2026-03-10
+- <Badge variant="POST">feat</Badge> admin platform improvements — auth BFF, error boundary, middleware — `a821efec` 2026-03-10
+- <Badge variant="POST">feat</Badge> admin platform UX improvements — sheets, command search, bulk actions — `991c742e` 2026-03-08
+- <Badge variant="POST">feat</Badge> admin platform UI enhancements, gitignore AI tools, motion components — `03de2d43` 2026-03-08
+- <Badge variant="POST">feat</Badge> add evlog module, admin settings, seed API, UI lucide-react fix (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `d165aac2` 2026-03-08
+- <Badge variant="POST">feat</Badge> Sprint 12 — provisioning enhancements, extended tests, notification handlers, UI fixes (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `fa7e5141` 2026-03-08
+- <Badge variant="POST">feat</Badge> complete Sprint 11 (frontend consolidation) and Sprint 12 (code quality) (billing-integration, notification-service, order-service, product-service, provisioning-service, support-service) — `e7463ee9` 2026-03-07
+- <Badge variant="POST">feat</Badge> add VPS products, custom Select component, and full admin UI consistency pass (notification-service) — `77545f7c` 2026-03-07
+
+## Bug Fixes
+
+- <Badge variant="PATCH">fix</Badge> increase bottom padding on all report pages to prevent scroll cutoff — `01954a88` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> move order analytics route into OrdersController to prevent :id shadowing (order-service) — `319540d9` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> move AnalyticsModule before OrdersModule to prevent route shadowing (order-service) — `c6a714b6` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> remove duplicate v1 prefix from analytics controllers (billing-integration, order-service, provisioning-service, support-service) — `4e8a0b14` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> add bottom padding to revenue page for scroll clearance — `514570fb` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> correct grouped cost endpoint path to /cost-and-usage/grouped — `3e350933` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> make at-risk customers clickable links to customer details — `522c639f` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> map nested reporting API response to flat UI shape — `9d6c76a7` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> add reporting service to BFF proxy SERVICE_PORT_MAP — `57107d26` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> remove FK constraint on dns_zones migration to avoid missing table error (provisioning-service) — `d533f3e2` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> tenant isolation, floating IP leak, pricing rounding, invoice idempotency (provisioning-service) — `59c79575` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> pricing rounding loss and invoice paidAt overwrite (billing-integration, order-service) — `6366e6f8` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> data integrity, credential stripping, and notification resilience (billing-integration, notification-service, order-service, provisioning-service) — `46c21c66` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> security hardening and business logic validation (identity-service, product-service, support-service) — `f9e59e9c` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> cache invalidation, webhook dedup race condition, null safety (billing-integration) — `3fa70c5d` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> tenant isolation on payment intent, hardcoded currency, HTTP status codes (billing-integration, order-service, support-service) — `3b84676e` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> Money object types, notification consumer missing userId fallback (notification-service) — `bc1fd460` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> **customer-portal**: remove incorrect /100 currency division — `759679d4` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> **dashboard**: correct analytics field names and conversion rate display (billing-integration) — `5b1e03db` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> **identity-service**: add speakeasy type declaration for container builds (identity-service) — `8b7a91c9` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> deep business logic audit — saga wiring, race conditions, data integrity (billing-integration, identity-service, order-service, provisioning-service, support-service) — `6fa079eb` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> comprehensive code review — security, resilience, and data integrity (billing-integration, identity-service, provisioning-service) — `9e858c71` 2026-03-14
+- <Badge variant="PATCH">fix</Badge> **security**: P0 fixes — auth guards, tenant isolation, product snapshots (billing-integration, order-service, provisioning-service) — `b90d81c9` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin**: normalize page heights and product name display — `b3c51525` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> pass product name to order snapshot instead of deriving from ID (order-service) — `061287fc` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> prevent page-level vertical scroll when detail panel is open — `5b6f0b4e` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> prevent horizontal scroll on admin pages — `f03fb6d3` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin-platform**: prevent horizontal scroll on team and support pages — `83e051aa` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin-platform**: prevent horizontal page scroll on provisioning page — `d7d13afa` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin-platform**: aggressively contain overflow on machines page — `f311ea6a` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin-platform**: prevent horizontal page scroll on machines page — `17ecf78f` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin-platform**: prevent page scroll when scrolling expanded machine details — `b83051ae` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **admin-platform**: show product name prominently in machines list — `c89388e9` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **provisioning**: delete request from DB on deprovision instead of just suspending (provisioning-service) — `d642730a` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **auth-guard**: allow platform admins on @ServiceOnly() endpoints (provisioning-service) — `b7ecbc5f` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **provisioning**: pass clusterId through SimulationProvider metadata (provisioning-service) — `2fdedd30` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **customer-portal**: remove service from UI after delete and fix toast message — `017c54e8` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **customer-portal**: extract .data from paginated provisioning API response — `3af00ee8` 2026-03-13
+- <Badge variant="PATCH">fix</Badge> **public-web**: correct login redirect URL for production environment — `48d05f15` 2026-03-11
+- <Badge variant="PATCH">fix</Badge> analytics dashboard route sends Bearer token instead of Cookie — `8f443bd6` 2026-03-11
+- <Badge variant="PATCH">fix</Badge> prevent mutating frozen props array in dashboard OverviewTab — `c50e29cf` 2026-03-11
+- <Badge variant="PATCH">fix</Badge> allow admin users to manage clusters, add missing i18n keys (provisioning-service) — `31f5e0f3` 2026-03-11
+- <Badge variant="PATCH">fix</Badge> resolve TS strict-mode errors in customer-portal and admin-platform — `b28a7123` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> add JwtModule to PartnerApiModule — fixes JwtService dependency injection (identity-service) — `acbabe37` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> use per-commit Gitea API for selective builds (Gitea 1.19 compat) — `bc828e96` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> remove accidental .claude/worktrees submodule entry, add to gitignore — `de2e7945` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> disable reactCompiler and use UI package Toaster to fix React #130 — `88735ebb` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> add ALL musl native binaries to deps image (final — from package-lock.json audit) — `879490e3` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> add lightningcss-linux-x64-musl to deps image for CSS processing on Alpine — `f08dc68d` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> add @next/swc-linux-x64-musl to deps image for Next.js builds on Alpine — `4977c160` 2026-03-10
+- <Badge variant="PATCH">fix</Badge> move NODE_IMAGE ARG to top of Dockerfiles for multi-stage builds (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `5bb04ca3` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> use internal registry node image to avoid Docker Hub rate limits (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `5500e6c6` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> add @parcel/watcher-linux-x64-musl to deps image for Next.js builds — `79fea114` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> resolve TypeScript compilation errors in billing-integration and provisioning-service (billing-integration, provisioning-service) — `cd5e012d` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> install @rollup/rollup-linux-x64-musl in deps image for Alpine builds — `788e7633` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> use require for sanitize-html to avoid tsup DTS build failure in containers — `1d2bab22` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> deep code quality audit — type safety, error handling, resource leaks, tenant separation (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `39eca4d9` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> resolve ESLint AJV version conflict — `4dae0b2e` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> API access control audit — RLS, open redirect, CORS, console.log (billing-integration, identity-service, notification-service, order-service, provisioning-service, support-service) — `c91d10c0` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> remove incompatible @tailwindcss/typography plugin from public-web — `ba9d688a` 2026-03-09
+- <Badge variant="PATCH">fix</Badge> make DbPoolHealthIndicator resilient to missing DbPoolMetricsService — `48a32837` 2026-03-08
+- <Badge variant="PATCH">fix</Badge> robust health controllers bypassing Terminus error propagation (billing-integration, identity-service, notification-service, order-service, provisioning-service, support-service) — `f44b994d` 2026-03-08
+- <Badge variant="PATCH">fix</Badge> add missing @cloud-factory/idempotency dependency to 3 services (identity-service, provisioning-service, support-service) — `6e0c2ac4` 2026-03-08
+- <Badge variant="PATCH">fix</Badge> handle HealthCheckError in AllExceptionsFilter — `25c053bd` 2026-03-08
+- <Badge variant="PATCH">fix</Badge> update Dockerfiles — replace deleted kafka-consumers with idempotency, add ui package (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `41cec4fb` 2026-03-08
+- <Badge variant="PATCH">fix</Badge> remove double borders and !important override in admin & customer portal — `2267d5f2` 2026-03-08
+- <Badge variant="PATCH">fix</Badge> update admin login design and order timeline ux (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `9cf42677` 2026-03-07
+- <Badge variant="PATCH">fix</Badge> resolve [object Object] error messages across all frontend apps — `d9bc6bf4` 2026-03-07
+- <Badge variant="PATCH">fix</Badge> remove invalid nested searchField from provisioning page — `aa18f6b7` 2026-03-07
+
+## Documentation
+
+- <Badge variant="GET">docs</Badge> add comprehensive documentation for all 7 backend services — `9aaf8f33` 2026-03-08
+
+## Maintenance
+
+- <Badge variant="GET">chore</Badge> restructure CLAUDE.md, add project rules and code review report — `45cc60ad` 2026-03-14
+- <Badge variant="GET">chore</Badge> Kong gateway setup, API docs aggregation, service versioning, admin UI updates (billing-integration, identity-service, notification-service, order-service, product-service, provisioning-service, support-service) — `19919d7d` 2026-03-10
+- <Badge variant="GET">chore</Badge> update next-env types, seed script, and health monitor service (notification-service) — `25d00898` 2026-03-10
+- <Badge variant="GET">chore</Badge> remaining changes — cache utils, kafka types, integration tests, GDPR entities (billing-integration, identity-service, notification-service, product-service) — `d35bf060` 2026-03-09
+
+## Other Changes
+
+- <Badge variant="GET">other</Badge> disable GitHub Actions workflows — using Tekton on OpenShift instead — `8a06d755` 2026-03-10
+

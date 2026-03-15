@@ -1,0 +1,404 @@
+---
+title: "Reporting Service API"
+description: "Auto-generated API reference for reporting-service"
+section: "api"
+service: "reporting-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Reporting Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 21
+
+---
+
+## Customer Health
+
+### List customer health scores
+
+<ApiEndpoint method="GET" path="/reporting/customers/health" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="riskLevel" type="string">
+    query parameter
+  </Param>
+  <Param name="limit" type="number">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get individual customer health score
+
+<ApiEndpoint method="GET" path="/reporting/customers/:id/health" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Dashboard
+
+### Unified KPIs across all domains
+
+<ApiEndpoint method="GET" path="/reporting/dashboard/kpis" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Active alerts and anomalies
+
+<ApiEndpoint method="GET" path="/reporting/dashboard/alerts" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+## Exports
+
+### Create a new export job
+
+<ApiEndpoint method="POST" path="/reporting/exports" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `reportType: string; format: string; parameters: Recordstring, unknown; startDate: string; endDate: string;`
+
+<ParamTable>
+  <Param name="reportType" type="string" required>
+    —
+  </Param>
+  <Param name="format" type="string" required>
+    —
+  </Param>
+  <Param name="parameters" type="Recordstring, unknown" required>
+    —
+  </Param>
+  <Param name="startDate" type="string" required>
+    —
+  </Param>
+  <Param name="endDate" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List export jobs
+
+<ApiEndpoint method="GET" path="/reporting/exports" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="limit" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get export status
+
+<ApiEndpoint method="GET" path="/reporting/exports/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Download exported file
+
+<ApiEndpoint method="GET" path="/reporting/exports/:id/download" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Focus
+
+### FOCUS-compliant cost and usage report
+
+<ApiEndpoint method="GET" path="/reporting/focus/cost-and-usage" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="startDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="endDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="serviceCategory" type="string | string[]">
+    query parameter
+  </Param>
+  <Param name="provider" type="string | string[]">
+    query parameter
+  </Param>
+  <Param name="chargeCategory" type="string | string[]">
+    query parameter
+  </Param>
+  <Param name="regionId" type="string">
+    query parameter
+  </Param>
+  <Param name="page" type="string">
+    query parameter
+  </Param>
+  <Param name="pageSize" type="string">
+    query parameter
+  </Param>
+  <Param name="sortBy" type="string">
+    query parameter
+  </Param>
+  <Param name="sortOrder" type="'ASC' | 'DESC'">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### FOCUS cost and usage grouped by dimension
+
+<ApiEndpoint method="GET" path="/reporting/focus/cost-and-usage/grouped" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="startDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="endDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="groupBy" type="string | string[]" required>
+    query parameter
+  </Param>
+  <Param name="serviceCategory" type="string | string[]">
+    query parameter
+  </Param>
+  <Param name="provider" type="string | string[]">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Infrastructure
+
+### Resource utilization by provider and region
+
+<ApiEndpoint method="GET" path="/reporting/infrastructure/utilization" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="startDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="endDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="provider" type="string | string[]">
+    query parameter
+  </Param>
+  <Param name="regionId" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Provisioning Analytics
+
+### Provisioning SLA compliance and performance metrics
+
+<ApiEndpoint method="GET" path="/reporting/provisioning/performance" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="startDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="endDate" type="string" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Revenue
+
+### MRR breakdown over time
+
+<ApiEndpoint method="GET" path="/reporting/revenue/mrr" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="period" type="string" required>
+    query parameter
+  </Param>
+  <Param name="startDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="endDate" type="string" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Churn analysis over time
+
+<ApiEndpoint method="GET" path="/reporting/revenue/churn" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="period" type="string" required>
+    query parameter
+  </Param>
+  <Param name="startDate" type="string" required>
+    query parameter
+  </Param>
+  <Param name="endDate" type="string" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Schedules
+
+### Create a scheduled report
+
+<ApiEndpoint method="POST" path="/reporting/schedules" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `name: string; reportType: string; format: string; frequency: string; parameters: Recordstring, unknown; recipients: string[]; enabled: boolean;`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="reportType" type="string" required>
+    —
+  </Param>
+  <Param name="format" type="string" required>
+    —
+  </Param>
+  <Param name="frequency" type="string" required>
+    —
+  </Param>
+  <Param name="parameters" type="Recordstring, unknown" required>
+    —
+  </Param>
+  <Param name="recipients" type="string[]" required>
+    —
+  </Param>
+  <Param name="enabled" type="boolean" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List scheduled reports
+
+<ApiEndpoint method="GET" path="/reporting/schedules" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get schedule details
+
+<ApiEndpoint method="GET" path="/reporting/schedules/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update a scheduled report
+
+<ApiEndpoint method="PUT" path="/reporting/schedules/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateScheduleOptions`
+
+<ParamTable>
+  <Param name="name" type="string">
+    —
+  </Param>
+  <Param name="format" type="string">
+    —
+  </Param>
+  <Param name="frequency" type="string">
+    —
+  </Param>
+  <Param name="parameters" type="Recordstring, unknown">
+    —
+  </Param>
+  <Param name="recipients" type="string[]">
+    —
+  </Param>
+  <Param name="enabled" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a scheduled report
+
+<ApiEndpoint method="DELETE" path="/reporting/schedules/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+

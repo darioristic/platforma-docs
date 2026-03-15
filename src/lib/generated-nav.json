@@ -1,0 +1,99 @@
+[
+  {
+    "title": "API (Auto-Generated)",
+    "items": [
+      {
+        "title": "Identity Service API",
+        "href": "/generated/api/identity-service"
+      },
+      {
+        "title": "Notification Service API",
+        "href": "/generated/api/notification-service"
+      },
+      {
+        "title": "Order Service API",
+        "href": "/generated/api/order-service"
+      },
+      {
+        "title": "Product Service API",
+        "href": "/generated/api/product-service"
+      },
+      {
+        "title": "Provisioning Service API",
+        "href": "/generated/api/provisioning-service"
+      },
+      {
+        "title": "Reporting Service API",
+        "href": "/generated/api/reporting-service"
+      },
+      {
+        "title": "Support Service API",
+        "href": "/generated/api/support-service"
+      }
+    ]
+  },
+  {
+    "title": "Data Models",
+    "items": [
+      {
+        "title": "Identity Service Data Model",
+        "href": "/generated/models/identity-service"
+      },
+      {
+        "title": "Notification Service Data Model",
+        "href": "/generated/models/notification-service"
+      },
+      {
+        "title": "Order Service Data Model",
+        "href": "/generated/models/order-service"
+      },
+      {
+        "title": "Provisioning Service Data Model",
+        "href": "/generated/models/provisioning-service"
+      },
+      {
+        "title": "Reporting Service Data Model",
+        "href": "/generated/models/reporting-service"
+      },
+      {
+        "title": "Support Service Data Model",
+        "href": "/generated/models/support-service"
+      }
+    ]
+  },
+  {
+    "title": "Events",
+    "items": [
+      {
+        "title": "Event System Overview",
+        "href": "/generated/events/overview"
+      },
+      {
+        "title": "Unknown Events",
+        "href": "/generated/events/unknown"
+      }
+    ]
+  },
+  {
+    "title": "System Architecture",
+    "items": [
+      {
+        "title": "Service Map",
+        "href": "/generated/architecture/service-map"
+      },
+      {
+        "title": "Dependency Graph",
+        "href": "/generated/architecture/dependency-graph"
+      }
+    ]
+  },
+  {
+    "title": "Changelog",
+    "items": [
+      {
+        "title": "Changelog",
+        "href": "/generated/changelog/latest"
+      }
+    ]
+  }
+]

@@ -1,0 +1,919 @@
+---
+title: "Identity Service API"
+description: "Auto-generated API reference for identity-service"
+section: "api"
+service: "identity-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Identity Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 56
+
+---
+
+## Api Keys
+
+### List API keys
+
+<ApiEndpoint method="GET" path="/api-keys" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="userId" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Create a new API key
+
+<ApiEndpoint method="POST" path="/api-keys" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateApiKeyDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="userId" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete an API key
+
+<ApiEndpoint method="DELETE" path="/api-keys/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Audit Logs
+
+### List audit logs with filters
+
+<ApiEndpoint method="GET" path="/audit-logs" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="QueryAuditLogsDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Create audit log entry (service-to-service only)
+
+<ApiEndpoint method="POST" path="/audit-logs" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateAuditLogDto`
+
+<ParamTable>
+  <Param name="actorId" type="string" required>
+    —
+  </Param>
+  <Param name="actorType" type="'user' | 'service' | 'system' | 'api_key'" required>
+    —
+  </Param>
+  <Param name="action" type="string" required>
+    —
+  </Param>
+  <Param name="resource" type="string" required>
+    —
+  </Param>
+  <Param name="resourceId" type="string">
+    —
+  </Param>
+  <Param name="tenantId" type="string">
+    —
+  </Param>
+  <Param name="correlationId" type="string">
+    —
+  </Param>
+  <Param name="previousState" type="Recordstring, unknown">
+    —
+  </Param>
+  <Param name="newState" type="Recordstring, unknown">
+    —
+  </Param>
+  <Param name="metadata" type="Recordstring, unknown">
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+## Auth
+
+### Register a new user
+
+<ApiEndpoint method="POST" path="/auth/register">
+</ApiEndpoint>
+
+**Request Body:** `RegisterDto`
+
+<ParamTable>
+  <Param name="email" type="string" required>
+    —
+  </Param>
+  <Param name="password" type="string" required>
+    —
+  </Param>
+  <Param name="firstName" type="string" required>
+    —
+  </Param>
+  <Param name="lastName" type="string" required>
+    —
+  </Param>
+  <Param name="companyName" type="string">
+    —
+  </Param>
+  <Param name="country" type="string">
+    —
+  </Param>
+  <Param name="inviteToken" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Login with email and password
+
+<ApiEndpoint method="POST" path="/auth/login">
+</ApiEndpoint>
+
+**Request Body:** `LoginDto`
+
+<ParamTable>
+  <Param name="email" type="string" required>
+    —
+  </Param>
+  <Param name="password" type="string" required>
+    —
+  </Param>
+  <Param name="mfaCode" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Refresh access token
+
+<ApiEndpoint method="POST" path="/auth/refresh">
+</ApiEndpoint>
+
+**Request Body:** `RefreshTokenDto`
+
+<ParamTable>
+  <Param name="refreshToken" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Logout current user
+
+<ApiEndpoint method="POST" path="/auth/logout" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Initiate Google OAuth login
+
+<ApiEndpoint method="GET" path="/auth/oauth/google">
+</ApiEndpoint>
+
+---
+
+### GET /auth/oauth/google/callback
+
+<ApiEndpoint method="GET" path="/auth/oauth/google/callback">
+</ApiEndpoint>
+
+---
+
+### Initiate GitHub OAuth login
+
+<ApiEndpoint method="GET" path="/auth/oauth/github">
+</ApiEndpoint>
+
+---
+
+### GET /auth/oauth/github/callback
+
+<ApiEndpoint method="GET" path="/auth/oauth/github/callback">
+</ApiEndpoint>
+
+---
+
+### Initiate Microsoft OAuth login
+
+<ApiEndpoint method="GET" path="/auth/oauth/microsoft">
+</ApiEndpoint>
+
+---
+
+### GET /auth/oauth/microsoft/callback
+
+<ApiEndpoint method="GET" path="/auth/oauth/microsoft/callback">
+</ApiEndpoint>
+
+---
+
+## Service Auth
+
+### Issue a service-to-service JWT token
+
+<ApiEndpoint method="POST" path="/v1/auth/service-token">
+</ApiEndpoint>
+
+**Request Body:** `ServiceTokenDto`
+
+<ParamTable>
+  <Param name="serviceName" type="string" required>
+    —
+  </Param>
+  <Param name="serviceSecret" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+## Gdpr
+
+### Export all personal data (GDPR Art. 20 — Data Portability)
+
+<ApiEndpoint method="GET" path="/users/me/export" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Request data erasure (GDPR Art. 17 — Right to be Forgotten)
+
+<ApiEndpoint method="DELETE" path="/users/me/erase" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get current consent status for all consent types
+
+<ApiEndpoint method="GET" path="/users/me/consent" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get full consent change history
+
+<ApiEndpoint method="GET" path="/users/me/consent/history" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Record or update consent preference
+
+<ApiEndpoint method="POST" path="/users/me/consent" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `RecordConsentDto`
+
+<ParamTable>
+  <Param name="consentType" type="'marketing' | 'analytics' | 'essential' | 'third_party'" required>
+    —
+  </Param>
+  <Param name="granted" type="boolean" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Partner API
+
+### Create an OAuth2 client for partner API access
+
+<ApiEndpoint method="POST" path="/api/partner/clients">
+</ApiEndpoint>
+
+**Request Body:** `CreateOAuthClientDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="scopes" type="string[]" required>
+    —
+  </Param>
+  <Param name="rateLimitPerMinute" type="number">
+    —
+  </Param>
+  <Param name="allowedIps" type="string[]">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List all OAuth2 clients for this tenant
+
+<ApiEndpoint method="GET" path="/api/partner/clients">
+</ApiEndpoint>
+
+---
+
+### Revoke an OAuth2 client (deactivate without deleting)
+
+<ApiEndpoint method="POST" path="/api/partner/clients/:id/revoke">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Permanently delete an OAuth2 client
+
+<ApiEndpoint method="DELETE" path="/api/partner/clients/:id">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### OAuth2 Client Credentials Grant — issue access token
+
+<ApiEndpoint method="POST" path="/api/partner/oauth/token">
+</ApiEndpoint>
+
+**Request Body:** `OAuthTokenRequestDto`
+
+<ParamTable>
+  <Param name="grant_type" type="string" required>
+    —
+  </Param>
+  <Param name="client_id" type="string" required>
+    —
+  </Param>
+  <Param name="client_secret" type="string" required>
+    —
+  </Param>
+  <Param name="scope" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+## Roles
+
+### List all role definitions
+
+<ApiEndpoint method="GET" path="/roles" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get a role by ID
+
+<ApiEndpoint method="GET" path="/roles/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Create a new role definition
+
+<ApiEndpoint method="POST" path="/roles" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateRoleDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="displayName" type="string" required>
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="category" type="RoleCategory">
+    —
+  </Param>
+  <Param name="permissions" type="string[]">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Update a role definition
+
+<ApiEndpoint method="PUT" path="/roles/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateRoleDto`
+
+<ParamTable>
+  <Param name="displayName" type="string">
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="permissions" type="string[]">
+    —
+  </Param>
+  <Param name="isActive" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a role definition (non-system only)
+
+<ApiEndpoint method="DELETE" path="/roles/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get roles for a user (with full details)
+
+<ApiEndpoint method="GET" path="/roles/users/:userId" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="userId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Assign roles to a user
+
+<ApiEndpoint method="POST" path="/roles/users/:userId/assign" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="userId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `AssignRolesDto`
+
+<ParamTable>
+  <Param name="roles" type="string[]" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Remove roles from a user
+
+<ApiEndpoint method="POST" path="/roles/users/:userId/remove" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="userId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `RemoveRolesDto`
+
+<ParamTable>
+  <Param name="roles" type="string[]" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+## Tenants
+
+### Create a new tenant
+
+<ApiEndpoint method="POST" path="/tenants" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateTenantDto`
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="type" type="'customer' | 'partner' | 'internal'" required>
+    —
+  </Param>
+  <Param name="country" type="string" required>
+    —
+  </Param>
+  <Param name="config" type="Recordstring, any">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List all tenants
+
+<ApiEndpoint method="GET" path="/tenants" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="type" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get a tenant by ID
+
+<ApiEndpoint method="GET" path="/tenants/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update a tenant
+
+<ApiEndpoint method="PATCH" path="/tenants/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateTenantDto`
+
+<ParamTable>
+  <Param name="name" type="string">
+    —
+  </Param>
+  <Param name="type" type="'customer' | 'partner' | 'internal'">
+    —
+  </Param>
+  <Param name="country" type="string">
+    —
+  </Param>
+  <Param name="config" type="Recordstring, any">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete a tenant
+
+<ApiEndpoint method="DELETE" path="/tenants/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get the number of users in a tenant
+
+<ApiEndpoint method="GET" path="/tenants/:id/user-count" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get tenant settings
+
+<ApiEndpoint method="GET" path="/tenants/:id/settings" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update tenant settings (partial)
+
+<ApiEndpoint method="PATCH" path="/tenants/:id/settings" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateSettingsDto`
+
+<ParamTable>
+  <Param name="locale" type="string">
+    —
+  </Param>
+  <Param name="timezone" type="string">
+    —
+  </Param>
+  <Param name="currency" type="string">
+    —
+  </Param>
+  <Param name="dateFormat" type="string">
+    —
+  </Param>
+  <Param name="maxUsers" type="number">
+    —
+  </Param>
+  <Param name="maxInstances" type="number">
+    —
+  </Param>
+  <Param name="features" type="TenantFeaturesDto">
+    —
+  </Param>
+  <Param name="branding" type="TenantBrandingDto">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Invite a user to this tenant
+
+<ApiEndpoint method="POST" path="/tenants/:id/invites" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `CreateInviteDto`
+
+<ParamTable>
+  <Param name="email" type="string" required>
+    —
+  </Param>
+  <Param name="role" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List invites for a tenant
+
+<ApiEndpoint method="GET" path="/tenants/:id/invites" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Revoke an invite
+
+<ApiEndpoint method="DELETE" path="/tenants/:id/invites/:inviteId" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+  <Param name="inviteId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Validate an invite token (public)
+
+<ApiEndpoint method="GET" path="/tenants/invites/validate/:token" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="token" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Users
+
+### Get current user profile
+
+<ApiEndpoint method="GET" path="/users/me" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Update own profile (firstName, lastName)
+
+<ApiEndpoint method="PATCH" path="/users/me" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `UpdateProfileDto`
+
+<ParamTable>
+  <Param name="firstName" type="string">
+    —
+  </Param>
+  <Param name="lastName" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Change own password
+
+<ApiEndpoint method="POST" path="/users/me/change-password" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `ChangePasswordDto`
+
+<ParamTable>
+  <Param name="currentPassword" type="string" required>
+    —
+  </Param>
+  <Param name="newPassword" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List all users (admin, paginated)
+
+<ApiEndpoint method="GET" path="/users" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="QueryUsersDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get a user by ID (admin)
+
+<ApiEndpoint method="GET" path="/users/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update a user (admin)
+
+<ApiEndpoint method="PUT" path="/users/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `AdminUpdateUserDto`
+
+<ParamTable>
+  <Param name="firstName" type="string">
+    —
+  </Param>
+  <Param name="lastName" type="string">
+    —
+  </Param>
+  <Param name="email" type="string">
+    —
+  </Param>
+  <Param name="status" type="UserStatus">
+    —
+  </Param>
+  <Param name="roles" type="string[]">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Deactivate (suspend) a user
+
+<ApiEndpoint method="POST" path="/users/:id/deactivate" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Reactivate a user
+
+<ApiEndpoint method="POST" path="/users/:id/reactivate" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+

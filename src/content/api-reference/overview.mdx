@@ -1,0 +1,85 @@
+---
+title: "API Overview"
+description: "Overview of the PLATFORMA REST API"
+section: "api-reference"
+order: 1
+---
+
+# API Overview
+
+The PLATFORMA API is organized around REST. It accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes, authentication, and verbs.
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://api.platforma.cloud/v1
+```
+
+## Request Format
+
+All requests must include:
+
+- `Content-Type: application/json` header for requests with a body
+- `Authorization: Bearer <token>` header for authentication
+
+```bash
+curl -X POST https://api.platforma.cloud/v1/orders \
+  -H "Authorization: Bearer pk_live_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id": "cust_abc123", "items": [...]}'
+```
+
+## Response Format
+
+All responses follow a consistent structure:
+
+```json
+{
+  "data": { ... },
+  "meta": {
+    "request_id": "req_abc123",
+    "timestamp": "2026-03-15T10:00:00Z"
+  }
+}
+```
+
+For list endpoints, the response includes pagination:
+
+```json
+{
+  "data": [ ... ],
+  "meta": {
+    "total": 142,
+    "page": 1,
+    "per_page": 20,
+    "has_more": true
+  }
+}
+```
+
+## Pagination
+
+List endpoints support cursor-based pagination:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | integer | Number of items per page (default: 20, max: 100) |
+| `cursor` | string | Cursor for the next page of results |
+| `sort` | string | Sort field (e.g., `created_at`, `-created_at` for descending) |
+
+## Versioning
+
+The API is versioned via the URL path (`/v1/`). Breaking changes will be introduced in new versions. Non-breaking changes (new fields, new endpoints) may be added to the current version.
+
+## SDKs
+
+<CardGrid cols={2}>
+  <Card title="TypeScript SDK" href="/sdks/typescript" icon="Code">
+    Official TypeScript/JavaScript SDK
+  </Card>
+  <Card title="Python SDK" href="/sdks/python" icon="Code">
+    Official Python SDK
+  </Card>
+</CardGrid>

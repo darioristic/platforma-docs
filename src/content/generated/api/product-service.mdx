@@ -1,0 +1,263 @@
+---
+title: "Product Service API"
+description: "Auto-generated API reference for product-service"
+section: "api"
+service: "product-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Product Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 11
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Pricing Plans
+
+### List products (legacy pricing-plans endpoint)
+
+<ApiEndpoint method="GET" path="/pricing-plans">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="category" type="string">
+    query parameter
+  </Param>
+  <Param name="status" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Products
+
+### Create product
+
+<ApiEndpoint method="POST" path="/products" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateProductDto`
+
+<ParamTable>
+  <Param name="sku" type="string" required>
+    —
+  </Param>
+  <Param name="name" type="string" required>
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="category" type="string" required>
+    —
+  </Param>
+  <Param name="status" type="string">
+    —
+  </Param>
+  <Param name="specs" type="Recordstring, string">
+    —
+  </Param>
+  <Param name="monthlyPrice" type="number" required>
+    —
+  </Param>
+  <Param name="hourlyPrice" type="number">
+    —
+  </Param>
+  <Param name="unitPrice" type="number">
+    —
+  </Param>
+  <Param name="currency" type="string">
+    —
+  </Param>
+  <Param name="annualDiscount" type="number">
+    —
+  </Param>
+  <Param name="tier" type="string">
+    —
+  </Param>
+  <Param name="features" type="string[]">
+    —
+  </Param>
+  <Param name="isPopular" type="boolean">
+    —
+  </Param>
+  <Param name="sortOrder" type="number">
+    —
+  </Param>
+  <Param name="ctaText" type="string">
+    —
+  </Param>
+  <Param name="ctaAction" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Search products with full-text search, filters, sorting, and pagination
+
+<ApiEndpoint method="GET" path="/products/search" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="searchDto" type="SearchProductsDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get search autocomplete suggestions
+
+<ApiEndpoint method="GET" path="/products/search/suggest" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="q" type="string" required>
+    query parameter
+  </Param>
+  <Param name="limit" type="number">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get all product categories
+
+<ApiEndpoint method="GET" path="/products/search/categories" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### List products with optional filters and pagination
+
+<ApiEndpoint method="GET" path="/products" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="QueryProductsDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get product by ID
+
+<ApiEndpoint method="GET" path="/products/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update product
+
+<ApiEndpoint method="PUT" path="/products/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateProductDto`
+
+<ParamTable>
+  <Param name="sku" type="string">
+    —
+  </Param>
+  <Param name="name" type="string">
+    —
+  </Param>
+  <Param name="description" type="string">
+    —
+  </Param>
+  <Param name="category" type="string">
+    —
+  </Param>
+  <Param name="status" type="string">
+    —
+  </Param>
+  <Param name="specs" type="Recordstring, string">
+    —
+  </Param>
+  <Param name="monthlyPrice" type="number">
+    —
+  </Param>
+  <Param name="hourlyPrice" type="number">
+    —
+  </Param>
+  <Param name="unitPrice" type="number">
+    —
+  </Param>
+  <Param name="currency" type="string">
+    —
+  </Param>
+  <Param name="annualDiscount" type="number">
+    —
+  </Param>
+  <Param name="tier" type="string">
+    —
+  </Param>
+  <Param name="features" type="string[]">
+    —
+  </Param>
+  <Param name="isPopular" type="boolean">
+    —
+  </Param>
+  <Param name="sortOrder" type="number">
+    —
+  </Param>
+  <Param name="ctaText" type="string">
+    —
+  </Param>
+  <Param name="ctaAction" type="string">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Delete product
+
+<ApiEndpoint method="DELETE" path="/products/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+

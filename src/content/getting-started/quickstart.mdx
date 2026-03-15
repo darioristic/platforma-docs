@@ -1,0 +1,106 @@
+---
+title: "Quickstart"
+description: "Get up and running with PLATFORMA in under 5 minutes"
+section: "getting-started"
+order: 2
+---
+
+# Quickstart
+
+Get your first cloud service provisioned and ready in minutes.
+
+<Callout type="info">
+You'll need an API key to follow this guide. See [Authentication](/getting-started/authentication) to create one.
+</Callout>
+
+<Steps>
+<Step title="Install the SDK">
+
+Install the PLATFORMA SDK using your preferred package manager:
+
+```bash
+npm install @platforma/sdk
+```
+
+</Step>
+
+<Step title="Initialize the client">
+
+Create a new file and initialize the PLATFORMA client with your API key:
+
+```typescript title="index.ts"
+import { Platforma } from "@platforma/sdk";
+
+const client = new Platforma({
+  apiKey: process.env.PLATFORMA_API_KEY,
+  baseUrl: "https://api.platforma.cloud",
+});
+```
+
+</Step>
+
+<Step title="List available products">
+
+Query the product catalog to see what services are available:
+
+```typescript
+const products = await client.products.list({
+  status: "active",
+  limit: 10,
+});
+
+console.log(products.data);
+// [{ id: "prod_vm_small", name: "Small VM", ... }, ...]
+```
+
+</Step>
+
+<Step title="Create your first order">
+
+Place an order for a cloud resource:
+
+```typescript
+const order = await client.orders.create({
+  customer_id: "cust_abc123",
+  items: [
+    {
+      product_id: "prod_vm_small",
+      quantity: 1,
+      configuration: {
+        region: "eu-west-1",
+        os: "ubuntu-22.04",
+      },
+    },
+  ],
+});
+
+console.log(order.id);     // "ord_xyz789"
+console.log(order.status); // "pending"
+```
+
+</Step>
+
+<Step title="Check provisioning status">
+
+Monitor the order status as the resource is provisioned:
+
+```typescript
+const status = await client.orders.get(order.id);
+
+console.log(status.status);        // "provisioned"
+console.log(status.resources[0]);  // { type: "vm", ip: "10.0.1.42", ... }
+```
+
+</Step>
+</Steps>
+
+## Next Steps
+
+<CardGrid cols={2}>
+  <Card title="API Reference" href="/api-reference/overview" icon="Code">
+    Explore the full API surface
+  </Card>
+  <Card title="Deploy Infrastructure" href="/guides/deploy-infrastructure" icon="Server">
+    Set up your first cluster
+  </Card>
+</CardGrid>

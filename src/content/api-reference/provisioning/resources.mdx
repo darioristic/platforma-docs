@@ -1,0 +1,75 @@
+---
+title: "Resources"
+description: "Manage provisioned resources"
+section: "api-reference"
+order: 2
+method: "GET"
+endpoint: "/v1/provisioning/resources"
+---
+
+# Provisioned Resources
+
+<ApiEndpoint method="GET" path="/v1/provisioning/resources" auth="Bearer token">
+  List all provisioned resources across all orders and workflows.
+</ApiEndpoint>
+
+## Query Parameters
+
+<ParamTable>
+  <Param name="type" type="string">
+    Filter by resource type: `virtual_machine`, `container`, `network`, `storage`, `load_balancer`.
+  </Param>
+  <Param name="status" type="string">
+    Filter by status: `running`, `stopped`, `error`, `terminated`.
+  </Param>
+  <Param name="order_id" type="string">
+    Filter by originating order.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "data": [
+    {
+      "id": "res_vm_001",
+      "type": "virtual_machine",
+      "name": "web-server-eu-01",
+      "status": "running",
+      "order_id": "ord_xyz789",
+      "cluster_id": "cls_eu01",
+      "specs": {
+        "cpu_cores": 4,
+        "memory_gb": 16,
+        "disk_gb": 100,
+        "os": "ubuntu-22.04"
+      },
+      "network": {
+        "private_ip": "10.0.1.42",
+        "public_ip": "203.0.113.42"
+      },
+      "metrics": {
+        "cpu_usage_percent": 34.2,
+        "memory_usage_percent": 56.8,
+        "disk_usage_percent": 22.1
+      },
+      "created_at": "2026-03-15T10:05:00Z"
+    }
+  ],
+  "meta": {
+    "total": 142,
+    "has_more": true
+  }
+}`}
+</ResponseExample>
+
+## Delete Resource
+
+<ApiEndpoint method="DELETE" path="/v1/provisioning/resources/:id" auth="Bearer token">
+  Terminate and delete a provisioned resource.
+</ApiEndpoint>
+
+<Callout type="warning">
+Deleting a resource is irreversible. All data stored on the resource will be permanently lost. Consider creating a snapshot first.
+</Callout>

@@ -1,0 +1,71 @@
+---
+title: "Order Service Data Model"
+description: "Database schema for order-service (schema: orders)"
+section: "models"
+auto_generated: true
+last_synced: "2026-03-15T15:39:29.769Z"
+---
+
+# Order Service Data Model
+
+<Callout type="info">
+Auto-generated from TypeORM entity definitions. Last synced: 2026-03-15
+</Callout>
+
+**Database schema:** `orders`
+
+## OrderItem
+
+**Table:** `order_items`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `orderId` | `uuid` | No | - | - | - |
+| `productId` | `varchar` | No | - | - | - |
+| `productSnapshot` | `ProductSnapshot` | No | - | - | - |
+| `quantity` | `int` | No | - | - | 1 |
+| `configuration` | `ServiceConfiguration` | No | - | - | - |
+| `pricing` | `ItemPricing` | No | - | - | - |
+| `status` | `varchar` | No | - | - | OrderItemStatus.PENDING |
+| `provisioningRef` | `ProvisioningReference` | No | - | - | - |
+| `deliveryInfo` | `ServiceDeliveryInfo` | No | - | - | - |
+| `statusHistory` | `ItemStatusChange[]` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+### Relations
+
+| Property | Type | Target | Join Column |
+|----------|------|--------|-------------|
+| `order` | ManyToOne | `Order` | - |
+
+---
+
+## Order
+
+**Table:** `orders`
+
+| Column | Type | Nullable | Primary | Unique | Default |
+|--------|------|----------|---------|--------|---------|
+| `id` | `string` | No | Yes | Yes | - |
+| `orderNumber` | `varchar` | No | - | Yes | - |
+| `tenantId` | `uuid` | No | - | - | - |
+| `customerId` | `varchar` | No | - | - | - |
+| `status` | `varchar` | No | - | - | OrderStatus.DRAFT |
+| `type` | `varchar` | No | - | - | OrderType.NEW_SERVICE |
+| `pricing` | `OrderPricing` | No | - | - | - |
+| `paymentInfo` | `PaymentInfo` | No | - | - | - |
+| `timeline` | `OrderTimeline` | No | - | - | - |
+| `metadata` | `Recordstring, unknown` | No | - | - | - |
+| `createdAt` | `Date` | No | - | - | - |
+| `updatedAt` | `Date` | No | - | - | - |
+
+### Relations
+
+| Property | Type | Target | Join Column |
+|----------|------|--------|-------------|
+| `items` | OneToMany | `OrderItem` | - |
+
+---
+

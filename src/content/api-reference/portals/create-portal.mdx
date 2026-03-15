@@ -1,0 +1,71 @@
+---
+title: "Create Portal"
+description: "Create a new portal instance"
+section: "api-reference"
+order: 2
+method: "POST"
+endpoint: "/v1/portals"
+---
+
+# Create Portal
+
+<ApiEndpoint method="POST" path="/v1/portals" auth="Bearer token">
+  Creates a new portal instance for the authenticated tenant.
+</ApiEndpoint>
+
+## Request Body
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    Display name for the portal.
+  </Param>
+  <Param name="type" type="string" required>
+    Portal type: `customer`, `admin`, or `partner`.
+  </Param>
+  <Param name="domain" type="string" required>
+    Custom domain for the portal (e.g., `portal.example.com`).
+  </Param>
+  <Param name="branding" type="object">
+    Custom branding configuration including logo URL, primary color, and favicon.
+  </Param>
+  <Param name="features" type="string[]">
+    List of enabled features: `self_service`, `billing`, `support`, `monitoring`.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={201}>
+{`{
+  "data": {
+    "id": "portal_ghi789",
+    "name": "Enterprise Portal",
+    "type": "customer",
+    "status": "provisioning",
+    "domain": "cloud.enterprise.com",
+    "url": "https://cloud.enterprise.com",
+    "branding": {
+      "logo_url": "https://cdn.example.com/logo.svg",
+      "primary_color": "#0066FF",
+      "favicon_url": null
+    },
+    "features": ["self_service", "billing", "support"],
+    "tenant_id": "ten_xyz789",
+    "created_at": "2026-03-15T10:00:00Z"
+  }
+}`}
+</ResponseExample>
+
+## Errors
+
+<ResponseExample status={400}>
+{`{
+  "error": {
+    "code": "validation_error",
+    "message": "Validation failed",
+    "details": [
+      { "field": "domain", "message": "domain is already in use" }
+    ]
+  }
+}`}
+</ResponseExample>

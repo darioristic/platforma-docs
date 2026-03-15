@@ -1,0 +1,103 @@
+---
+title: "Configure Billing"
+description: "Set up automated billing, usage metering, and invoice generation"
+section: "guides"
+order: 2
+---
+
+# Configure Billing
+
+PLATFORMA's billing engine supports flat-rate, usage-based, and tiered pricing models. This guide covers setting up automated billing for your services.
+
+## Billing Models
+
+| Model | Use Case | Example |
+|-------|---------|---------|
+| **Flat-rate** | Fixed monthly fee | VM hosting at EUR 79.99/month |
+| **Usage-based** | Pay-per-use metering | EUR 0.05/GB bandwidth |
+| **Tiered** | Volume discounts | 1-10 VMs at EUR 79.99, 11+ at EUR 69.99 |
+| **Hybrid** | Base fee + overage | EUR 49.99/month + EUR 0.05/GB over 100GB |
+
+<Steps>
+<Step title="Configure usage metering">
+
+Set up meters to track customer resource usage:
+
+```typescript
+const meter = await client.billing.meters.create({
+  name: "bandwidth_egress",
+  unit: "GB",
+  aggregation: "sum",
+  reset_cycle: "monthly",
+});
+```
+
+</Step>
+
+<Step title="Define pricing rules">
+
+Attach pricing rules to your meters:
+
+```typescript
+await client.billing.pricing.create({
+  product_id: "prod_web_hosting",
+  components: [
+    {
+      type: "recurring",
+      amount: 49.99,
+      cycle: "monthly",
+    },
+    {
+      type: "usage",
+      meter_id: meter.id,
+      tiers: [
+        { up_to: 100, unit_price: 0 },        // 100GB included
+        { up_to: 1000, unit_price: 0.05 },     // EUR 0.05/GB
+        { up_to: null, unit_price: 0.03 },      // Volume discount
+      ],
+    },
+  ],
+  currency: "EUR",
+});
+```
+
+</Step>
+
+<Step title="Configure invoice generation">
+
+Set up automated invoice generation:
+
+```typescript
+await client.billing.config.update({
+  auto_generate_invoices: true,
+  invoice_day: 1,           // Generate on 1st of each month
+  payment_terms_days: 14,   // Due in 14 days
+  tax_rate: 0.20,           // 20% VAT
+  currency: "EUR",
+});
+```
+
+</Step>
+
+<Step title="Set up payment notifications">
+
+Configure email notifications for billing events:
+
+```typescript
+await client.billing.notifications.configure({
+  invoice_generated: { email: true, webhook: true },
+  payment_received: { email: true },
+  payment_overdue: { email: true, webhook: true },
+  usage_threshold: {
+    email: true,
+    thresholds: [80, 90, 100], // % of included usage
+  },
+});
+```
+
+</Step>
+</Steps>
+
+<Callout type="tip">
+Test your billing configuration with a test customer before going live. Use `pk_test_` API keys to create test invoices without affecting production data.
+</Callout>

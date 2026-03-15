@@ -1,0 +1,123 @@
+---
+title: "Data Model"
+description: "Core entities, relationships, and data architecture"
+section: "architecture"
+order: 4
+---
+
+# Data Model
+
+PLATFORMA's data model is designed around domain-driven design principles. Each service owns its data and exposes it only through APIs and events.
+
+## Core Entities
+
+### Tenant
+The top-level organizational unit. All data is scoped to a tenant.
+
+```
+Tenant
+├── id: string (ten_xxx)
+├── name: string
+├── slug: string (unique)
+├── status: active | suspended | archived
+├── settings: TenantSettings
+├── created_at: timestamp
+└── users: User[]
+```
+
+### Customer
+End-users who consume cloud services provided by the tenant.
+
+```
+Customer
+├── id: string (cust_xxx)
+├── tenant_id: string
+├── name: string
+├── email: string
+├── company: string
+├── billing_address: Address
+├── payment_method: PaymentMethod
+├── metadata: Record<string, string>
+└── created_at: timestamp
+```
+
+### Product
+A cloud service or resource type available in the catalog.
+
+```
+Product
+├── id: string (prod_xxx)
+├── tenant_id: string
+├── name: string
+├── sku: string (unique per tenant)
+├── category: compute | storage | network | service
+├── specs: ProductSpecs
+├── pricing: PricingRule[]
+├── regions: string[]
+├── status: active | draft | archived
+└── provisioning_template_id: string
+```
+
+### Order
+A customer's request to purchase products.
+
+```
+Order
+├── id: string (ord_xxx)
+├── tenant_id: string
+├── customer_id: string
+├── status: pending | processing | provisioned | failed | cancelled
+├── items: OrderItem[]
+├── total_amount: decimal
+├── currency: string
+├── metadata: Record<string, string>
+├── created_at: timestamp
+└── provisioned_at: timestamp | null
+```
+
+### Resource
+A provisioned infrastructure component.
+
+```
+Resource
+├── id: string (res_xxx)
+├── tenant_id: string
+├── order_id: string
+├── cluster_id: string
+├── type: virtual_machine | container | network | storage | load_balancer
+├── name: string
+├── status: provisioning | running | stopped | error | terminated
+├── specs: ResourceSpecs
+├── network: NetworkInfo
+├── created_at: timestamp
+└── terminated_at: timestamp | null
+```
+
+## Relationships
+
+```
+Tenant ─┬── Customer ──── Order ──── OrderItem
+        │                    │
+        ├── Product ─────────┘           │
+        │                          Resource
+        ├── Cluster ──── Instance
+        │            └── Network
+        │
+        └── User ──── Role ──── Permission
+```
+
+## Data Isolation
+
+Every database query is scoped to `tenant_id`. Row-level security is enforced at the database layer:
+
+```sql
+-- Automatically applied to all queries
+CREATE POLICY tenant_isolation ON orders
+  USING (tenant_id = current_setting('app.tenant_id'));
+```
+
+This ensures that even in the event of an application bug, data from one tenant cannot leak to another.
+
+<Callout type="info">
+Each service uses its own database schema. Cross-service data access is only possible through APIs or events — never through shared database access.
+</Callout>

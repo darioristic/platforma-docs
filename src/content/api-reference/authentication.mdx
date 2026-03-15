@@ -1,0 +1,56 @@
+---
+title: "API Authentication"
+description: "How to authenticate with the PLATFORMA API"
+section: "api-reference"
+order: 2
+---
+
+# API Authentication
+
+Every API request requires a valid authentication token passed via the `Authorization` header.
+
+<ApiEndpoint method="POST" path="/v1/auth/token" auth="Client credentials">
+  Exchange client credentials for an access token.
+</ApiEndpoint>
+
+## Request
+
+<ParamTable>
+  <Param name="grant_type" type="string" required>
+    Must be `client_credentials`.
+  </Param>
+  <Param name="client_id" type="string" required>
+    Your application's client ID.
+  </Param>
+  <Param name="client_secret" type="string" required>
+    Your application's client secret.
+  </Param>
+  <Param name="scope" type="string">
+    Space-separated list of scopes (e.g., `orders:read infrastructure:manage`).
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "orders:read infrastructure:manage"
+}`}
+</ResponseExample>
+
+## Available Scopes
+
+| Scope | Description |
+|-------|-------------|
+| `orders:read` | Read order data |
+| `orders:write` | Create and update orders |
+| `products:read` | Read product catalog |
+| `products:write` | Manage product catalog |
+| `billing:read` | View invoices and billing |
+| `billing:write` | Manage billing configuration |
+| `infrastructure:read` | View infrastructure resources |
+| `infrastructure:manage` | Provision and manage resources |
+| `admin` | Full administrative access |

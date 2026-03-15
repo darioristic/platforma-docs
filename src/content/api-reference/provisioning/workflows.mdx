@@ -1,0 +1,79 @@
+---
+title: "Workflows"
+description: "Manage provisioning workflows"
+section: "api-reference"
+order: 1
+method: "GET"
+endpoint: "/v1/provisioning/workflows"
+---
+
+# Provisioning Workflows
+
+<ApiEndpoint method="GET" path="/v1/provisioning/workflows" auth="Bearer token">
+  List all provisioning workflows and their execution status.
+</ApiEndpoint>
+
+Workflows represent the automated steps PLATFORMA executes when provisioning resources from an order. Each workflow contains a series of tasks that run in sequence or parallel.
+
+## Query Parameters
+
+<ParamTable>
+  <Param name="order_id" type="string">
+    Filter workflows by originating order.
+  </Param>
+  <Param name="status" type="string">
+    Filter by status: `queued`, `running`, `completed`, `failed`, `cancelled`.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "data": [
+    {
+      "id": "wf_abc123",
+      "order_id": "ord_xyz789",
+      "status": "completed",
+      "steps": [
+        {
+          "name": "validate_resources",
+          "status": "completed",
+          "duration_ms": 234
+        },
+        {
+          "name": "allocate_network",
+          "status": "completed",
+          "duration_ms": 1823
+        },
+        {
+          "name": "provision_instances",
+          "status": "completed",
+          "duration_ms": 45210
+        },
+        {
+          "name": "configure_monitoring",
+          "status": "completed",
+          "duration_ms": 3421
+        }
+      ],
+      "started_at": "2026-03-15T10:00:00Z",
+      "completed_at": "2026-03-15T10:01:12Z"
+    }
+  ],
+  "meta": {
+    "total": 1,
+    "has_more": false
+  }
+}`}
+</ResponseExample>
+
+## Retry a Failed Workflow
+
+<ApiEndpoint method="POST" path="/v1/provisioning/workflows/:id/retry" auth="Bearer token">
+  Retry a failed workflow from the last failed step.
+</ApiEndpoint>
+
+<Callout type="info">
+Only workflows in `failed` status can be retried. The workflow will resume from the step that failed, not from the beginning.
+</Callout>

@@ -1,0 +1,230 @@
+---
+title: "Order Service API"
+description: "Auto-generated API reference for order-service"
+section: "api"
+service: "order-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Order Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 15
+
+---
+
+## Order Analytics
+
+### Get order analytics and metrics
+
+<ApiEndpoint method="GET" path="/orders/analytics" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Orders
+
+### Create order and submit for payment
+
+<ApiEndpoint method="POST" path="/orders" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateOrderDto`
+
+<ParamTable>
+  <Param name="customerId" type="string" required>
+    —
+  </Param>
+  <Param name="items" type="CreateOrderItemDto[]" required>
+    —
+  </Param>
+  <Param name="totalAmount" type="number" required>
+    —
+  </Param>
+  <Param name="currency" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Start validation and provisioning for a paid order
+
+<ApiEndpoint method="POST" path="/orders/:id/start-provisioning" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Submit order for payment
+
+<ApiEndpoint method="POST" path="/orders/:id/submit" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Confirm payment for an order
+
+<ApiEndpoint method="POST" path="/orders/:id/confirm-payment" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `ConfirmPaymentDto`
+
+<ParamTable>
+  <Param name="transactionRef" type="string" required>
+    —
+  </Param>
+  <Param name="amount" type="number" required>
+    —
+  </Param>
+  <Param name="currency" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Revert payment confirmation back to pending
+
+<ApiEndpoint method="POST" path="/orders/:id/revert-payment" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Cancel an order
+
+<ApiEndpoint method="POST" path="/orders/:id/cancel" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `CancelOrderDto`
+
+<ParamTable>
+  <Param name="reason" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List orders with filtering, sorting and pagination
+
+<ApiEndpoint method="GET" path="/orders" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="QueryOrdersDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get order analytics and metrics
+
+<ApiEndpoint method="GET" path="/orders/analytics" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get order statistics (counts by status, totals)
+
+<ApiEndpoint method="GET" path="/orders/stats" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get order by ID
+
+<ApiEndpoint method="GET" path="/orders/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get delivery info for an order item
+
+<ApiEndpoint method="GET" path="/orders/:id/items/:itemId/delivery" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+  <Param name="itemId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Send or re-send delivery email for an order item
+
+<ApiEndpoint method="POST" path="/orders/:id/items/:itemId/deliver" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+  <Param name="itemId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+

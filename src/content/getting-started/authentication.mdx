@@ -1,0 +1,87 @@
+---
+title: "Authentication"
+description: "Learn how to authenticate with the PLATFORMA API"
+section: "getting-started"
+order: 3
+---
+
+# Authentication
+
+All API requests to PLATFORMA require authentication. The platform supports two authentication methods: API keys and OAuth 2.0 tokens.
+
+## API Keys
+
+API keys are the simplest way to authenticate. Each key is scoped to a tenant and has configurable permissions.
+
+### Creating an API Key
+
+1. Log in to the PLATFORMA Admin Portal
+2. Navigate to **Settings** → **API Keys**
+3. Click **Create New Key**
+4. Select the required scopes (e.g., `orders:read`, `orders:write`, `infrastructure:manage`)
+5. Copy the generated key — it will only be shown once
+
+### Using API Keys
+
+Include your API key in the `Authorization` header:
+
+```bash
+curl -X GET https://api.platforma.cloud/v1/orders \
+  -H "Authorization: Bearer pk_live_abc123def456"
+```
+
+Or with the SDK:
+
+```typescript
+import { Platforma } from "@platforma/sdk";
+
+const client = new Platforma({
+  apiKey: "pk_live_abc123def456",
+});
+```
+
+<Callout type="warning">
+Never expose API keys in client-side code or commit them to version control. Use environment variables instead.
+</Callout>
+
+## OAuth 2.0
+
+For user-facing applications, use OAuth 2.0 with the Authorization Code flow.
+
+### Configuration
+
+```typescript
+const config = {
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://yourapp.com/callback",
+  authorizationUrl: "https://auth.platforma.cloud/authorize",
+  tokenUrl: "https://auth.platforma.cloud/token",
+};
+```
+
+### Token Exchange
+
+After the user authorizes your application, exchange the authorization code for an access token:
+
+```typescript
+const tokenResponse = await client.auth.exchangeCode({
+  code: "auth_code_from_redirect",
+  redirectUri: "https://yourapp.com/callback",
+});
+
+// Use the access token for API requests
+const authenticatedClient = new Platforma({
+  accessToken: tokenResponse.access_token,
+});
+```
+
+## Rate Limits
+
+Authentication tokens are subject to rate limits. See [Rate Limits](/api-reference/rate-limits) for details.
+
+| Key Type | Rate Limit |
+|----------|-----------|
+| Test keys (`pk_test_`) | 100 requests/min |
+| Live keys (`pk_live_`) | 1,000 requests/min |
+| OAuth tokens | 500 requests/min |

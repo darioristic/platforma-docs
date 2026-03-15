@@ -1,0 +1,80 @@
+---
+title: "Errors"
+description: "API error codes and handling"
+section: "api-reference"
+order: 4
+---
+
+# Errors
+
+PLATFORMA uses conventional HTTP response codes to indicate the success or failure of an API request. Codes in the `2xx` range indicate success, `4xx` codes indicate client errors, and `5xx` codes indicate server errors.
+
+## Error Response Format
+
+All error responses follow a consistent structure:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "Human-readable error description",
+    "details": [
+      {
+        "field": "customer_id",
+        "message": "is required"
+      }
+    ]
+  }
+}
+```
+
+## HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Success |
+| `201` | Created — resource was successfully created |
+| `204` | No Content — request succeeded with no response body |
+| `400` | Bad Request — invalid parameters or malformed request |
+| `401` | Unauthorized — invalid or missing authentication |
+| `403` | Forbidden — insufficient permissions |
+| `404` | Not Found — resource does not exist |
+| `409` | Conflict — request conflicts with current state |
+| `422` | Unprocessable Entity — validation failed |
+| `429` | Too Many Requests — rate limit exceeded |
+| `500` | Internal Server Error — unexpected server error |
+| `503` | Service Unavailable — temporary outage |
+
+## Error Codes
+
+| Code | HTTP Status | Description |
+|------|------------|-------------|
+| `invalid_request` | 400 | The request body is malformed or missing required fields |
+| `authentication_failed` | 401 | The API key or token is invalid |
+| `insufficient_scope` | 403 | The token lacks required scopes |
+| `resource_not_found` | 404 | The requested resource does not exist |
+| `duplicate_resource` | 409 | A resource with this identifier already exists |
+| `validation_error` | 422 | One or more fields failed validation |
+| `rate_limit_exceeded` | 429 | Rate limit has been exceeded |
+| `internal_error` | 500 | An unexpected error occurred |
+
+## Handling Errors
+
+<Callout type="tip">
+Always check the `error.code` field for programmatic error handling rather than parsing the `message` string, which may change.
+</Callout>
+
+```typescript
+try {
+  const order = await client.orders.create({ ... });
+} catch (err) {
+  if (err.code === "validation_error") {
+    console.error("Validation failed:", err.details);
+  } else if (err.code === "rate_limit_exceeded") {
+    // Retry with exponential backoff
+    await sleep(err.retryAfter * 1000);
+  } else {
+    console.error("Unexpected error:", err.message);
+  }
+}
+```

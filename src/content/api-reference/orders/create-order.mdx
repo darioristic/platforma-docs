@@ -1,0 +1,99 @@
+---
+title: "Create Order"
+description: "Create a new order for a customer"
+section: "api-reference"
+order: 2
+method: "POST"
+endpoint: "/v1/orders"
+---
+
+# Create Order
+
+<ApiEndpoint method="POST" path="/v1/orders" auth="Bearer token">
+  Creates a new order that triggers the provisioning workflow.
+</ApiEndpoint>
+
+## Request Body
+
+<ParamTable>
+  <Param name="customer_id" type="string" required>
+    Unique identifier of the customer placing the order.
+  </Param>
+  <Param name="items" type="OrderItem[]" required>
+    Array of order line items. Each must include `product_id` and `quantity`.
+  </Param>
+  <Param name="configuration" type="object">
+    Global configuration options applied to all items (e.g., region, environment).
+  </Param>
+  <Param name="metadata" type="Record&lt;string, string&gt;">
+    Arbitrary key-value pairs attached to the order for your reference.
+  </Param>
+  <Param name="callback_url" type="string">
+    Webhook URL to receive provisioning status updates.
+  </Param>
+</ParamTable>
+
+### OrderItem Schema
+
+<ParamTable>
+  <Param name="product_id" type="string" required>
+    The product to order from the catalog.
+  </Param>
+  <Param name="quantity" type="integer" required>
+    Number of units to provision.
+  </Param>
+  <Param name="configuration" type="object">
+    Item-specific configuration (overrides global configuration).
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={201}>
+{`{
+  "data": {
+    "id": "ord_xyz789",
+    "customer_id": "cust_abc123",
+    "status": "pending",
+    "total_amount": 299.98,
+    "currency": "EUR",
+    "items": [
+      {
+        "id": "item_001",
+        "product_id": "prod_vm_small",
+        "quantity": 2,
+        "unit_price": 149.99,
+        "status": "pending"
+      }
+    ],
+    "metadata": {},
+    "created_at": "2026-03-15T10:00:00Z"
+  }
+}`}
+</ResponseExample>
+
+## Errors
+
+<ResponseExample status={400}>
+{`{
+  "error": {
+    "code": "invalid_request",
+    "message": "customer_id is required"
+  }
+}`}
+</ResponseExample>
+
+<ResponseExample status={422}>
+{`{
+  "error": {
+    "code": "validation_error",
+    "message": "Product not available in requested region",
+    "details": [
+      {
+        "field": "items[0].configuration.region",
+        "message": "Product prod_vm_small is not available in us-east-1"
+      }
+    ]
+  }
+}`}
+</ResponseExample>

@@ -1,0 +1,103 @@
+---
+title: "Deploy Infrastructure"
+description: "Provision and manage cloud infrastructure clusters"
+section: "guides"
+order: 3
+---
+
+# Deploy Infrastructure
+
+This guide covers provisioning your first infrastructure cluster, adding nodes, and configuring networking.
+
+<Steps>
+<Step title="Choose a region and cluster type">
+
+PLATFORMA supports multiple cluster types and regions:
+
+| Type | Best For |
+|------|---------|
+| `kubernetes` | Container workloads, microservices |
+| `openstack` | Virtual machines, traditional workloads |
+| `bare_metal` | High-performance computing, databases |
+
+</Step>
+
+<Step title="Provision a cluster">
+
+```typescript
+const cluster = await client.infrastructure.clusters.create({
+  name: "production-eu",
+  type: "kubernetes",
+  region: "eu-west-1",
+  node_count: 3,
+  node_size: "medium",  // 8 vCPU, 32GB RAM per node
+  kubernetes_version: "1.29",
+  networking: {
+    pod_cidr: "10.244.0.0/16",
+    service_cidr: "10.96.0.0/12",
+    cni: "cilium",
+  },
+});
+
+// Wait for cluster to be ready
+await client.infrastructure.clusters.waitForReady(cluster.id, {
+  timeout: 900_000, // 15 minutes
+});
+```
+
+</Step>
+
+<Step title="Configure networking">
+
+Set up virtual networks and subnets for workload isolation:
+
+```typescript
+const network = await client.infrastructure.networks.create({
+  cluster_id: cluster.id,
+  name: "app-network",
+  cidr: "10.0.0.0/16",
+  subnets: [
+    { name: "web-tier", cidr: "10.0.1.0/24" },
+    { name: "api-tier", cidr: "10.0.2.0/24" },
+    { name: "data-tier", cidr: "10.0.3.0/24" },
+  ],
+});
+```
+
+</Step>
+
+<Step title="Scale the cluster">
+
+Add or remove nodes based on demand:
+
+```typescript
+await client.infrastructure.clusters.scale(cluster.id, {
+  node_count: 6,
+  node_size: "large",  // Upgrade existing nodes
+});
+```
+
+</Step>
+
+<Step title="Enable monitoring">
+
+Configure monitoring and alerting:
+
+```typescript
+await client.monitoring.configure({
+  cluster_id: cluster.id,
+  metrics: ["cpu", "memory", "disk", "network"],
+  alerts: [
+    { metric: "cpu", threshold: 85, window: "5m", action: "notify" },
+    { metric: "memory", threshold: 90, window: "5m", action: "notify" },
+    { metric: "disk", threshold: 95, window: "1m", action: "notify" },
+  ],
+});
+```
+
+</Step>
+</Steps>
+
+<Callout type="warning">
+Always provision at least 3 nodes for production workloads to ensure high availability. Single-node clusters should only be used for development and testing.
+</Callout>

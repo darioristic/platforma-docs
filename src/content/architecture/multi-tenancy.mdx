@@ -1,0 +1,84 @@
+---
+title: "Multi-Tenancy"
+description: "How PLATFORMA isolates tenant data and resources"
+section: "architecture"
+order: 5
+---
+
+# Multi-Tenancy
+
+PLATFORMA is a multi-tenant platform where each tenant (organization) has completely isolated data, configuration, and resource quotas. This document explains the isolation model.
+
+## Isolation Model
+
+PLATFORMA uses a **shared infrastructure, isolated data** model:
+
+| Layer | Isolation Strategy |
+|-------|-------------------|
+| **Application** | Tenant context injected into every request via middleware |
+| **Database** | Row-level security with `tenant_id` on every table |
+| **API** | Tenant scoping via authentication token |
+| **Infrastructure** | Resource quotas per tenant, optional dedicated clusters |
+| **Events** | Event streams partitioned by tenant |
+| **Storage** | Object storage with tenant-prefixed paths |
+
+## Tenant Context
+
+Every API request carries tenant context extracted from the authentication token:
+
+```typescript
+// Middleware extracts tenant from JWT
+const tenantContext = {
+  tenant_id: "ten_xyz789",
+  user_id: "usr_abc123",
+  roles: ["admin"],
+  scopes: ["orders:write", "infrastructure:manage"],
+};
+
+// Injected into all service calls
+const orders = await orderService.list(tenantContext);
+// SQL: SELECT * FROM orders WHERE tenant_id = 'ten_xyz789'
+```
+
+## Resource Quotas
+
+Each tenant has configurable resource limits:
+
+```json
+{
+  "tenant_id": "ten_xyz789",
+  "quotas": {
+    "max_clusters": 10,
+    "max_instances": 500,
+    "max_cpu_cores": 2000,
+    "max_memory_gb": 8000,
+    "max_storage_tb": 100,
+    "max_api_keys": 50,
+    "max_users": 200
+  }
+}
+```
+
+<Callout type="info">
+Quota enforcement happens at the API layer before any provisioning begins. Requests that would exceed quotas are rejected with a `quota_exceeded` error.
+</Callout>
+
+## Dedicated Clusters
+
+For tenants with strict compliance requirements, PLATFORMA supports dedicated infrastructure:
+
+- **Dedicated compute** — Tenant's workloads run on isolated physical nodes
+- **Dedicated network** — Separate VLANs and firewall rules
+- **Dedicated storage** — Isolated Ceph pools or dedicated NVMe drives
+- **Geographic restrictions** — Resources constrained to specific regions
+
+## Tenant Lifecycle
+
+| State | Description |
+|-------|-------------|
+| `active` | Fully operational |
+| `suspended` | Access disabled, data preserved (e.g., non-payment) |
+| `archived` | Data retained for compliance, no API access |
+| `deleted` | All data permanently removed after retention period |
+
+Data retention follows a configurable policy (default: 90 days after deletion request) to comply with GDPR and similar regulations.

@@ -1,0 +1,66 @@
+---
+title: "List Portals"
+description: "Retrieve a list of all portals"
+section: "api-reference"
+order: 1
+method: "GET"
+endpoint: "/v1/portals"
+---
+
+# List Portals
+
+<ApiEndpoint method="GET" path="/v1/portals" auth="Bearer token">
+  Retrieves a paginated list of all portals accessible to the authenticated tenant.
+</ApiEndpoint>
+
+## Query Parameters
+
+<ParamTable>
+  <Param name="limit" type="integer">
+    Number of results per page (default: 20, max: 100).
+  </Param>
+  <Param name="cursor" type="string">
+    Pagination cursor from a previous response.
+  </Param>
+  <Param name="status" type="string">
+    Filter by portal status: `active`, `inactive`, `suspended`.
+  </Param>
+  <Param name="type" type="string">
+    Filter by portal type: `customer`, `admin`, `partner`.
+  </Param>
+</ParamTable>
+
+## Response
+
+<ResponseExample status={200}>
+{`{
+  "data": [
+    {
+      "id": "portal_abc123",
+      "name": "Customer Self-Service",
+      "type": "customer",
+      "status": "active",
+      "url": "https://portal.example.com",
+      "tenant_id": "ten_xyz789",
+      "created_at": "2026-01-15T09:00:00Z",
+      "updated_at": "2026-03-10T14:30:00Z"
+    },
+    {
+      "id": "portal_def456",
+      "name": "Partner Dashboard",
+      "type": "partner",
+      "status": "active",
+      "url": "https://partner.example.com",
+      "tenant_id": "ten_xyz789",
+      "created_at": "2026-02-20T11:00:00Z",
+      "updated_at": "2026-03-12T08:15:00Z"
+    }
+  ],
+  "meta": {
+    "total": 3,
+    "page": 1,
+    "per_page": 20,
+    "has_more": false
+  }
+}`}
+</ResponseExample>

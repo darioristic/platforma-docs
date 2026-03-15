@@ -1,0 +1,116 @@
+---
+title: "Event-Driven Workflows"
+description: "Build automated workflows with PLATFORMA's event bus"
+section: "guides"
+order: 6
+---
+
+# Event-Driven Workflows
+
+PLATFORMA's event bus enables you to build automated workflows that respond to platform events in real-time. Use events to trigger provisioning, send notifications, update billing, and integrate with external systems.
+
+## How Events Work
+
+Every action in PLATFORMA publishes an event to the event bus. You can subscribe to these events via webhooks, message queues, or the streaming API.
+
+## Event Types
+
+| Event | Trigger |
+|-------|---------|
+| `order.created` | A new order is placed |
+| `order.provisioned` | An order's resources are ready |
+| `order.failed` | An order's provisioning failed |
+| `resource.created` | A new resource is provisioned |
+| `resource.status_changed` | A resource's status changed |
+| `resource.deleted` | A resource was terminated |
+| `invoice.generated` | A new invoice was generated |
+| `invoice.paid` | An invoice payment was received |
+| `alert.triggered` | A monitoring alert fired |
+
+<Steps>
+<Step title="Register a webhook endpoint">
+
+```typescript
+const webhook = await client.events.webhooks.create({
+  url: "https://yourapp.com/webhooks/platforma",
+  events: ["order.created", "order.provisioned", "order.failed"],
+  secret: "whsec_your_signing_secret",
+});
+```
+
+</Step>
+
+<Step title="Handle incoming events">
+
+Verify the webhook signature and process events:
+
+```typescript
+import { verifyWebhookSignature } from "@platforma/sdk";
+
+app.post("/webhooks/platforma", (req, res) => {
+  const isValid = verifyWebhookSignature(
+    req.body,
+    req.headers["x-platforma-signature"],
+    "whsec_your_signing_secret"
+  );
+
+  if (!isValid) {
+    return res.status(401).json({ error: "Invalid signature" });
+  }
+
+  const event = req.body;
+
+  switch (event.type) {
+    case "order.provisioned":
+      // Send welcome email to customer
+      sendWelcomeEmail(event.data.customer_id, event.data.resources);
+      break;
+
+    case "order.failed":
+      // Alert operations team
+      notifyOpsTeam(event.data.order_id, event.data.error);
+      break;
+
+    case "alert.triggered":
+      // Auto-scale if CPU is high
+      if (event.data.metric === "cpu" && event.data.value > 90) {
+        autoScaleCluster(event.data.cluster_id);
+      }
+      break;
+  }
+
+  res.status(200).json({ received: true });
+});
+```
+
+</Step>
+
+<Step title="Build an auto-scaling workflow">
+
+Combine events and API calls for automated operations:
+
+```typescript
+async function autoScaleCluster(clusterId: string) {
+  const cluster = await client.infrastructure.clusters.get(clusterId);
+  const currentNodes = cluster.node_count;
+  const maxNodes = 20;
+
+  if (currentNodes < maxNodes) {
+    await client.infrastructure.clusters.scale(clusterId, {
+      node_count: Math.min(currentNodes + 2, maxNodes),
+    });
+
+    await client.notifications.send({
+      channel: "ops-alerts",
+      message: `Auto-scaled cluster ${cluster.name} from ${currentNodes} to ${currentNodes + 2} nodes`,
+    });
+  }
+}
+```
+
+</Step>
+</Steps>
+
+<Callout type="info">
+Webhook deliveries are retried up to 5 times with exponential backoff if your endpoint returns a non-2xx status code. Events are stored for 30 days and can be replayed via the API.
+</Callout>

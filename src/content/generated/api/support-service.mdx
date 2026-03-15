@@ -1,0 +1,223 @@
+---
+title: "Support Service API"
+description: "Auto-generated API reference for support-service"
+section: "api"
+service: "support-service"
+auto_generated: true
+last_synced: "2026-03-15T15:39:27.419Z"
+---
+
+# Support Service API
+
+<Callout type="info">
+Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
+</Callout>
+
+**Base path:** `/api`  
+**Endpoints:** 13
+
+---
+
+## Support Analytics
+
+### Get support ticket analytics and metrics
+
+<ApiEndpoint method="GET" path="/support/analytics" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+## Comments
+
+### Add a comment to a ticket
+
+<ApiEndpoint method="POST" path="/tickets/:ticketId/comments" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="ticketId" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `AddCommentDto`
+
+<ParamTable>
+  <Param name="body" type="string" required>
+    —
+  </Param>
+  <Param name="internal" type="boolean">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List comments for a ticket
+
+<ApiEndpoint method="GET" path="/tickets/:ticketId/comments" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="ticketId" type="string" required>
+    path parameter
+  </Param>
+  <Param name="includeInternal" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Health
+
+### Liveness probe
+
+<ApiEndpoint method="GET" path="/health">
+</ApiEndpoint>
+
+---
+
+### Readiness probe
+
+<ApiEndpoint method="GET" path="/ready">
+</ApiEndpoint>
+
+---
+
+## Tickets
+
+### Create a new support ticket
+
+<ApiEndpoint method="POST" path="/tickets" auth="Bearer token">
+</ApiEndpoint>
+
+**Request Body:** `CreateTicketDto`
+
+<ParamTable>
+  <Param name="subject" type="string" required>
+    —
+  </Param>
+  <Param name="description" type="string" required>
+    —
+  </Param>
+  <Param name="priority" type="TicketPriority">
+    —
+  </Param>
+  <Param name="category" type="TicketCategory">
+    —
+  </Param>
+  <Param name="relatedResources" type="orderId?: string; serviceInstanceId?: string; invoiceId?: string;">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### List tickets (filtered, paginated, tenant-isolated)
+
+<ApiEndpoint method="GET" path="/tickets" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="TicketQueryDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get ticket statistics (counts by status and priority)
+
+<ApiEndpoint method="GET" path="/tickets/stats" auth="Bearer token">
+</ApiEndpoint>
+
+---
+
+### Get ticket by ID with comments
+
+<ApiEndpoint method="GET" path="/tickets/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Update ticket status, priority, or category
+
+<ApiEndpoint method="PATCH" path="/tickets/:id" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateTicketDto`
+
+<ParamTable>
+  <Param name="status" type="TicketStatus">
+    —
+  </Param>
+  <Param name="priority" type="TicketPriority">
+    —
+  </Param>
+  <Param name="category" type="TicketCategory">
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Assign ticket to an agent (admin/support_agent only)
+
+<ApiEndpoint method="PATCH" path="/tickets/:id/assign" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `AssignTicketDto`
+
+<ParamTable>
+  <Param name="assigneeId" type="string" required>
+    —
+  </Param>
+</ParamTable>
+
+---
+
+### Close a ticket
+
+<ApiEndpoint method="PATCH" path="/tickets/:id/close" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Reopen a closed or resolved ticket
+
+<ApiEndpoint method="PATCH" path="/tickets/:id/reopen" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+---
+
