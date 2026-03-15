@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, Code, BookOpen, Layers, Search, ArrowRight } from "lucide-react";
+import { Zap, Code, BookOpen, Users, Search, ArrowRight } from "lucide-react";
 import DocsNavbar from "@/components/layout/DocsNavbar";
 import DocsFooter from "@/components/layout/DocsFooter";
 
@@ -28,10 +28,10 @@ const sections = [
     color: "text-amber-400",
   },
   {
-    title: "Architecture",
-    description: "Platform architecture, data models, event bus, multi-tenancy, and security.",
-    href: "/architecture/overview",
-    icon: Layers,
+    title: "User Guides",
+    description: "Detailed guides for the Admin Platform, Customer Portal, and Public Web.",
+    href: "/generated/docs/user-guides/customer-portal/getting-started",
+    icon: Users,
     color: "text-purple-400",
   },
 ];
@@ -41,8 +41,8 @@ const popularPages = [
   { title: "Authentication", href: "/api-reference/authentication" },
   { title: "Create Order", href: "/api-reference/orders/create-order" },
   { title: "Deploy Infrastructure", href: "/guides/deploy-infrastructure" },
-  { title: "Platform Layers", href: "/architecture/platform-layers" },
-  { title: "Event Bus", href: "/architecture/event-bus" },
+  { title: "Customer Portal", href: "/generated/docs/user-guides/customer-portal/getting-started" },
+  { title: "Admin Platform", href: "/generated/docs/user-guides/admin-platform/getting-started" },
 ];
 
 export default function DocsHome() {

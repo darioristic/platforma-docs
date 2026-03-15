@@ -75,17 +75,6 @@ export const navigation: NavSection[] = [
       { title: "Event-Driven Workflows", href: "/guides/event-driven-workflows" },
     ],
   },
-  {
-    title: "Architecture",
-    items: [
-      { title: "Overview", href: "/architecture/overview" },
-      { title: "Platform Layers", href: "/architecture/platform-layers" },
-      { title: "Event Bus", href: "/architecture/event-bus" },
-      { title: "Data Model", href: "/architecture/data-model" },
-      { title: "Multi-Tenancy", href: "/architecture/multi-tenancy" },
-      { title: "Security Model", href: "/architecture/security-model" },
-    ],
-  },
 ];
 
 // Auto-generated sections are appended dynamically.

@@ -19,6 +19,16 @@ export interface DocFile {
 
 const IGNORED_FILES = new Set([".DS_Store"]);
 
+/** Paths excluded from public documentation (internal/developer content) */
+const EXCLUDED_PATHS = [
+  "demo-script.md",
+  "reference/database-schema.md",
+  "reference/kafka-events.md",
+  "services/",
+  "architecture/",
+  "api/",
+];
+
 async function collectMarkdownFiles(dir: string, base: string): Promise<string[]> {
   const results: string[] = [];
   let entries;
@@ -52,63 +62,17 @@ function extractFirstHeading(content: string): string | null {
   return match ? match[1].trim() : null;
 }
 
-/**
- * Collect README.md files from packages/ and services/ directories.
- * Each package README becomes a doc under the "packages" category.
- */
-async function collectPackageReadmes(repoDir: string): Promise<DocFile[]> {
-  const docs: DocFile[] = [];
-  const dirs = ["packages", "services"];
-
-  for (const dir of dirs) {
-    const baseDir = path.join(repoDir, dir);
-    let entries;
-    try {
-      entries = await fs.readdir(baseDir, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const readmePath = path.join(baseDir, entry.name, "README.md");
-      try {
-        const raw = await fs.readFile(readmePath, "utf-8");
-        const { data: frontmatter, content } = matter(raw);
-
-        const title =
-          (frontmatter.title as string) ||
-          extractFirstHeading(content) ||
-          titleFromFilename(entry.name);
-
-        const description =
-          (frontmatter.description as string) || `Documentation: ${title}`;
-
-        const slug = `${dir}/${entry.name}/readme`.toLowerCase();
-
-        docs.push({
-          relativePath: `${dir}/${entry.name}/README.md`,
-          category: dir,
-          slug,
-          title,
-          description,
-          content,
-        });
-      } catch {
-        // No README, skip
-      }
-    }
-  }
-
-  return docs;
-}
-
 export async function parseDocsFolder(repoDir: string): Promise<DocFile[]> {
   const docsDir = path.join(repoDir, "docs");
   const files = await collectMarkdownFiles(docsDir, docsDir);
   const docs: DocFile[] = [];
 
   for (const relPath of files) {
+    // Skip internal/developer content
+    if (EXCLUDED_PATHS.some((exc) => relPath === exc || relPath.startsWith(exc))) {
+      continue;
+    }
+
     const fullPath = path.join(docsDir, relPath);
     const raw = await fs.readFile(fullPath, "utf-8");
     const { data: frontmatter, content } = matter(raw);
@@ -137,10 +101,6 @@ export async function parseDocsFolder(repoDir: string): Promise<DocFile[]> {
       content,
     });
   }
-
-  // Also collect README files from packages/ and services/
-  const packageDocs = await collectPackageReadmes(repoDir);
-  docs.push(...packageDocs);
 
   // Sort: categories first, then alphabetically
   docs.sort((a, b) => {

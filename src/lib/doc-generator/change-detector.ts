@@ -2,19 +2,11 @@ import type { GitClient } from "./git-client";
 
 export type ParserName =
   | "openapi"
-  | "entities"
-  | "events"
-  | "dependencies"
-  | "docs"
-  | "changelog";
+  | "docs";
 
 export const ALL_PARSERS: ParserName[] = [
   "openapi",
-  "entities",
-  "events",
-  "dependencies",
   "docs",
-  "changelog",
 ];
 
 export interface ChangeDetectionResult {
@@ -27,28 +19,13 @@ export interface ChangeDetectionResult {
 const PATH_RULES: Array<{ pattern: RegExp; parsers: ParserName[] }> = [
   { pattern: /^services\/[^/]+\/src\/.*controller/, parsers: ["openapi"] },
   { pattern: /^services\/[^/]+\/src\/.*\.dto/, parsers: ["openapi"] },
-  { pattern: /^services\/[^/]+\/src\/entities\//, parsers: ["entities"] },
-  { pattern: /^services\/[^/]+\/src\/schemas\//, parsers: ["entities"] },
-  { pattern: /^packages\/kafka\//, parsers: ["events"] },
-  {
-    pattern: /^(services|packages|apps)\/[^/]+\/package\.json$/,
-    parsers: ["dependencies"],
-  },
-  { pattern: /^package\.json$/, parsers: ["dependencies"] },
-  { pattern: /^ARCHITECTURE\.md$/, parsers: ["dependencies"] },
   { pattern: /^docs\//, parsers: ["docs"] },
-  { pattern: /^packages\/[^/]+\/README\.md$/, parsers: ["docs"] },
-  { pattern: /^services\/[^/]+\/README\.md$/, parsers: ["docs"] },
 ];
 
 /** Map output directory category back to the parser that generates it */
 export const CATEGORY_TO_PARSER: Record<string, ParserName> = {
   api: "openapi",
-  models: "entities",
-  events: "events",
-  architecture: "dependencies",
   docs: "docs",
-  changelog: "changelog",
 };
 
 function matchParsers(filePath: string): ParserName[] {
@@ -112,31 +89,17 @@ export async function detectChanges(opts: {
 
   // Map changed files to parsers
   const parsersToRun = new Set<ParserName>();
-  let hasNonDocsChanges = false;
 
   for (const file of changedFiles) {
     const matched = matchParsers(file);
-    if (matched.length > 0) {
-      for (const p of matched) {
-        parsersToRun.add(p);
-      }
-      if (!matched.every((p) => p === "docs")) {
-        hasNonDocsChanges = true;
-      }
-    } else {
-      // Unmatched files → could affect changelog
-      hasNonDocsChanges = true;
+    for (const p of matched) {
+      parsersToRun.add(p);
     }
   }
 
-  // Changelog always runs unless only docs/ changed
-  if (hasNonDocsChanges) {
-    parsersToRun.add("changelog");
-  }
-
-  // If no parsers matched at all, run changelog at minimum
+  // If no parsers matched, nothing to regenerate
   if (parsersToRun.size === 0) {
-    parsersToRun.add("changelog");
+    return fullResult("No matching changes for public docs");
   }
 
   const parserList = [...parsersToRun].join(", ");

@@ -1,20 +1,11 @@
 import { GitClient } from "./git-client";
 import { parseServiceApis } from "./parsers/openapi-parser";
-import { parseAllEntities, parseMongooseSchemas } from "./parsers/entity-parser";
-import { parseEventSystem } from "./parsers/event-parser";
-import { parseDependencyGraph } from "./parsers/dependency-parser";
-import { parseChangelog } from "./parsers/changelog-parser";
 import { parseDocsFolder } from "./parsers/docs-parser";
 import { generateApiMdx } from "./generators/api-mdx-generator";
-import { generateModelMdx } from "./generators/model-mdx-generator";
-import { generateEventMdx } from "./generators/event-mdx-generator";
-import { generateArchitectureMdx } from "./generators/architecture-mdx-generator";
-import { generateChangelogMdx } from "./generators/changelog-mdx-generator";
 import { generateDocsMdx } from "./generators/docs-mdx-generator";
 import { loadState, saveState } from "./generation-state";
 import { detectChanges, CATEGORY_TO_PARSER, ALL_PARSERS, type ParserName } from "./change-detector";
 import type { GeneratedFile } from "./types";
-import fsSync from "fs";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -136,15 +127,11 @@ function buildGeneratedNav(files: GeneratedFile[], outputDir: string): NavSectio
   }
 
   const categoryLabels: Record<string, string> = {
-    docs: "Project Documentation",
-    api: "API (Auto-Generated)",
-    models: "Data Models",
-    events: "Events",
-    architecture: "System Architecture",
-    changelog: "Changelog",
+    docs: "Documentation",
+    api: "API Reference (Auto-Generated)",
   };
 
-  const order = ["docs", "api", "models", "events", "architecture", "changelog"];
+  const order = ["docs", "api"];
 
   for (const cat of order) {
     const items = groups.get(cat);
@@ -239,52 +226,6 @@ export async function runGenerationPipeline(options: {
     }
   }
 
-  if (parsersToRun.has("entities")) {
-    try {
-      console.log("[pipeline] Parsing entities...");
-      const entityServices = parseAllEntities(repoDir);
-      const mongooseSchemas = parseMongooseSchemas(repoDir);
-      console.log(`  Found ${entityServices.length} entity groups, ${mongooseSchemas.length} Mongoose schemas`);
-      const modelFiles = generateModelMdx(entityServices, mongooseSchemas, options.outputDir);
-      allFiles.push(...modelFiles);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push(`Entity parser failed: ${message}`);
-      console.error(`[pipeline] Entity error: ${message}`);
-    }
-  }
-
-  if (parsersToRun.has("events")) {
-    try {
-      console.log("[pipeline] Parsing events...");
-      const eventSystem = parseEventSystem(repoDir);
-      console.log(`  Found ${eventSystem.domains.length} event domains`);
-      const eventFiles = generateEventMdx(eventSystem, options.outputDir);
-      allFiles.push(...eventFiles);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push(`Event parser failed: ${message}`);
-      console.error(`[pipeline] Event error: ${message}`);
-    }
-  }
-
-  if (parsersToRun.has("dependencies")) {
-    try {
-      console.log("[pipeline] Parsing dependencies...");
-      const depGraph = parseDependencyGraph(repoDir);
-      const archMd = fsSync.existsSync(path.join(repoDir, "ARCHITECTURE.md"))
-        ? fsSync.readFileSync(path.join(repoDir, "ARCHITECTURE.md"), "utf-8")
-        : null;
-      console.log(`  Found ${depGraph.packages.length} packages, ${depGraph.internalDeps.length} internal deps`);
-      const archFiles = generateArchitectureMdx(depGraph, archMd, options.outputDir);
-      allFiles.push(...archFiles);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push(`Dependency parser failed: ${message}`);
-      console.error(`[pipeline] Dependency error: ${message}`);
-    }
-  }
-
   if (parsersToRun.has("docs")) {
     try {
       console.log("[pipeline] Parsing docs/ folder...");
@@ -296,20 +237,6 @@ export async function runGenerationPipeline(options: {
       const message = error instanceof Error ? error.message : String(error);
       errors.push(`Docs parser failed: ${message}`);
       console.error(`[pipeline] Docs error: ${message}`);
-    }
-  }
-
-  if (parsersToRun.has("changelog")) {
-    try {
-      console.log("[pipeline] Parsing changelog...");
-      const entries = await parseChangelog(repoDir, options.changelogSince);
-      console.log(`  Found ${entries.length} commits`);
-      const changelogFiles = generateChangelogMdx(entries, options.outputDir);
-      allFiles.push(...changelogFiles);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push(`Changelog parser failed: ${message}`);
-      console.error(`[pipeline] Changelog error: ${message}`);
     }
   }
 

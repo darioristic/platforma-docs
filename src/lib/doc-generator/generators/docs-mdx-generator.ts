@@ -30,13 +30,10 @@ function sanitizeForMdx(content: string): string {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  general: "Documentation",
-  services: "Service Documentation",
+  general: "Overview",
   architecture: "Architecture",
-  api: "API Documentation",
-  runbooks: "Runbooks",
-  adr: "Architecture Decision Records",
-  packages: "Packages",
+  reference: "Reference",
+  "user-guides": "User Guides",
 };
 
 function categoryLabel(category: string): string {

@@ -1,78 +1,10 @@
 [
   {
-    "title": "Project Documentation",
+    "title": "Documentation",
     "items": [
-      {
-        "title": "Cloud Factory API Documentation",
-        "href": "/generated/docs/api/readme"
-      },
-      {
-        "title": "Cloud Factory Platform - Architecture Overview",
-        "href": "/generated/docs/architecture/architecture"
-      },
-      {
-        "title": "Domain Model Reference",
-        "href": "/generated/docs/architecture/domain_model"
-      },
-      {
-        "title": "Cloud Factory - Service Interconnection Map",
-        "href": "/generated/docs/architecture/event-flow"
-      },
-      {
-        "title": "Non-Functional Requirements",
-        "href": "/generated/docs/architecture/non_functional_requirements"
-      },
-      {
-        "title": "Cloud Factory — Demo Script",
-        "href": "/generated/docs/demo-script"
-      },
       {
         "title": "Project Documentation",
         "href": "/generated/docs/index"
-      },
-      {
-        "title": "@cloud-factory/api-contracts",
-        "href": "/generated/docs/packages/api-contracts/readme"
-      },
-      {
-        "title": "@cloud-factory/auth-guard",
-        "href": "/generated/docs/packages/auth-guard/readme"
-      },
-      {
-        "title": "@cloud-factory/cache",
-        "href": "/generated/docs/packages/cache/readme"
-      },
-      {
-        "title": "@cloud-factory/common",
-        "href": "/generated/docs/packages/common/readme"
-      },
-      {
-        "title": "@cloud-factory/idempotency",
-        "href": "/generated/docs/packages/idempotency/readme"
-      },
-      {
-        "title": "@cloud-factory/kafka",
-        "href": "/generated/docs/packages/kafka/readme"
-      },
-      {
-        "title": "@cloud-factory/mcp-server",
-        "href": "/generated/docs/packages/mcp-server/readme"
-      },
-      {
-        "title": "@cloud-factory/resilience",
-        "href": "/generated/docs/packages/resilience/readme"
-      },
-      {
-        "title": "@cloud-factory/tracing",
-        "href": "/generated/docs/packages/tracing/readme"
-      },
-      {
-        "title": "@cloud-factory/ui",
-        "href": "/generated/docs/packages/ui/readme"
-      },
-      {
-        "title": "@cloud-factory/vault",
-        "href": "/generated/docs/packages/vault/readme"
       },
       {
         "title": "Cloud Factory - Platform Page Content",
@@ -87,48 +19,8 @@
         "href": "/generated/docs/reference/api-endpoints"
       },
       {
-        "title": "Database Schema Reference",
-        "href": "/generated/docs/reference/database-schema"
-      },
-      {
         "title": "Error Codes Reference",
         "href": "/generated/docs/reference/error-codes"
-      },
-      {
-        "title": "Kafka Events Reference",
-        "href": "/generated/docs/reference/kafka-events"
-      },
-      {
-        "title": "Billing Integration Service",
-        "href": "/generated/docs/services/billing-integration"
-      },
-      {
-        "title": "Identity Service",
-        "href": "/generated/docs/services/identity-service"
-      },
-      {
-        "title": "Notification Service",
-        "href": "/generated/docs/services/notification-service"
-      },
-      {
-        "title": "Order Service",
-        "href": "/generated/docs/services/order-service"
-      },
-      {
-        "title": "Product Service",
-        "href": "/generated/docs/services/product-service"
-      },
-      {
-        "title": "Provisioning Service",
-        "href": "/generated/docs/services/provisioning-service"
-      },
-      {
-        "title": "Cloud Factory — Backend Services",
-        "href": "/generated/docs/services/readme"
-      },
-      {
-        "title": "Support Service",
-        "href": "/generated/docs/services/support-service"
       },
       {
         "title": "Billing & Invoices",
@@ -201,7 +93,7 @@
     ]
   },
   {
-    "title": "API (Auto-Generated)",
+    "title": "API Reference (Auto-Generated)",
     "items": [
       {
         "title": "Identity Service API",
@@ -230,70 +122,6 @@
       {
         "title": "Support Service API",
         "href": "/generated/api/support-service"
-      }
-    ]
-  },
-  {
-    "title": "Data Models",
-    "items": [
-      {
-        "title": "Identity Service Data Model",
-        "href": "/generated/models/identity-service"
-      },
-      {
-        "title": "Notification Service Data Model",
-        "href": "/generated/models/notification-service"
-      },
-      {
-        "title": "Order Service Data Model",
-        "href": "/generated/models/order-service"
-      },
-      {
-        "title": "Provisioning Service Data Model",
-        "href": "/generated/models/provisioning-service"
-      },
-      {
-        "title": "Reporting Service Data Model",
-        "href": "/generated/models/reporting-service"
-      },
-      {
-        "title": "Support Service Data Model",
-        "href": "/generated/models/support-service"
-      }
-    ]
-  },
-  {
-    "title": "Events",
-    "items": [
-      {
-        "title": "Event System Overview",
-        "href": "/generated/events/overview"
-      },
-      {
-        "title": "Unknown Events",
-        "href": "/generated/events/unknown"
-      }
-    ]
-  },
-  {
-    "title": "System Architecture",
-    "items": [
-      {
-        "title": "Dependency Graph",
-        "href": "/generated/architecture/dependency-graph"
-      },
-      {
-        "title": "Service Map",
-        "href": "/generated/architecture/service-map"
-      }
-    ]
-  },
-  {
-    "title": "Changelog",
-    "items": [
-      {
-        "title": "Changelog",
-        "href": "/generated/changelog/latest"
       }
     ]
   }
