@@ -4,11 +4,13 @@ import { parseAllEntities, parseMongooseSchemas } from "./parsers/entity-parser"
 import { parseEventSystem } from "./parsers/event-parser";
 import { parseDependencyGraph } from "./parsers/dependency-parser";
 import { parseChangelog } from "./parsers/changelog-parser";
+import { parseDocsFolder } from "./parsers/docs-parser";
 import { generateApiMdx } from "./generators/api-mdx-generator";
 import { generateModelMdx } from "./generators/model-mdx-generator";
 import { generateEventMdx } from "./generators/event-mdx-generator";
 import { generateArchitectureMdx } from "./generators/architecture-mdx-generator";
 import { generateChangelogMdx } from "./generators/changelog-mdx-generator";
+import { generateDocsMdx } from "./generators/docs-mdx-generator";
 import type { GeneratedFile } from "./types";
 import fsSync from "fs";
 import { promises as fs } from "fs";
@@ -72,6 +74,7 @@ function buildGeneratedNav(files: GeneratedFile[], outputDir: string): NavSectio
   }
 
   const categoryLabels: Record<string, string> = {
+    docs: "Project Documentation",
     api: "API (Auto-Generated)",
     models: "Data Models",
     events: "Events",
@@ -79,7 +82,7 @@ function buildGeneratedNav(files: GeneratedFile[], outputDir: string): NavSectio
     changelog: "Changelog",
   };
 
-  const order = ["api", "models", "events", "architecture", "changelog"];
+  const order = ["docs", "api", "models", "events", "architecture", "changelog"];
 
   for (const cat of order) {
     const items = groups.get(cat);
@@ -188,6 +191,19 @@ export async function runGenerationPipeline(options: {
     const message = error instanceof Error ? error.message : String(error);
     errors.push(`Dependency parser failed: ${message}`);
     console.error(`[pipeline] Dependency error: ${message}`);
+  }
+
+  // Docs folder (markdown documentation from cloud-factory/docs/)
+  try {
+    console.log("[pipeline] Parsing docs/ folder...");
+    const docFiles = await parseDocsFolder(repoDir);
+    console.log(`  Found ${docFiles.length} documentation files`);
+    const docsGenerated = generateDocsMdx(docFiles, options.outputDir);
+    allFiles.push(...docsGenerated);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    errors.push(`Docs parser failed: ${message}`);
+    console.error(`[pipeline] Docs error: ${message}`);
   }
 
   // Changelog
