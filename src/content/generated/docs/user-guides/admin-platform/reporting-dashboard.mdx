@@ -1,0 +1,217 @@
+---
+title: "Reporting & Dashboard"
+description: "Documentation: Reporting & Dashboard"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/reporting-dashboard.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/reporting-dashboard.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Reporting & Dashboard
+
+The reporting and monitoring tools give you visibility into platform performance, revenue, resource usage, and system health. This guide covers the Reports page, Monitoring dashboard, and Audit Log.
+
+## Reports
+
+### Accessing Reports
+
+1. Click **Reports** in the sidebar.
+2. The reports dashboard loads with an overview of available report types.
+
+
+
+### Available Report Types
+
+| Report           | Description                                                         |
+| ---------------- | ------------------------------------------------------------------- |
+| **Cost / Usage** | Resource consumption broken down by tenant, product, or time period |
+| **Revenue**      | Income analysis by product, customer segment, or time period        |
+
+### Cost / Usage Reports
+
+Cost and usage reports show how infrastructure resources are being consumed across your customer base.
+
+**How to generate a cost/usage report:**
+
+1. Click **Cost / Usage** on the reports dashboard.
+2. Select the reporting period (daily, weekly, monthly, or custom range).
+3. Choose grouping: by tenant, by product category, or by resource type.
+4. Click **Generate Report**.
+5. The report displays as charts and a data table.
+
+Key metrics included:
+
+- Compute hours consumed (vCPU-hours, RAM-hours)
+- Storage consumption (GB-months)
+- Network bandwidth (ingress/egress in GB)
+- GPU hours (if applicable)
+
+
+
+### Revenue Reports
+
+Revenue reports provide financial analysis of your platform's income.
+
+**How to generate a revenue report:**
+
+1. Click **Revenue** on the reports dashboard.
+2. Select the reporting period.
+3. Choose grouping: by product, by customer, or by tier.
+4. Click **Generate Report**.
+
+Key metrics included:
+
+- Total revenue for the period
+- Revenue by product category (VPS, GPU, Storage, Kubernetes, Add-ons)
+- Month-over-month growth
+- Average revenue per customer
+- Top customers by revenue
+
+
+
+### Exporting Reports
+
+All reports can be exported for use in external tools.
+
+1. Generate a report with your desired parameters.
+2. Click the **Export** button in the top-right corner of the report view.
+3. Select the format (CSV).
+4. The file downloads immediately.
+
+Exported data includes all rows visible in the report table, along with summary totals.
+
+## Monitoring
+
+### Accessing Monitoring
+
+1. Click **Monitoring** in the sidebar.
+2. The monitoring dashboard loads with real-time health status.
+
+
+
+### Service Health
+
+The monitoring page displays the health status of all 7 backend services:
+
+| Service      | Port | Function                                  |
+| ------------ | ---- | ----------------------------------------- |
+| Identity     | 3003 | Authentication, user management, RBAC     |
+| Product      | 3001 | Product catalog and configuration         |
+| Order        | 3002 | Order lifecycle management                |
+| Provisioning | 3004 | Resource provisioning and cloud providers |
+| Billing      | 3005 | Invoicing, payments, usage metering       |
+| Notification | 3006 | Email, SMS, push notifications            |
+| Support      | 3007 | Ticket management and SLA tracking        |
+
+Each service shows:
+
+- **Status indicator** -- Green (healthy), Yellow (degraded), Red (down)
+- **Uptime** -- Percentage uptime over the selected period
+- **Response time** -- Average response time in milliseconds
+
+### Infrastructure Health
+
+Below the services, 5 infrastructure components are monitored:
+
+| Component      | Description                    |
+| -------------- | ------------------------------ |
+| **PostgreSQL** | Primary relational database    |
+| **MongoDB**    | Product catalog document store |
+| **Redis**      | Caching layer                  |
+| **Kafka**      | Event streaming platform       |
+| **Nginx**      | API gateway and load balancer  |
+
+Each component shows its current status and basic health metrics.
+
+### Response Times
+
+The monitoring dashboard includes response time charts showing:
+
+- Average response time per service (line chart over time)
+- 95th percentile response time
+- Error rate percentage
+
+Use these charts to identify performance degradation before it impacts customers.
+
+
+
+### How to Restart a Service
+
+If a service is unhealthy and requires a restart:
+
+1. Locate the service on the monitoring dashboard.
+2. Click the options menu (three dots) on the service card.
+3. Select **Restart**.
+4. Confirm the action in the dialog.
+5. The service status will show "Restarting" until it comes back up.
+
+> **Warning:** Restarting a service causes brief downtime for that service. Use this only when necessary and preferably during low-traffic periods. Active requests to the service may fail during the restart.
+
+## Audit Log
+
+### Accessing the Audit Log
+
+1. Click **Audit Log** in the sidebar.
+2. The log displays a chronological list of all platform actions.
+
+
+
+### What the Audit Log Records
+
+The audit log is an immutable record of every significant action taken on the platform. Each entry includes:
+
+- **Timestamp** -- Exact date and time of the action
+- **Actor** -- Team member or system process that performed the action
+- **Action** -- What was done (e.g., Created, Updated, Deleted, Sent, Voided)
+- **Resource** -- The affected entity and its identifier (e.g., Order #1042, Invoice INV-2026-0042)
+- **Details** -- Additional context about the change
+
+### Searching the Audit Log
+
+1. Use the search field to find entries by actor name, resource ID, or action description.
+2. Results filter in real time.
+
+### Filtering the Audit Log
+
+| Filter            | Options                                                          |
+| ----------------- | ---------------------------------------------------------------- |
+| **Resource Type** | Orders, Invoices, Products, Customers, Users, Tickets, Settings  |
+| **Action**        | Created, Updated, Deleted, Sent, Voided, Refunded, Login, Logout |
+| **Date Range**    | Preset ranges or custom date picker                              |
+
+Combine filters to investigate specific events. For example, filter to "Invoices" + "Voided" + last 7 days to review all recently voided invoices.
+
+### Immutability
+
+Audit log entries cannot be modified or deleted by any user, including administrators. This ensures a trustworthy record for compliance, dispute resolution, and security investigations.
+
+## Log Explorer
+
+### Accessing Log Explorer
+
+1. Click **Log Explorer** in the sidebar.
+2. The log search interface loads.
+
+The Log Explorer provides full-text search across system logs from all services. Use it for detailed technical investigation when monitoring dashboards indicate issues.
+
+
+
+## Best Practices
+
+- **Review revenue reports monthly** to track growth trends and identify underperforming products.
+- **Set up monitoring checks** as part of your daily routine -- a quick glance at the dashboard catches issues early.
+- **Use the audit log for dispute resolution** -- it provides objective evidence of what happened and when.
+- **Export reports before meetings** to share data with stakeholders without requiring platform access.
+- **Investigate response time spikes** promptly -- they often precede service outages.
+
+## Related Guides
+
+- [Getting Started](./getting-started.md) -- Dashboard overview and KPI cards
+- [Billing & Invoices](./billing-invoices.md) -- Invoice data that feeds into revenue reports
+- [Order Management](./order-management.md) -- Order data in cost and usage reports
+- [Settings](./settings.md) -- Configure monitoring and notification preferences

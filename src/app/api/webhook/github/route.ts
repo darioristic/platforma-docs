@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { runGenerationPipeline } from "@/lib/doc-generator/pipeline";
-import { setGenerationStatus } from "@/lib/doc-generator/status";
-import path from "path";
 
 function verifySignature(payload: string, signature: string | null, secret: string): boolean {
   if (!signature) return false;
@@ -29,54 +26,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Skipped: not main branch" });
   }
 
-  const repoUrl = process.env.GITHUB_REPO
-    ? `https://github.com/${process.env.GITHUB_REPO}`
-    : payload.repository?.clone_url;
-
-  if (!repoUrl) {
-    return NextResponse.json({ error: "No repo URL" }, { status: 400 });
+  // Trigger Vercel redeploy — generation runs during build
+  const deployHook = process.env.VERCEL_DEPLOY_HOOK;
+  if (!deployHook) {
+    return NextResponse.json({ error: "VERCEL_DEPLOY_HOOK not configured" }, { status: 500 });
   }
 
-  // Extract changed files from webhook payload commits
-  const changedFiles: string[] = [];
-  if (Array.isArray(payload.commits)) {
-    for (const commit of payload.commits) {
-      const added = commit.added as string[] | undefined;
-      const modified = commit.modified as string[] | undefined;
-      const removed = commit.removed as string[] | undefined;
-      changedFiles.push(...(added ?? []), ...(modified ?? []), ...(removed ?? []));
+  try {
+    const res = await fetch(deployHook, { method: "POST" });
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: `Deploy hook failed: ${res.status}` },
+        { status: 502 }
+      );
     }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: `Deploy hook error: ${message}` },
+      { status: 502 }
+    );
   }
-  const uniqueChangedFiles = [...new Set(changedFiles)];
-
-  const startedAt = new Date().toISOString();
-  setGenerationStatus({ status: "running", startedAt });
-
-  runGenerationPipeline({
-    repoUrl,
-    token: process.env.GITHUB_TOKEN,
-    outputDir: path.join(process.cwd(), "src", "content", "generated"),
-    changedFiles: uniqueChangedFiles,
-  })
-    .then((result) => {
-      setGenerationStatus({
-        status: "completed",
-        startedAt,
-        completedAt: new Date().toISOString(),
-        result,
-      });
-    })
-    .catch((err: Error) => {
-      setGenerationStatus({
-        status: "failed",
-        startedAt,
-        completedAt: new Date().toISOString(),
-        error: err.message,
-      });
-    });
 
   return NextResponse.json({
-    message: "Generation started",
+    message: "Redeploy triggered",
     commit: payload.after?.slice(0, 8),
   });
 }

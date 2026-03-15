@@ -1,0 +1,488 @@
+---
+title: "Kafka Events Reference"
+description: "Documentation: Kafka Events Reference"
+section: "docs"
+category: "reference"
+auto_generated: true
+source: "docs/reference/kafka-events.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/reference/kafka-events.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Kafka Events Reference
+
+All Cloud Factory services communicate asynchronously via Apache Kafka 7.5. Events follow a standardized envelope format with topic naming conventions.
+
+## Event Envelope
+
+Every event published to Kafka wraps its domain-specific payload in a `CloudFactoryEvent&lt;T>` envelope:
+
+```typescript
+interface CloudFactoryEvent<T> {
+  eventId: string; // UUID v7
+  eventType: string; // domain.action (e.g. "order.created")
+  version: string; // Schema version (e.g. "v1")
+  timestamp: string; // ISO 8601
+  tenantId: string; // Tenant isolation
+  correlationId: string; // Request tracing
+  causationId?: string; // ID of the event that caused this
+  actor: EventActor; // Who triggered the event
+  payload: T; // Domain-specific data
+  metadata?: Record<string, unknown>;
+}
+
+interface EventActor {
+  id: string; // User ID, service name, etc.
+  type: 'user' | 'service' | 'system' | 'api_key';
+}
+```
+
+## Topic Naming Convention
+
+```
+cloud-factory.{env}.{domain}.{event}.v{version}
+```
+
+- **env**: `dev`, `staging`, `prod`, `test` (prevents cross-environment leakage)
+- **domain**: `order`, `product`, `provisioning`, `billing`, `identity`, `notification`, `support`, `reporting`, `dns`, `audit`
+- **event**: kebab-case event name
+- **version**: schema version (currently `v1`)
+
+Example: `cloud-factory.prod.order.created.v1`
+
+## Dead Letter Queue (DLQ)
+
+Failed messages are routed to `\{original-topic\}.dlq` after exhausting retries. The DLQ handler service tracks failure reasons and supports replay.
+
+---
+
+## Order Events
+
+**Publisher:** Order Service
+
+| Topic                          | Event Type                     | Description                          |
+| ------------------------------ | ------------------------------ | ------------------------------------ |
+| `order.created`                | `order.created`                | New order submitted for payment      |
+| `order.payment-confirmed`      | `order.payment-confirmed`      | Payment verified for order           |
+| `order.provisioning-started`   | `order.provisioning-started`   | Provisioning pipeline initiated      |
+| `order.fulfilled`              | `order.fulfilled`              | All items provisioned and active     |
+| `order.cancelled`              | `order.cancelled`              | Order cancelled (may trigger refund) |
+| `order.failed`                 | `order.failed`                 | Order failed during processing       |
+| `order.service-delivered`      | `order.service-delivered`      | Service credentials sent to customer |
+| `order.compensation-started`   | `order.compensation-started`   | Saga compensation initiated          |
+| `order.compensation-completed` | `order.compensation-completed` | Saga compensation finished           |
+| `order.compensation-failed`    | `order.compensation-failed`    | Saga compensation failed             |
+
+### `order.created` Payload
+
+| Field       | Type               | Description                             |
+| ----------- | ------------------ | --------------------------------------- |
+| orderId     | string             | Order UUID                              |
+| orderNumber | string             | Human-readable number (ORD-YYYY-NNNNN)  |
+| customerId  | string             | Customer identifier                     |
+| tenantId    | string             | Tenant UUID                             |
+| userId      | string             | User who placed the order               |
+| email       | string?            | User email                              |
+| type        | string             | Order type (NEW_SERVICE, UPGRADE, etc.) |
+| items       | OrderItemPayload[] | Array of order items                    |
+| totalAmount | number             | Total order amount                      |
+| currency    | string             | Currency code                           |
+
+**items[]:**
+| Field | Type | Description |
+|-------|------|-------------|
+| itemId | string | Item UUID |
+| productId | string | Product catalog ID |
+| productCode | string | Product SKU |
+| productName | string | Product display name |
+| quantity | number | |
+| configuration | object | Service configuration |
+
+### `order.payment-confirmed` Payload
+
+| Field          | Type   | Description                   |
+| -------------- | ------ | ----------------------------- |
+| orderId        | string |                               |
+| orderNumber    | string |                               |
+| tenantId       | string |                               |
+| transactionRef | string | Payment transaction reference |
+| amount         | number | Amount paid                   |
+| currency       | string |                               |
+| paidAt         | string | ISO 8601 timestamp            |
+
+### `order.provisioning-started` Payload
+
+| Field       | Type   | Description                                            |
+| ----------- | ------ | ------------------------------------------------------ |
+| orderId     | string |                                                        |
+| orderNumber | string |                                                        |
+| tenantId    | string |                                                        |
+| items       | array  | Items with configuration details (specs, region, zone) |
+
+### `order.fulfilled` Payload
+
+| Field       | Type   | Description                                      |
+| ----------- | ------ | ------------------------------------------------ |
+| orderId     | string |                                                  |
+| orderNumber | string |                                                  |
+| tenantId    | string |                                                  |
+| customerId  | string |                                                  |
+| fulfilledAt | string |                                                  |
+| currency    | string |                                                  |
+| items       | array  | Items with serviceInstanceId, productId, pricing |
+
+### `order.failed` Payload
+
+| Field       | Type    | Description      |
+| ----------- | ------- | ---------------- |
+| orderId     | string  |                  |
+| orderNumber | string  |                  |
+| tenantId    | string  |                  |
+| reason      | string  | Failure reason   |
+| failedAt    | string  |                  |
+| failedStep  | string? | Step that failed |
+
+### `order.cancelled` Payload
+
+| Field          | Type    | Description                     |
+| -------------- | ------- | ------------------------------- |
+| orderId        | string  |                                 |
+| orderNumber    | string  |                                 |
+| tenantId       | string  |                                 |
+| reason         | string  | Cancellation reason             |
+| cancelledAt    | string  |                                 |
+| refundRequired | boolean | Whether refund should be issued |
+
+### `order.service-delivered` Payload
+
+| Field        | Type                   | Description |
+| ------------ | ---------------------- | ----------- |
+| orderId      | string                 |             |
+| orderNumber  | string                 |             |
+| orderItemId  | string                 |             |
+| tenantId     | string                 |             |
+| customerId   | string                 |             |
+| productName  | string                 |             |
+| ipAddress    | string?                |             |
+| hostname     | string?                |             |
+| endpoints    | Record&lt;string,string>? |             |
+| resourceId   | string?                |             |
+| providerType | string?                |             |
+| deliveredAt  | string                 |             |
+
+**Subscribers:** Notification Service, Billing Integration, Reporting Service
+
+---
+
+## Provisioning Events
+
+**Publisher:** Provisioning Service
+
+| Topic                             | Event Type                        | Description                   |
+| --------------------------------- | --------------------------------- | ----------------------------- |
+| `provisioning.started`            | `provisioning.started`            | Provisioning pipeline started |
+| `provisioning.step-completed`     | `provisioning.step-completed`     | Individual step completed     |
+| `provisioning.resource-allocated` | `provisioning.resource-allocated` | Cloud resource created        |
+| `provisioning.service-activated`  | `provisioning.service-activated`  | Service endpoints ready       |
+| `provisioning.completed`          | `provisioning.completed`          | Full provisioning completed   |
+| `provisioning.failed`             | `provisioning.failed`             | Provisioning failed           |
+| `provisioning.rolled-back`        | `provisioning.rolled-back`        | Resources cleaned up          |
+| `provisioning.service-suspended`  | `provisioning.service-suspended`  | Service suspended             |
+
+### `provisioning.started` Payload
+
+| Field                 | Type   | Description                   |
+| --------------------- | ------ | ----------------------------- |
+| provisioningRequestId | string |                               |
+| orderId               | string |                               |
+| orderItemId           | string |                               |
+| tenantId              | string |                               |
+| resourceType          | string | VPS, KUBERNETES_CLUSTER, etc. |
+| specification         | object | CPU, memory, storage, region  |
+| estimatedDuration     | number | Seconds                       |
+
+### `provisioning.completed` Payload
+
+| Field                 | Type    | Description                                                               |
+| --------------------- | ------- | ------------------------------------------------------------------------- |
+| provisioningRequestId | string  |                                                                           |
+| orderId               | string  |                                                                           |
+| orderItemId           | string  |                                                                           |
+| tenantId              | string  |                                                                           |
+| serviceInstanceId     | string  |                                                                           |
+| endpoints             | array   | \{ name, url \}                                                             |
+| completedAt           | string  |                                                                           |
+| duration              | number  | Seconds                                                                   |
+| allocation            | object? | \{ resourceId, ipAddress, hostname, endpoints, credentials, providerType \} |
+
+### `provisioning.failed` Payload
+
+| Field                 | Type   | Description                         |
+| --------------------- | ------ | ----------------------------------- |
+| provisioningRequestId | string |                                     |
+| orderId               | string |                                     |
+| orderItemId           | string |                                     |
+| tenantId              | string |                                     |
+| error                 | object | \{ code, message, step?, retryable \} |
+| failedAt              | string |                                     |
+| retryCount            | number |                                     |
+| maxRetries            | number |                                     |
+
+**Subscribers:** Order Service (saga orchestration), Billing Integration, Notification Service, Reporting Service
+
+---
+
+## Identity Events
+
+**Publisher:** Identity Service
+
+| Topic                      | Event Type                 | Description            |
+| -------------------------- | -------------------------- | ---------------------- |
+| `identity.user-created`    | `identity.user-created`    | New user registered    |
+| `identity.user-logged-in`  | `identity.user-logged-in`  | Successful login       |
+| `identity.user-logged-out` | `identity.user-logged-out` | User logged out        |
+| `identity.role-assigned`   | `identity.role-assigned`   | Roles changed for user |
+| `identity.mfa-enabled`     | `identity.mfa-enabled`     | MFA activated          |
+
+### `identity.user-created` Payload
+
+| Field     | Type     | Description    |
+| --------- | -------- | -------------- |
+| userId    | string   |                |
+| email     | string   |                |
+| tenantId  | string   |                |
+| roles     | string[] | Assigned roles |
+| createdAt | string   |                |
+
+### `identity.user-logged-in` Payload
+
+| Field       | Type   | Description                                                   |
+| ----------- | ------ | ------------------------------------------------------------- |
+| userId      | string |                                                               |
+| email       | string |                                                               |
+| tenantId    | string |                                                               |
+| loginMethod | string | `password`, `oauth_google`, `oauth_github`, `oauth_microsoft` |
+| loggedInAt  | string |                                                               |
+
+### `identity.role-assigned` Payload
+
+| Field         | Type     | Description         |
+| ------------- | -------- | ------------------- |
+| userId        | string   |                     |
+| tenantId      | string   |                     |
+| assignedRoles | string[] | Roles just assigned |
+| previousRoles | string[] | Roles before change |
+| newRoles      | string[] | Roles after change  |
+
+**Subscribers:** Notification Service, Reporting Service
+
+---
+
+## Billing Events
+
+**Publisher:** Billing Integration Service
+
+| Topic                            | Event Type                       | Description                                   |
+| -------------------------------- | -------------------------------- | --------------------------------------------- |
+| `billing.usage-recorded`         | `billing.usage-recorded`         | Resource usage captured                       |
+| `billing.invoice-generated`      | `billing.invoice-generated`      | Invoice created                               |
+| `billing.payment-received`       | `billing.payment-received`       | Payment processed                             |
+| `billing.refund-requested`       | `billing.refund-requested`       | Refund initiated (published by Order Service) |
+| `billing.refund-completed`       | `billing.refund-completed`       | Refund processed                              |
+| `billing.refund-failed`          | `billing.refund-failed`          | Refund failed                                 |
+| `billing.subscription-created`   | `billing.subscription-created`   | New subscription                              |
+| `billing.subscription-cancelled` | `billing.subscription-cancelled` | Subscription cancelled                        |
+| `billing.subscription-upgraded`  | `billing.subscription-upgraded`  | Plan change                                   |
+| `billing.subscription-past-due`  | `billing.subscription-past-due`  | Payment failed                                |
+
+### `billing.invoice-generated` Payload
+
+| Field         | Type     | Description |
+| ------------- | -------- | ----------- |
+| invoiceId     | string   |             |
+| invoiceNumber | string   |             |
+| customerId    | string   |             |
+| tenantId      | string   |             |
+| orderIds      | string[] |             |
+| amount        | number   |             |
+| currency      | string   |             |
+| dueDate       | string   |             |
+| issuedAt      | string   |             |
+
+### `billing.payment-received` Payload
+
+| Field           | Type   | Description           |
+| --------------- | ------ | --------------------- |
+| invoiceId       | string |                       |
+| invoiceNumber   | string |                       |
+| paymentIntentId | string | Stripe payment intent |
+| customerId      | string |                       |
+| tenantId        | string |                       |
+| amount          | number |                       |
+| currency        | string |                       |
+| paidAt          | string |                       |
+
+### `billing.subscription-created` Payload
+
+| Field            | Type   | Description                |
+| ---------------- | ------ | -------------------------- |
+| subscriptionId   | string |                            |
+| tenantId         | string |                            |
+| customerId       | string |                            |
+| orderId          | string |                            |
+| productId        | string |                            |
+| billingFrequency | string | MONTHLY, QUARTERLY, ANNUAL |
+| pricing          | object | \{ amount, currency \}       |
+| periodStart      | string |                            |
+| periodEnd        | string |                            |
+
+### `billing.subscription-past-due` Payload
+
+| Field          | Type   | Description |
+| -------------- | ------ | ----------- |
+| subscriptionId | string |             |
+| tenantId       | string |             |
+| customerId     | string |             |
+| orderId        | string |             |
+| failedAttempts | number |             |
+| lastFailureAt  | string |             |
+
+**Subscribers:** Notification Service, Order Service, Provisioning Service (suspension), Reporting Service
+
+---
+
+## Product Events
+
+**Publisher:** Product Service
+
+| Topic                          | Event Type                     | Description             |
+| ------------------------------ | ------------------------------ | ----------------------- |
+| `product.created`              | `product.created`              | New product in catalog  |
+| `product.updated`              | `product.updated`              | Product details changed |
+| `product.deleted`              | `product.deleted`              | Product removed         |
+| `product.pricing-plan-created` | `product.pricing-plan-created` | New pricing plan        |
+| `product.pricing-plan-updated` | `product.pricing-plan-updated` | Pricing plan changed    |
+| `product.pricing-plan-deleted` | `product.pricing-plan-deleted` | Pricing plan removed    |
+
+### `product.created` Payload
+
+| Field     | Type   | Description |
+| --------- | ------ | ----------- |
+| productId | string |             |
+| code      | string | SKU         |
+| name      | string |             |
+| category  | string |             |
+| status    | string |             |
+
+**Subscribers:** Billing Integration (pricing sync), Reporting Service
+
+---
+
+## Notification Events
+
+**Publisher:** Notification Service
+
+| Topic                      | Event Type                 | Description                           |
+| -------------------------- | -------------------------- | ------------------------------------- |
+| `notification.send-email`  | `notification.send-email`  | Request to send email                 |
+| `notification.send-in-app` | `notification.send-in-app` | Request to create in-app notification |
+| `notification.delivered`   | `notification.delivered`   | Notification successfully sent        |
+| `notification.failed`      | `notification.failed`      | Notification delivery failed          |
+
+### `notification.delivered` Payload
+
+| Field          | Type   | Description |
+| -------------- | ------ | ----------- |
+| notificationId | string |             |
+
+### `notification.failed` Payload
+
+| Field          | Type   | Description |
+| -------------- | ------ | ----------- |
+| notificationId | string |             |
+| errorMessage   | string |             |
+
+**Subscribers:** Reporting Service
+
+---
+
+## Support Events
+
+**Publisher:** Support Service
+
+| Topic                     | Event Type                | Description                    |
+| ------------------------- | ------------------------- | ------------------------------ |
+| `support.ticket-created`  | `support.ticket-created`  | New ticket opened              |
+| `support.ticket-updated`  | `support.ticket-updated`  | Ticket status/priority changed |
+| `support.ticket-assigned` | `support.ticket-assigned` | Ticket assigned to agent       |
+| `support.ticket-resolved` | `support.ticket-resolved` | Ticket resolved                |
+| `support.ticket-closed`   | `support.ticket-closed`   | Ticket closed                  |
+| `support.comment-added`   | `support.comment-added`   | Comment added to ticket        |
+
+### `support.ticket-created` Payload
+
+| Field        | Type   | Description               |
+| ------------ | ------ | ------------------------- |
+| ticketId     | string |                           |
+| ticketNumber | string |                           |
+| subject      | string |                           |
+| priority     | string | LOW, MEDIUM, HIGH, URGENT |
+| category     | string |                           |
+| userId       | string | Creator                   |
+
+**Subscribers:** Notification Service, Reporting Service
+
+---
+
+## DNS Events
+
+**Publisher:** Provisioning Service (DNS module)
+
+| Topic                  | Event Type             | Description         |
+| ---------------------- | ---------------------- | ------------------- |
+| `dns.zone-created`     | `dns.zone-created`     | New DNS zone        |
+| `dns.zone-deleted`     | `dns.zone-deleted`     | Zone removed        |
+| `dns.zone-suspended`   | `dns.zone-suspended`   | Zone suspended      |
+| `dns.zone-reactivated` | `dns.zone-reactivated` | Zone reactivated    |
+| `dns.record-created`   | `dns.record-created`   | DNS record added    |
+| `dns.record-updated`   | `dns.record-updated`   | DNS record modified |
+| `dns.record-deleted`   | `dns.record-deleted`   | DNS record removed  |
+| `dns.dnssec-enabled`   | `dns.dnssec-enabled`   | DNSSEC activated    |
+| `dns.dnssec-disabled`  | `dns.dnssec-disabled`  | DNSSEC deactivated  |
+
+---
+
+## Reporting Events
+
+**Publisher:** Reporting Service
+
+| Topic                        | Event Type                   | Description              |
+| ---------------------------- | ---------------------------- | ------------------------ |
+| `reporting.report-generated` | `reporting.report-generated` | Report export completed  |
+| `reporting.alert-triggered`  | `reporting.alert-triggered`  | Alert threshold breached |
+
+---
+
+## Event Flow: Order Lifecycle (Saga)
+
+```
+1. order.created           -> Notification: "Order received" email
+2. order.payment-confirmed -> Order Service starts provisioning
+3. order.provisioning-started -> Provisioning Service creates resources
+4. provisioning.started    -> Progress tracking
+5. provisioning.step-completed (x N)
+6. provisioning.completed  -> Order Service marks item fulfilled
+7. order.service-delivered  -> Notification: delivery email with credentials
+8. order.fulfilled         -> Billing: create subscription + invoice
+                           -> Notification: "Order complete" email
+```
+
+On failure at any step, the saga triggers compensation:
+
+```
+order.compensation-started -> rollback provisioned resources, issue refund
+order.compensation-completed | order.compensation-failed
+```

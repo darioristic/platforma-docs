@@ -1,0 +1,542 @@
+---
+title: "Cloud Factory - Service Interconnection Map"
+description: "Documentation: Cloud Factory - Service Interconnection Map"
+section: "docs"
+category: "architecture"
+auto_generated: true
+source: "docs/architecture/event-flow.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/architecture/event-flow.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory - Service Interconnection Map
+
+**Version:** 3.4 | **Date:** February 17, 2026
+
+This document describes how Cloud Factory platform microservices are interconnected.
+All inter-service communication goes **exclusively through Apache Kafka** (async, event-driven).
+There are no direct HTTP calls between services — each service is fully autonomous with its own database.
+
+---
+
+## 1. Communication Patterns Overview
+
+The platform uses three communication patterns:
+
+| Pattern               | Technology                     | Description                                                          |
+| --------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| **Client → Service**  | HTTP via nginx gateway (:8880) | Frontend applications call services exclusively through API Gateway  |
+| **Service → Service** | Apache Kafka (:9092)           | Asynchronous communication via domain events                         |
+| **Service → Client**  | WebSocket (Socket.IO)          | Real-time notifications from notification-service to browser clients |
+
+There are no synchronous inter-service calls (HTTP, gRPC). Services do not share databases — each has its own PostgreSQL schema or MongoDB collection.
+
+---
+
+## 2. Service Topology
+
+The diagram shows service categories by their role in the event-driven architecture.
+
+```text
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                                                                       │
+  │   ISOLATED SERVICES                                                   │
+  │   No Kafka producer or consumer.                                      │
+  │   Accessible only through HTTP (API Gateway).                         │
+  │                                                                       │
+  │   ┌──────────────────────┐    ┌──────────────────────┐               │
+  │   │   Identity Service   │    │   Product Service    │               │
+  │   │   :3003              │    │   :3001              │               │
+  │   │   PostgreSQL         │    │   MongoDB            │               │
+  │   │                      │    │                      │               │
+  │   │   Auth, JWT, RBAC,   │    │   Product CRUD,      │               │
+  │   │   MFA, Audit Log     │    │   pricing plans      │               │
+  │   └──────────────────────┘    └──────────────────────┘               │
+  │                                                                       │
+  ├───────────────────────────────────────────────────────────────────────┤
+  │                                                                       │
+  │   SAGA PARTICIPANTS (bidirectional Kafka communication)               │
+  │   Order orchestrates lifecycle, Provisioning and Billing react.       │
+  │                                                                       │
+  │   ┌──────────────────────┐                                           │
+  │   │   Order Service      │  ◄── Saga orchestrator                    │
+  │   │   :3002              │      Manages the entire order             │
+  │   │   PostgreSQL         │      lifecycle from creation to           │
+  │   │                      │      fulfillment or compensation          │
+  │   └──────────┬───────────┘                                           │
+  │              │ ▲                                                       │
+  │    events    │ │  events                                              │
+  │              ▼ │                                                       │
+  │   ┌──────────────────────┐    ┌──────────────────────┐               │
+  │   │ Provisioning Service │    │  Billing Integration │               │
+  │   │   :3004              │───►│   :3005              │               │
+  │   │   PostgreSQL         │    │   PostgreSQL         │               │
+  │   │                      │    │                      │               │
+  │   │   4-step workflow:   │    │   Stripe, invoices,  │               │
+  │   │   allocate, config,  │    │   subscriptions,     │               │
+  │   │   activate, verify   │    │   usage metering,    │               │
+  │   │                      │    │   refunds            │               │
+  │   └──────────────────────┘    └──────────────────────┘               │
+  │                                                                       │
+  ├───────────────────────────────────────────────────────────────────────┤
+  │                                                                       │
+  │   PRODUCER ONLY                                                       │
+  │   Sends events, does not receive from other services.                 │
+  │                                                                       │
+  │   ┌──────────────────────┐                                           │
+  │   │   Support Service    │                                           │
+  │   │   :3007              │                                           │
+  │   │   PostgreSQL         │                                           │
+  │   │                      │                                           │
+  │   │   Tickets, comments, │                                           │
+  │   │   SLA tracking       │                                           │
+  │   └──────────────────────┘                                           │
+  │                                                                       │
+  ├───────────────────────────────────────────────────────────────────────┤
+  │                                                                       │
+  │   EVENT SINK (subscriber hub)                                         │
+  │   Receives events from all producer services.                         │
+  │   Transforms them into user notifications.                            │
+  │                                                                       │
+  │   ┌──────────────────────┐                                           │
+  │   │ Notification Service │                                           │
+  │   │   :3006              │                                           │
+  │   │   PostgreSQL + Redis │                                           │
+  │   │                      │                                           │
+  │   │   In-app (Socket.IO) │                                           │
+  │   │   + Email (SMTP)     │                                           │
+  │   └──────────────────────┘                                           │
+  │                                                                       │
+  └───────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Event Flow Diagram
+
+The diagram shows all Kafka events and who sends/receives them.
+Arrows indicate the direction of data flow (publisher → subscriber).
+
+```text
+  Order Service (:3002)
+  ══════════════════════
+       │
+       │  order.created ──────────────────────────────────► Notification
+       │  order.payment-confirmed ────────────────────────► Billing
+       │  order.provisioning-started ─────────────────────► Provisioning
+       │  order.fulfilled ────────────────────────────────► Billing + Notification
+       │  order.failed ───────────────────────────────────► Notification
+       │  order.cancelled ────────────────────────────────► Provisioning + Notification
+       │  order.compensation-started ─────────────────────► (log only)
+       │  order.compensation-completed ───────────────────► (log only)
+       │  order.compensation-failed ──────────────────────► (log only)
+       │  billing.refund-requested ───────────────────────► Billing (*)
+       │
+       │  ◄── provisioning.completed          (from Provisioning)
+       │  ◄── provisioning.failed             (from Provisioning)
+       │  ◄── provisioning.step-completed     (from Provisioning)
+       │  ◄── provisioning.rolled-back        (from Provisioning)
+       │  ◄── billing.refund-completed        (from Billing) (*)
+       │  ◄── billing.refund-failed           (from Billing) (*)
+       │
+       │  (*) = topic defined but publisher not yet implemented
+
+
+  Provisioning Service (:3004)
+  ════════════════════════════
+       │
+       │  provisioning.started ───────────────────────────► (log only)
+       │  provisioning.step-completed ────────────────────► Order
+       │  provisioning.resource-allocated ────────────────► (log only)
+       │  provisioning.service-activated ─────────────────► Billing
+       │  provisioning.completed ─────────────────────────► Order + Billing + Notification
+       │  provisioning.failed ────────────────────────────► Order
+       │  provisioning.rolled-back ───────────────────────► Order
+       │
+       │  ◄── order.provisioning-started      (from Order)
+       │  ◄── order.cancelled                 (from Order)
+
+
+  Billing Integration (:3005)
+  ═══════════════════════════
+       │
+       │  billing.usage-recorded ─────────────────────────► (log only)
+       │  billing.invoice-generated ──────────────────────► Notification
+       │  billing.payment-received ───────────────────────► Notification
+       │  billing.subscription-created ───────────────────► (log only)
+       │  billing.subscription-cancelled ─────────────────► (log only)
+       │  billing.subscription-upgraded ──────────────────► (log only)
+       │  billing.subscription-past-due ──────────────────► (log only)
+       │
+       │  ◄── provisioning.service-activated  (from Provisioning)
+       │  ◄── provisioning.completed          (from Provisioning)
+       │  ◄── order.fulfilled                 (from Order)
+       │  ◄── order.payment-confirmed         (from Order)
+       │
+       │  ←→ Stripe API (payment intents, refunds, customers)
+       │  ◄── Stripe Webhooks (POST /webhooks/stripe)
+
+
+  Support Service (:3007)
+  ═══════════════════════
+       │
+       │  support.ticket-created ─────────────────────────► Notification
+       │  support.ticket-updated ─────────────────────────► (log only)
+       │  support.ticket-assigned ────────────────────────► (log only)
+       │  support.ticket-resolved ────────────────────────► Notification
+       │  support.ticket-closed ──────────────────────────► (log only)
+       │  support.comment-added ──────────────────────────► Notification
+       │
+       │  (does not receive events — producer only)
+
+
+  Notification Service (:3006)
+  ════════════════════════════
+       │
+       │  notification.delivered ─────────────────────────► (log only)
+       │  notification.failed ────────────────────────────► (log only)
+       │
+       │  ◄── order.created                   (from Order)
+       │  ◄── order.fulfilled                 (from Order)
+       │  ◄── order.failed                    (from Order)
+       │  ◄── order.cancelled                 (from Order)
+       │  ◄── provisioning.completed          (from Provisioning)
+       │  ◄── billing.invoice-generated       (from Billing)
+       │  ◄── billing.payment-received        (from Billing)
+       │  ◄── support.ticket-created          (from Support)
+       │  ◄── support.comment-added           (from Support)
+       │  ◄── support.ticket-resolved         (from Support)
+       │
+       │  ──► Browser clients (Socket.IO WebSocket)
+       │  ──► Email (SMTP)
+
+
+  Identity (:3003) and Product (:3001)
+  ═══════════════════════════════════
+       No Kafka integration.
+       Accessible only through HTTP API Gateway.
+```
+
+---
+
+## 4. Order Fulfillment Saga (Sequence Diagram)
+
+This is the main business flow of the platform — from order creation to service delivery.
+Order Service acts as the **saga orchestrator** coordinating Provisioning and Billing services.
+
+```text
+  User               Order :3002        Provisioning :3004      Billing :3005      Notification :3006
+     │                  │                     │                     │                     │
+     │  POST /orders    │                     │                     │                     │
+     ├─────────────────►│                     │                     │                     │
+     │                  │                     │                     │                     │
+     │  201 Created     │  order.created      │                     │                     │
+     │◄─────────────────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─►│
+     │                  │                     │                     │       "Order        │
+     │                  │                     │                     │       received!"     │
+     │                  │                     │                     │                     │
+     │ Confirm Payment  │                     │                     │                     │
+     ├─────────────────►│                     │                     │                     │
+     │                  │                     │                     │                     │
+     │                  │ order.payment-      │                     │                     │
+     │                  │    confirmed        │                     │                     │
+     │                  │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─►│                     │
+     │                  │                     │                     │                     │
+     │                  │                     │          Marks invoice                    │
+     │                  │                     │             as paid                       │
+     │                  │                     │                     │                     │
+     │                  │ order.provisioning- │                     │                     │
+     │                  │    started          │                     │                     │
+     │                  │────────────────────►│                     │                     │
+     │                  │                     │                     │                     │
+     │                  │                     │ 1. Allocate         │                     │
+     │                  │                     │ 2. Configure        │                     │
+     │                  │                     │ 3. Activate         │                     │
+     │                  │                     │ 4. Verify           │                     │
+     │                  │                     │                     │                     │
+     │                  │ provisioning.       │                     │                     │
+     │                  │  step-completed     │                     │                     │
+     │                  │◄────────────────────│                     │                     │
+     │                  │  (for each step)    │                     │                     │
+     │                  │                     │                     │                     │
+     │                  │                     │ provisioning.       │                     │
+     │                  │                     │  service-activated  │                     │
+     │                  │                     │────────────────────►│                     │
+     │                  │                     │                     │                     │
+     │                  │                     │          Initializes                      │
+     │                  │                     │          usage metering                   │
+     │                  │                     │                     │                     │
+     │                  │ provisioning.       │                     │                     │
+     │                  │  completed          │                     │                     │
+     │                  │◄────────────────────│                     │                     │
+     │                  │                     │─ ─ ─ ─ ─ ─ ─ ─ ─ ─►│                     │
+     │                  │                     │                     │─ ─ ─ ─ ─ ─ ─ ─ ─ ─►│
+     │                  │                     │                     │   "Provisioning     │
+     │                  │                     │                     │    completed!"      │
+     │                  │                     │                     │                     │
+     │                  │ order.fulfilled     │                     │                     │
+     │                  │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─►│                     │
+     │                  │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─►│
+     │                  │                     │                     │       "Order        │
+     │                  │                     │          Generates  │       fulfilled!"   │
+     │                  │                     │          invoice +  │                     │
+     │                  │                     │          subscription│                     │
+     │                  │                     │                     │                     │
+     │                  │                     │  billing.invoice-   │                     │
+     │                  │                     │    generated        │                     │
+     │                  │                     │                     │─ ─ ─ ─ ─ ─ ─ ─ ─ ─►│
+     │                  │                     │                     │       "New          │
+     │                  │                     │                     │       invoice!"     │
+     │                  │                     │                     │                     │
+     │  Service active  │                     │                     │                     │
+     │◄══════════════════════════════════════════════════════════════│                     │
+```
+
+---
+
+## 5. Compensation (Saga Rollback)
+
+When provisioning or billing fails, Order Service initiates compensation —
+a reverse sequence of steps that undoes all completed operations.
+
+```text
+  Order :3002            Provisioning :3004        Billing :3005
+     │                        │                        │
+     │  provisioning.failed   │                        │
+     │◄───────────────────────│                        │
+     │                        │                        │
+     │  Saga detects failure  │                        │
+     │  Initiates compensation│                        │
+     │                        │                        │
+     │  order.compensation-   │                        │
+     │    started             │                        │
+     │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─►│                        │
+     │                        │                        │
+     │                        │  Rollback:             │
+     │                        │  - Deallocate          │
+     │                        │  - Teardown infra      │
+     │                        │                        │
+     │  provisioning.         │                        │
+     │    rolled-back         │                        │
+     │◄───────────────────────│                        │
+     │                        │                        │
+     │  billing.refund-       │                        │
+     │    requested           │                        │
+     │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─►│
+     │                        │                        │
+     │                        │         Processes      │
+     │                        │         refund         │
+     │                        │         (Stripe)       │
+     │                        │                        │
+     │  billing.refund-       │                        │
+     │    completed (*)       │                        │
+     │◄─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│
+     │                        │                        │
+     │  order.compensation-   │                        │
+     │    completed           │                        │
+     │  order.failed          │                        │
+     │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─►│                        │
+     │                        │                        │
+     │  (*) Topic defined but publisher
+     │      not yet implemented in billing-integration.
+     │      This is a known gap — refund compensation
+     │      currently does not close automatically.
+```
+
+---
+
+## 6. Notification Service as Event Sink
+
+Notification Service is the central hub that listens to events from all other services
+and transforms them into user notifications (in-app and email).
+
+```text
+                                    ┌──────────────────────────┐
+    order.created ─────────────────►│                          │
+    order.fulfilled ───────────────►│                          │
+    order.failed ──────────────────►│                          │      ┌──────────────┐
+    order.cancelled ───────────────►│                          │ ────►│  Browser      │
+                                    │   Notification Service   │      │  (Socket.IO)  │
+    provisioning.completed ────────►│   :3006                  │      └──────────────┘
+                                    │                          │
+    billing.invoice-generated ─────►│   10 event types         │      ┌──────────────┐
+    billing.payment-received ──────►│   → in-app notification  │ ────►│  Email        │
+                                    │   → email notification   │      │  (SMTP)       │
+    support.ticket-created ────────►│                          │      └──────────────┘
+    support.comment-added ─────────►│                          │
+    support.ticket-resolved ───────►│                          │
+                                    └──────────────────────────┘
+
+    For each received event:
+    1. Checks user preferences (whether they want in-app/email for that type)
+    2. Creates a Notification entity in the database
+    3. Sends via Socket.IO WebSocket if the user is online
+    4. Sends email via SMTP if the user has enabled it
+    5. Publishes notification.delivered or notification.failed
+```
+
+---
+
+## 7. Publisher/Subscriber Matrix
+
+The table shows which service publishes (P) and which subscribes (S) to each topic.
+
+| Topic                           | Order | Provisioning | Billing | Notification | Support |
+| ------------------------------- | :---: | :----------: | :-----: | :----------: | :-----: |
+| order.created                   |   P   |              |         |      S       |         |
+| order.payment-confirmed         |   P   |              |    S    |              |         |
+| order.provisioning-started      |   P   |      S       |         |              |         |
+| order.fulfilled                 |   P   |              |    S    |      S       |         |
+| order.failed                    |   P   |              |         |      S       |         |
+| order.cancelled                 |   P   |      S       |         |      S       |         |
+| order.compensation-started      |   P   |              |         |              |         |
+| order.compensation-completed    |   P   |              |         |              |         |
+| order.compensation-failed       |   P   |              |         |              |         |
+| provisioning.started            |       |      P       |         |              |         |
+| provisioning.step-completed     |   S   |      P       |         |              |         |
+| provisioning.resource-allocated |       |      P       |         |              |         |
+| provisioning.service-activated  |       |      P       |    S    |              |         |
+| provisioning.completed          |   S   |      P       |    S    |      S       |         |
+| provisioning.failed             |   S   |      P       |         |              |         |
+| provisioning.rolled-back        |   S   |      P       |         |              |         |
+| billing.usage-recorded          |       |              |    P    |              |         |
+| billing.invoice-generated       |       |              |    P    |      S       |         |
+| billing.payment-received        |       |              |    P    |      S       |         |
+| billing.refund-requested        |   P   |              |         |              |         |
+| billing.refund-completed        |   S   |              |  (\*)   |              |         |
+| billing.refund-failed           |   S   |              |  (\*)   |              |         |
+| billing.subscription-created    |       |              |    P    |              |         |
+| billing.subscription-cancelled  |       |              |    P    |              |         |
+| billing.subscription-upgraded   |       |              |    P    |              |         |
+| billing.subscription-past-due   |       |              |    P    |              |         |
+| notification.delivered          |       |              |         |      P       |         |
+| notification.failed             |       |              |         |      P       |         |
+| support.ticket-created          |       |              |         |      S       |    P    |
+| support.ticket-updated          |       |              |         |              |    P    |
+| support.ticket-assigned         |       |              |         |              |    P    |
+| support.ticket-resolved         |       |              |         |      S       |    P    |
+| support.ticket-closed           |       |              |         |              |    P    |
+| support.comment-added           |       |              |         |      S       |    P    |
+
+`(*)` = Topic is defined and Order awaits it, but Billing does not publish yet. Known gap.
+
+---
+
+## 8. Kafka Consumer Groups
+
+Each service has one consumer group. Kafka guarantees that within a group
+each partition goes to exactly one consumer — this enables horizontal scaling.
+
+| Consumer Group                                 | Service      | Subscribed Topics |
+| ---------------------------------------------- | ------------ | ----------------- |
+| `order-service-provisioning-events-consumer`   | Order        | 6 topics          |
+| `provisioning-service-order-events-consumer`   | Provisioning | 2 topics          |
+| `billing-service-provisioning-events-consumer` | Billing      | 4 topics          |
+| `notification-service-order-events-consumer`   | Notification | 10 topics         |
+| `dlq-handler-all-consumer`                     | DLQ Handler  | all (dead letter) |
+
+---
+
+## 9. Dead Letter Queue (DLQ)
+
+When a consumer fails to process a message after all retry attempts,
+the message is sent to a Dead Letter Queue for later analysis.
+
+```text
+  ┌─────────────┐     retry (max 3x)      ┌─────────────┐
+  │   Kafka     │ ────────────────────────►│  Consumer   │
+  │   Topic     │                          │  Handler    │
+  └─────────────┘                          └──────┬──────┘
+                                                  │
+                                           fail after retries
+                                                  │
+                                                  ▼
+                                           ┌─────────────┐
+                                           │    DLQ       │
+                                           │   Topic      │
+                                           └──────┬──────┘
+                                                  │
+                                                  ▼
+                                           ┌─────────────┐
+                                           │ DLQ Handler  │
+                                           │ (log, alert) │
+                                           └─────────────┘
+
+  Retry configuration:
+  ┌──────────────┬─────────┬──────────┬──────────┬────────────┐
+  │ Profile      │ Retries │ Initial  │ Max      │ Multiplier │
+  ├──────────────┼─────────┼──────────┼──────────┼────────────┤
+  │ Default      │ 3       │ 1s       │ 30s      │ 2x         │
+  │ Critical     │ 5       │ 500ms    │ 60s      │ 2x         │
+  │ Non-critical │ 2       │ 2s       │ 10s      │ 2x         │
+  └──────────────┴─────────┴──────────┴──────────┴────────────┘
+```
+
+---
+
+## 10. Data Isolation
+
+Each service owns its own database/schema. There are no cross-schema queries.
+The only shared infrastructure is Kafka, Redis (cache), and the PostgreSQL server (separate schemas).
+
+```text
+  PostgreSQL Server (:5432)              MongoDB (:27017)
+  DB: cloud_factory                      DB: products
+  ┌─────────────────────────────┐        ┌──────────────────┐
+  │                             │        │                  │
+  │  ┌─── schema: identity ──┐ │        │  products        │
+  │  │  users, tenants,      │ │        │  pricing_plans   │
+  │  │  roles, api_keys,     │ │        │                  │
+  │  │  audit_logs           │ │        └──────────────────┘
+  │  └───────────────────────┘ │             ▲
+  │                             │             │
+  │  ┌─── schema: orders ────┐ │        Product Service
+  │  │  orders, order_items, │ │           :3001
+  │  │  saga_states          │ │
+  │  └───────────────────────┘ │
+  │                             │        Redis (:6379)
+  │  ┌─── schema: provisioning┐│        ┌──────────────────┐
+  │  │  provisioning_requests │ │        │                  │
+  │  └───────────────────────┘ │        │  Cache (key-val) │
+  │                             │        │  TTL: 30s-900s   │
+  │  ┌─── schema: billing ───┐ │        │  per service     │
+  │  │  invoices, line_items,│ │        │                  │
+  │  │  subscriptions,       │ │        │  Throttle store  │
+  │  │  usage_records,       │ │        │  (identity svc)  │
+  │  │  stripe_customers,    │ │        │                  │
+  │  │  refunds, credits     │ │        └──────────────────┘
+  │  └───────────────────────┘ │
+  │                             │
+  │  ┌─── schema: notifications┐│
+  │  │  notifications,        │ │
+  │  │  preferences,          │ │
+  │  │  templates             │ │
+  │  └───────────────────────┘ │
+  │                             │
+  │  ┌─── schema: support ───┐ │
+  │  │  tickets, comments,   │ │
+  │  │  attachments, slas    │ │
+  │  └───────────────────────┘ │
+  └─────────────────────────────┘
+```
+
+---
+
+## 11. Known Gaps
+
+| #   | Description                                                                                                                     | Impact                                                                                    | Status                                                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1   | ~~**Refund loop incomplete**~~                                                                                                  | ~~Saga compensation does not close~~                                                      | RESOLVED — Billing has a consumer for `refund-requested`, publishes `refund-completed/failed`                |
+| 2   | ~~**Identity has no Kafka**~~                                                                                                   | ~~Other services cannot react to auth events~~                                            | RESOLVED — Publishes `user-created`, `user-logged-in`, `user-logged-out`, `role-assigned`                    |
+| 3   | **Product isolated** — No Kafka events for product.created/updated/deleted                                                      | Order Service has no real-time sync with catalog; uses price snapshot when creating items | Low — acceptable for MVP                                                                                     |
+| 4   | ~~**Subscription lifecycle disconnected**~~                                                                                     | ~~No automatic service suspension on non-payment~~                                        | RESOLVED — Provisioning listens to `subscription-past-due`, suspends services, publishes `service-suspended` |
+| 5   | ~~**Order has notification tables**~~ — `notification_recipients` and `notification_logs` in orders schema are a legacy remnant | ~~Dead code; should be removed in favor of notification-service~~                         | RESOLVED — Tables removed, DROP migration created, NotificationsModule removed from Order Service            |
+
+### New in Sprint M1 (Feb 17, 2026)
+
+- **Provisioning Auto-Worker** — Background worker that automatically progresses through 4 provisioning steps with simulated delays and configurable failure rate
+- **Service Suspend Flow** — Provisioning now listens to `billing.subscription-past-due` and automatically suspends active services. New topic: `provisioning.service-suspended`
+- **SUSPENDED status** added to provisioning state machine: COMPLETED &lt;-> SUSPENDED

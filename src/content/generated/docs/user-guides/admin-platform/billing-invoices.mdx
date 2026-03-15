@@ -1,0 +1,176 @@
+---
+title: "Billing & Invoices"
+description: "Documentation: Billing & Invoices"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/billing-invoices.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/billing-invoices.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Billing & Invoices
+
+The Invoices page under Sales & Billing provides full visibility into your organization's billing operations. Track invoice statuses, manage payments, and monitor resource usage from a single interface.
+
+## Accessing Invoices
+
+1. Click **Invoices** in the sidebar (under Sales & Billing).
+2. The invoice list loads showing all invoices across all customers.
+
+
+
+## Invoice Statuses
+
+Each invoice progresses through a lifecycle represented by these statuses:
+
+| Status       | Color     | Description                                 |
+| ------------ | --------- | ------------------------------------------- |
+| **Draft**    | Gray      | Invoice created but not yet finalized       |
+| **Pending**  | Yellow    | Finalized and awaiting review or delivery   |
+| **Sent**     | Blue      | Delivered to the customer                   |
+| **Paid**     | Green     | Payment received and confirmed              |
+| **Overdue**  | Red       | Payment deadline has passed without payment |
+| **Voided**   | Dark gray | Invoice cancelled and no longer valid       |
+| **Refunded** | Purple    | Payment was returned to the customer        |
+
+## Searching and Filtering
+
+### Search
+
+1. Use the search field at the top of the invoice list.
+2. Search by invoice number (e.g., `INV-2026-0042`) or customer name.
+3. Results filter in real time.
+
+### Date Range Filtering
+
+1. Click the date range picker above the invoice list.
+2. Select a preset range (This Month, Last Month, This Quarter, Last Quarter, This Year) or define a custom range.
+3. The list updates to show only invoices within the selected period.
+
+### Status Filtering
+
+1. Click the status filter tabs.
+2. Select one or more statuses to narrow the list.
+3. Click **All** to reset.
+
+Combine search, date range, and status filters for precise results. For example, filter to "Overdue" within the last 30 days to prioritize collection follow-ups.
+
+
+
+## Invoice List
+
+The table displays:
+
+- **Invoice Number** -- Unique identifier (e.g., INV-2026-0042)
+- **Customer** -- Tenant name
+- **Amount** -- Total invoice amount
+- **Status** -- Current status (color-coded badge)
+- **Issue Date** -- When the invoice was created
+- **Due Date** -- Payment deadline
+- **Paid Date** -- When payment was received (if applicable)
+
+## Invoice Detail Sheet
+
+Click any invoice row to open the detail sheet.
+
+### Contents
+
+- **Header** -- Invoice number, customer name, issue date, due date
+- **Line Items** -- Product name, description, quantity, unit price, line total
+- **Summary** -- Subtotal, discounts, tax, total amount
+- **Payment Information** -- Payment method, transaction ID (if paid)
+- **Timeline** -- Chronological record of status changes with timestamps
+
+The timeline is especially useful for auditing -- you can see exactly when an invoice was sent, when payment was received, and who performed each action.
+
+
+
+## How to Send an Invoice
+
+1. Open the invoice detail sheet.
+2. Verify the line items and amounts are correct.
+3. Click **Send Invoice**.
+4. The invoice status changes to Sent and the customer receives an email notification.
+
+> **Note:** Only Draft and Pending invoices can be sent. Ensure all line items are finalized before sending.
+
+## How to Void an Invoice
+
+1. Open the invoice detail sheet.
+2. Click the options menu (three dots).
+3. Select **Void Invoice**.
+4. Confirm the action in the dialog.
+
+Voiding an invoice removes it from the customer's outstanding balance. Use this for invoices created in error. Voided invoices remain visible in the list for audit purposes.
+
+## How to Record a Refund
+
+1. Open the detail sheet of a Paid invoice.
+2. Click the options menu.
+3. Select **Refund**.
+4. Enter the refund amount (full or partial).
+5. Confirm the refund.
+
+The invoice status changes to Refunded and the refund amount is recorded in the timeline.
+
+## Bulk Actions
+
+Select multiple invoices using the row checkboxes to access bulk operations.
+
+| Action     | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| **Export** | Download selected invoices as CSV                     |
+| **Send**   | Send all selected Draft/Pending invoices to customers |
+| **Void**   | Void all selected invoices (only Draft/Pending/Sent)  |
+
+### How to Perform Bulk Actions
+
+1. Check the boxes next to the desired invoices.
+2. The bulk action bar appears at the top.
+3. Click the desired action button.
+4. Confirm in the dialog (for Send and Void actions).
+
+## Usage Tracking
+
+The Usage page provides detailed resource consumption data that feeds into billing.
+
+### Accessing Usage Data
+
+1. Click **Usage** in the sidebar (under Sales & Billing).
+2. The usage dashboard loads with consumption metrics.
+
+
+
+### What Usage Tracks
+
+- **Compute** -- vCPU hours, RAM-hours consumed per tenant
+- **Storage** -- GB-months of block and object storage used
+- **Network** -- Bandwidth consumed (ingress/egress)
+- **GPU** -- GPU-hours consumed
+
+### Usage Reports
+
+1. Select a customer or view aggregate usage across all tenants.
+2. Choose a date range.
+3. View the usage breakdown by resource type.
+4. Export the data as CSV for integration with external billing systems.
+
+Usage data is collected automatically from the provisioning and monitoring systems and updated periodically.
+
+## Best Practices
+
+- **Follow up on Overdue invoices promptly.** Filter by Overdue status daily and take action -- send reminders or escalate to account managers.
+- **Review before sending.** Always verify line items and amounts before sending invoices to avoid the need for voids or corrections.
+- **Use date range filters** for monthly reconciliation and financial reporting.
+- **Export regularly** for integration with your accounting system.
+
+## Related Guides
+
+- [Order Management](./order-management.md) -- Orders that generate invoices
+- [Tenant Management](./tenant-management.md) -- Customer accounts and billing context
+- [Reporting & Dashboard](./reporting-dashboard.md) -- Revenue reports and analytics
+- [Settings](./settings.md) -- Currency and billing configuration

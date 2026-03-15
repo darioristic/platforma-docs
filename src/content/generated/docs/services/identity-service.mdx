@@ -1,0 +1,297 @@
+---
+title: "Identity Service"
+description: "Documentation: Identity Service"
+section: "docs"
+category: "services"
+auto_generated: true
+source: "docs/services/identity-service.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/services/identity-service.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Identity Service
+
+**Port:** 3003 | **Database:** PostgreSQL | **Events:** Kafka (producer) | **Auth:** JWT + OAuth2 + MFA
+
+Manages authentication, authorization, users, tenants, roles, API keys, and audit logs. Supports OAuth2 (Google, GitHub, Microsoft) and MFA.
+
+---
+
+## 1. Architecture
+
+```text
+                    ┌─────────────────┐
+   HTTP requests    │   Auth / Users  │     Kafka events
+  ─────────────────►│   Controllers   │────────────────────►
+                    └────────┬────────┘     (published)
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼───┐  ┌──────▼─────┐  ┌────▼────────┐
+     │   Auth     │  │   Users    │  │   Tenants   │
+     │  Service   │  │   Service  │  │   Service   │
+     └──────┬─────┘  └────────────┘  └─────────────┘
+            │
+     ┌──────┼──────────────┐
+     │      │              │
+  ┌──▼──┐ ┌─▼──┐ ┌────────▼┐
+  │ JWT │ │OAuth│ │  MFA    │
+  └─────┘ └────┘ └─────────┘
+```
+
+### Modules
+
+| Module                   | Responsibility                                                         |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `AuthModule`             | Login, register, refresh, logout, OAuth2, MFA, service-to-service auth |
+| `UsersModule`            | Profile, user listing, deactivation/reactivation                       |
+| `RolesModule`            | RBAC — 18 system roles, custom roles, assign/remove                    |
+| `TenantsModule`          | Multi-tenancy, settings, branding, invites                             |
+| `ApiKeysModule`          | API keys for programmatic access                                       |
+| `AuditLogsModule`        | Audit trail for all actions                                            |
+| `EventsModule` (@Global) | Kafka event publishing                                                 |
+| `HealthModule`           | Liveness/readiness probes                                              |
+
+---
+
+## 2. API Endpoints
+
+### Auth Controller (`/auth`)
+
+| Method | Route                            | Description              | Guard                     |
+| ------ | -------------------------------- | ------------------------ | ------------------------- |
+| `POST` | `/auth/register`                 | Register a new user      | @Public, Throttle(50/min) |
+| `POST` | `/auth/login`                    | Login (email/password)   | @Public, Throttle(50/min) |
+| `POST` | `/auth/refresh`                  | Refresh access token     | @Public                   |
+| `POST` | `/auth/logout`                   | Logout                   | JWT                       |
+| `GET`  | `/auth/oauth/google`             | Google OAuth redirect    | @Public                   |
+| `GET`  | `/auth/oauth/google/callback`    | Google OAuth callback    | @Public                   |
+| `GET`  | `/auth/oauth/github`             | GitHub OAuth redirect    | @Public                   |
+| `GET`  | `/auth/oauth/github/callback`    | GitHub OAuth callback    | @Public                   |
+| `GET`  | `/auth/oauth/microsoft`          | Microsoft OAuth redirect | @Public                   |
+| `GET`  | `/auth/oauth/microsoft/callback` | Microsoft OAuth callback | @Public                   |
+
+### Service Auth Controller (`/v1/auth`)
+
+| Method | Route                    | Description                  | Guard   |
+| ------ | ------------------------ | ---------------------------- | ------- |
+| `POST` | `/v1/auth/service-token` | Issue service-to-service JWT | @Public |
+
+### Users Controller (`/users`)
+
+| Method  | Route                       | Description          | Guard                              |
+| ------- | --------------------------- | -------------------- | ---------------------------------- |
+| `GET`   | `/users/me`                 | Current user profile | JWT                                |
+| `PATCH` | `/users/me`                 | Update profile       | JWT                                |
+| `POST`  | `/users/me/change-password` | Change password      | JWT                                |
+| `GET`   | `/users`                    | List all users       | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`   | `/users/:id`                | User by ID           | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `PUT`   | `/users/:id`                | Update user          | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `POST`  | `/users/:id/deactivate`     | Deactivate user      | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `POST`  | `/users/:id/reactivate`     | Reactivate user      | JWT, @Roles(admin, PLATFORM_ADMIN) |
+
+### Roles Controller (`/roles`)
+
+| Method   | Route                         | Description              | Guard                              |
+| -------- | ----------------------------- | ------------------------ | ---------------------------------- |
+| `GET`    | `/roles`                      | List all roles           | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/roles/:id`                  | Role by ID               | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `POST`   | `/roles`                      | Create a new role        | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `PUT`    | `/roles/:id`                  | Update role              | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `DELETE` | `/roles/:id`                  | Delete role (non-system) | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/roles/users/:userId`        | Roles for a user         | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `POST`   | `/roles/users/:userId/assign` | Assign roles to user     | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `POST`   | `/roles/users/:userId/remove` | Remove roles from user   | JWT, @Roles(admin, PLATFORM_ADMIN) |
+
+### Tenants Controller (`/tenants`)
+
+| Method   | Route                              | Description           | Guard                              |
+| -------- | ---------------------------------- | --------------------- | ---------------------------------- |
+| `POST`   | `/tenants`                         | Create tenant         | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/tenants`                         | List tenants          | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/tenants/:id`                     | Tenant by ID          | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `PATCH`  | `/tenants/:id`                     | Update tenant         | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `DELETE` | `/tenants/:id`                     | Delete tenant         | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/tenants/:id/user-count`          | User count in tenant  | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/tenants/:id/settings`            | Tenant settings       | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `PATCH`  | `/tenants/:id/settings`            | Update settings       | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `POST`   | `/tenants/:id/invites`             | Create invite         | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/tenants/:id/invites`             | List invites          | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `DELETE` | `/tenants/:id/invites/:inviteId`   | Revoke invite         | JWT, @Roles(admin, PLATFORM_ADMIN) |
+| `GET`    | `/tenants/invites/validate/:token` | Validate invite token | @Public                            |
+
+### API Keys Controller (`/api-keys`)
+
+| Method   | Route           | Description    | Guard |
+| -------- | --------------- | -------------- | ----- |
+| `GET`    | `/api-keys`     | List API keys  | JWT   |
+| `POST`   | `/api-keys`     | Create API key | JWT   |
+| `DELETE` | `/api-keys/:id` | Delete API key | JWT   |
+
+### Audit Logs Controller (`/audit-logs`)
+
+| Method | Route         | Description                  | Guard                                                |
+| ------ | ------------- | ---------------------------- | ---------------------------------------------------- |
+| `GET`  | `/audit-logs` | List audit logs with filters | JWT, @Roles(admin, PLATFORM_ADMIN, SECURITY_ANALYST) |
+| `POST` | `/audit-logs` | Create audit log entry       | JWT                                                  |
+
+### Health (`/`)
+
+| Method | Route     | Description                                         |
+| ------ | --------- | --------------------------------------------------- |
+| `GET`  | `/health` | Liveness probe                                      |
+| `GET`  | `/ready`  | Readiness probe (DB + Redis + Resilience + DB Pool) |
+
+---
+
+## 3. Entities
+
+### User
+
+| Field                     | Type               | Description                             |
+| ------------------------- | ------------------ | --------------------------------------- |
+| `id`                      | UUID (PK)          | Auto-generated                          |
+| `email`                   | varchar (UNIQUE)   | Email address                           |
+| `firstName`               | varchar            | First name                              |
+| `lastName`                | varchar            | Last name                               |
+| `passwordHash`            | varchar (excluded) | Hashed password                         |
+| `roles`                   | simple-array       | Array of roles (string[])               |
+| `tenantId`                | UUID (FK)          | Tenant isolation                        |
+| `status`                  | varchar            | active, suspended, pending_verification |
+| `mfaEnabled`              | boolean            | MFA enabled                             |
+| `mfaSecret`               | varchar (excluded) | MFA TOTP secret                         |
+| `lastLoginAt`             | timestamp          | Last login                              |
+| `loginAttempts`           | int                | Number of failed attempts               |
+| `lockedUntil`             | timestamp          | Account locked until                    |
+| `refreshTokenHash`        | varchar (excluded) | Refresh token hash                      |
+| `createdAt` / `updatedAt` | timestamp          | Auto                                    |
+
+### Tenant
+
+| Field                     | Type             | Description                                    |
+| ------------------------- | ---------------- | ---------------------------------------------- |
+| `id`                      | UUID (PK)        | Auto-generated                                 |
+| `name`                    | varchar (UNIQUE) | Tenant name                                    |
+| `type`                    | varchar          | customer, partner, internal                    |
+| `country`                 | varchar(2)       | ISO 3166-1 alpha-2 (default: RS)               |
+| `settings`                | jsonb            | Locale, timezone, currency, features, branding |
+| `users`                   | User[]           | Relation                                       |
+| `createdAt` / `updatedAt` | timestamp        | Auto                                           |
+
+### Role
+
+| Field         | Type             | Description                     |
+| ------------- | ---------------- | ------------------------------- |
+| `id`          | UUID (PK)        | Auto-generated                  |
+| `name`        | varchar (UNIQUE) | System name                     |
+| `displayName` | varchar          | Display name                    |
+| `category`    | varchar          | customer, system, admin, custom |
+| `permissions` | jsonb            | Array of permissions            |
+| `isSystem`    | boolean          | System role (cannot be deleted) |
+
+**18 system roles:** customer_viewer, admin, product_manager, admin_viewer, SALES_REP, SALES_MANAGER, ACCOUNT_MANAGER, NOC_OPERATOR, NOC_MANAGER, SUPPORT_AGENT, SUPPORT_MANAGER, FINANCE_ANALYST, FINANCE_MANAGER, CLOUD_OPS, OPERATIONS_MANAGER, SECURITY_ANALYST, PLATFORM_ADMIN, EXECUTIVE
+
+### AuditLog
+
+| Field                        | Type      | Description                    |
+| ---------------------------- | --------- | ------------------------------ |
+| `id`                         | UUID (PK) | Auto-generated                 |
+| `actorId`                    | varchar   | Who performed the action       |
+| `actorType`                  | varchar   | user, service, system, api_key |
+| `action`                     | varchar   | Action type                    |
+| `resource`                   | varchar   | Target resource                |
+| `resourceId`                 | varchar   | Resource ID                    |
+| `tenantId`                   | UUID      | Tenant context                 |
+| `correlationId`              | UUID      | Tracing ID                     |
+| `previousState` / `newState` | jsonb     | State before/after             |
+| `timestamp`                  | timestamp | Auto                           |
+
+### OAuthAccount
+
+| Field                          | Type                       | Description               |
+| ------------------------------ | -------------------------- | ------------------------- |
+| `id`                           | UUID (PK)                  | Auto-generated            |
+| `userId`                       | UUID (FK)                  | Linked user               |
+| `provider`                     | varchar                    | google, github, microsoft |
+| `providerUserId`               | varchar                    | Unique per provider       |
+| `email`                        | varchar                    | OAuth email               |
+| `accessToken` / `refreshToken` | text (encrypted, excluded) | Tokens                    |
+
+### TenantInvite
+
+| Field       | Type             | Description              |
+| ----------- | ---------------- | ------------------------ |
+| `id`        | UUID (PK)        | Auto-generated           |
+| `token`     | varchar (UNIQUE) | Invite token             |
+| `email`     | varchar          | Recipient email          |
+| `tenantId`  | UUID (FK)        | Tenant                   |
+| `role`      | varchar          | Default: customer_viewer |
+| `invitedBy` | UUID             | Invited by               |
+| `expiresAt` | timestamp        | Expires at               |
+| `used`      | boolean          | Used                     |
+
+---
+
+## 4. Kafka Events (Published)
+
+| Topic                                       | Payload                                                  |
+| ------------------------------------------- | -------------------------------------------------------- |
+| `cloud-factory.identity.user-created.v1`    | userId, email, tenantId, roles                           |
+| `cloud-factory.identity.user-logged-in.v1`  | userId, email, tenantId, loginMethod                     |
+| `cloud-factory.identity.user-logged-out.v1` | userId, tenantId                                         |
+| `cloud-factory.identity.role-assigned.v1`   | userId, tenantId, assignedRoles, previousRoles, newRoles |
+
+The Identity service **does not consume** Kafka topics.
+
+---
+
+## 5. Security
+
+### JWT Payload
+
+```json
+{
+  "sub": "user-id",
+  "email": "user@example.com",
+  "tenantId": "tenant-id",
+  "roles": ["admin"],
+  "mfaVerified": true,
+  "type": "access",
+  "iat": 1234567890,
+  "exp": 1234568790
+}
+```
+
+### Global Guards
+
+| Guard            | Description                                |
+| ---------------- | ------------------------------------------ |
+| `JwtAuthGuard`   | Validates JWT on all routes except @Public |
+| `RolesGuard`     | Checks @Roles decorator                    |
+| `TenantGuard`    | Enforces tenant isolation                  |
+| `ThrottlerGuard` | Rate limiting (100 req/60s default)        |
+
+### OAuth2 Providers
+
+- **Google** (passport-google-oauth20) — scope: email, profile
+- **GitHub** (passport-github2)
+- **Microsoft** (passport-microsoft)
+
+All conditionally registered based on env variables (CLIENT_ID + CLIENT_SECRET).
+
+---
+
+## 6. Migrations
+
+| File                                        | Description                                             |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `1738195200000-InitialSchema`               | Create identity schema, users, tenants, api_keys tables |
+| `1739836800000-AddRolesTable`               | Roles table + 18 system roles                           |
+| `1740700000000-AddAuditLogsTable`           | Audit logs table + 4 indexes                            |
+| `1741500000000-SeedAdminUser`               | Seed initial admin user                                 |
+| `1741600000000-AddTenantInvites`            | Tenant invites table                                    |
+| `1741700000000-AddTenantCountryAndSettings` | Country and settings columns on tenants                 |
+| `1741800000000-SeedT2AdminUser`             | Seed T2 admin user                                      |

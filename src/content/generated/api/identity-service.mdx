@@ -4,7 +4,7 @@ description: "Auto-generated API reference for identity-service"
 section: "api"
 service: "identity-service"
 auto_generated: true
-last_synced: "2026-03-15T15:39:27.419Z"
+last_synced: "2026-03-15T21:59:50.449Z"
 ---
 
 # Identity Service API
@@ -14,7 +14,7 @@ Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
 </Callout>
 
 **Base path:** `/api`  
-**Endpoints:** 56
+**Endpoints:** 57
 
 ---
 
@@ -592,6 +592,19 @@ Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
 <ParamTable>
   <Param name="type" type="string">
     query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get a tenant by name
+
+<ApiEndpoint method="GET" path="/tenants/by-name/:name" auth="Bearer token">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="name" type="string" required>
+    path parameter
   </Param>
 </ParamTable>
 

@@ -1,0 +1,117 @@
+---
+title: "Ordering Services"
+description: "Documentation: Ordering Services"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/customer-portal/ordering.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/customer-portal/ordering.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Ordering Services
+
+This guide explains how to browse available cloud services, deploy new resources, and track your orders.
+
+## Browsing Available Services
+
+
+
+Open the **Create Menu** from the header (the "+" button) to see all six service categories:
+
+| Service Type           | Description                                                        |
+| ---------------------- | ------------------------------------------------------------------ |
+| **Enterprise VPS**     | Virtual private servers with dedicated CPU and RAM.                |
+| **Private Cloud**      | Isolated cloud environments with custom networking.                |
+| **Managed Kubernetes** | Container orchestration clusters managed for you.                  |
+| **AI/ML & Data**       | GPU-accelerated compute for machine learning workloads.            |
+| **Managed Databases**  | Fully managed database engines (PostgreSQL, MongoDB, Redis, etc.). |
+| **Object Storage**     | S3-compatible storage for files, backups, and static assets.       |
+
+Click any service type to launch the deployment wizard.
+
+## Deploy Wizard
+
+The wizard walks you through four steps to configure and launch a new service.
+
+
+
+### Step 1 -- Select Service
+
+1. Choose the service type if you have not already selected one.
+2. Pick a specific plan or tier (e.g., Starter, Professional, Enterprise).
+3. Select the **region** where your service will be deployed.
+
+### Step 2 -- Configure
+
+1. Set a hostname or display name for your service.
+2. Choose the project this service belongs to.
+3. Adjust resource parameters (CPU cores, RAM, storage size) depending on the service type.
+4. Configure any additional options such as operating system, database engine version, or cluster node count.
+
+### Step 3 -- Review Pricing
+
+1. Review the full configuration summary.
+2. Check the monthly and hourly cost breakdown.
+3. Verify the project, region, and specs are correct.
+
+### Step 4 -- Deploy
+
+1. Click **Deploy** to submit your order.
+2. You will be redirected to the deployment progress view.
+
+## Deployment Progress
+
+
+
+After placing an order, the platform provisions your service through a six-stage pipeline. Each stage is displayed with a progress indicator:
+
+1. **QUEUED** -- Your order is in the provisioning queue.
+2. **ALLOCATING** -- Compute, storage, and network resources are being reserved.
+3. **CONFIGURING** -- The operating system, software, and networking are being set up.
+4. **ACTIVATING** -- The service is starting up and initializing.
+5. **VERIFYING** -- Automated health checks confirm everything is working.
+6. **COMPLETED** -- Your service is live and ready to use.
+
+If any stage fails, the status changes to **FAILED** and you will receive a notification with details. Contact [Support](./support.md) if the issue persists.
+
+## Orders Page
+
+The Orders page gives you a full history of everything you have ordered.
+
+
+
+### Statistics
+
+Four cards at the top summarize your order activity:
+
+- **Total** -- All orders ever placed.
+- **Pending** -- Orders currently being processed.
+- **Fulfilled** -- Orders that have been completed successfully.
+- **Total Spent** -- Cumulative amount in EUR across all orders.
+
+### Filtering Orders
+
+Use the tabs to filter your order list:
+
+- **All** -- Every order regardless of status.
+- **Pending** -- Orders still being provisioned or awaiting action.
+- **Fulfilled** -- Completed orders.
+
+### Order Details
+
+Click any order row to expand it and see:
+
+- **Line Items** -- Each service or resource included in the order.
+- **Quantities** -- How many units of each item were ordered.
+- **Pricing** -- Unit price and total for each line item, plus the order total.
+- **Status** -- Current provisioning state for each item.
+
+## Related Guides
+
+- [Managing your deployed services](./my-services.md)
+- [Understanding invoices and usage costs](./billing.md)
+- [Getting started with the portal](./getting-started.md)

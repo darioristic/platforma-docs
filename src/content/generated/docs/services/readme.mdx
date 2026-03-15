@@ -1,0 +1,71 @@
+---
+title: "Cloud Factory — Backend Services"
+description: "Documentation: Cloud Factory — Backend Services"
+section: "docs"
+category: "services"
+auto_generated: true
+source: "docs/services/README.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/services/README.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory — Backend Services
+
+Overview of all 7 backend microservices of the platform.
+
+## Services
+
+| Service                                           | Port | Database   | Description                                     |
+| ------------------------------------------------- | ---- | ---------- | ----------------------------------------------- |
+| [Identity Service](./identity-service.md)         | 3003 | PostgreSQL | Auth, RBAC, tenants, OAuth2, MFA, audit         |
+| [Product Service](./product-service.md)           | 3001 | MongoDB    | Product catalog, search, pricing                |
+| [Order Service](./order-service.md)               | 3002 | PostgreSQL | Orders, payments, saga orchestration            |
+| [Provisioning Service](./provisioning-service.md) | 3004 | PostgreSQL | Cloud infrastructure, state machine, providers  |
+| [Billing Integration](./billing-integration.md)   | 3005 | PostgreSQL | Invoices, subscriptions, Stripe, usage tracking |
+| [Notification Service](./notification-service.md) | 3006 | PostgreSQL | Email, WebSocket, preferences, templates        |
+| [Support Service](./support-service.md)           | 3007 | PostgreSQL | Ticketing, SLA, comments                        |
+
+## Common Characteristics
+
+- **Auth:** JWT + MFA + OAuth2 (Google, GitHub, Microsoft)
+- **Multi-tenancy:** Tenant isolation across all services
+- **Events:** Kafka (30+ topics, saga pattern, DLQ)
+- **Resilience:** Circuit breaker, bulkhead, timeout
+- **Caching:** Redis 7
+- **Health:** Liveness (`/health`) + Readiness (`/ready`) probes
+- **Observability:** Correlation ID propagation, Prometheus metrics
+- **Security:** Service-to-service auth, rate limiting, idempotency
+
+## Event Flow
+
+```text
+Identity ──► Kafka ◄── Product
+                │
+    ┌───────────┼───────────┐
+    │           │           │
+    ▼           ▼           ▼
+  Order ──► Provisioning  Billing
+    │           │           │
+    └───────────┼───────────┘
+                │
+                ▼
+          Notification ◄── Support
+```
+
+## Shared Packages
+
+| Package         | Description                                  |
+| --------------- | -------------------------------------------- |
+| `api-contracts` | Kafka topic/event definitions                |
+| `common`        | Shared utilities, decorators                 |
+| `auth-guard`    | JWT guard, Roles guard, Tenant guard         |
+| `cache`         | Redis cache module                           |
+| `resilience`    | Circuit breaker, bulkhead, health indicators |
+| `kafka`         | Kafka producer/consumer module               |
+| `tracing`       | Correlation ID, Pino logger                  |
+| `vault`         | HashiCorp Vault integration                  |
+| `idempotency`   | Idempotency key support                      |
+| `i18n`          | Internationalization                         |

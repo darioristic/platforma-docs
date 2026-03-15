@@ -1,0 +1,145 @@
+---
+title: "Tenant Management"
+description: "Documentation: Tenant Management"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/tenant-management.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/tenant-management.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Tenant Management
+
+The Customers page is where you view and manage all customer tenants on the platform. Each tenant represents a customer account -- either a company or an individual -- with their own users, orders, invoices, and support history.
+
+## Accessing the Customers Page
+
+1. Click **Customers** in the sidebar.
+2. The customer list loads with all registered tenants.
+
+
+
+## Summary Statistics
+
+At the top of the Customers page, four summary cards provide a quick overview:
+
+| Metric          | Description                                  |
+| --------------- | -------------------------------------------- |
+| Total Customers | Total number of registered customer tenants  |
+| Companies       | Number of business/organization accounts     |
+| Users           | Combined user count across all tenants       |
+| Revenue         | Total revenue generated across all customers |
+
+These numbers update in real time as new customers register or existing data changes.
+
+
+
+## Customer List
+
+The main table displays all customer tenants with the following columns:
+
+- **Name** -- Customer or company name
+- **Type** -- Company or Individual
+- **Status** -- Active, Suspended, or Inactive
+- **Users** -- Number of users within the tenant
+- **Created** -- Account creation date
+
+### Searching Customers
+
+1. Click the search field above the customer list (or use `Cmd+K` for global search).
+2. Type a customer name, email, or company name.
+3. Results filter in real time as you type.
+
+### Filtering by Type
+
+1. Click the **Type** filter dropdown above the list.
+2. Select **Companies** to show only business accounts.
+3. Select **Individuals** to show only personal accounts.
+4. Select **All** to reset the filter.
+
+You can combine the search field with type filters to narrow results further.
+
+
+
+## Customer Detail Panel
+
+Click any customer row to open the detail panel on the right side of the screen. This panel provides a comprehensive view of the selected tenant.
+
+### Overview Section
+
+The top of the detail panel shows:
+
+- Customer name and type
+- Account status
+- Contact email
+- Creation date
+
+### Activity Counts
+
+Below the overview, count badges summarize the customer's activity:
+
+| Badge    | Description                                  |
+| -------- | -------------------------------------------- |
+| Users    | Number of users registered under this tenant |
+| Orders   | Total orders placed by the tenant            |
+| Invoices | Number of invoices issued                    |
+| Tickets  | Support tickets created by the tenant        |
+
+Click any badge to navigate directly to the filtered view of that resource for the selected customer.
+
+
+
+### Tenant Details
+
+The detail panel also includes:
+
+- **Contact information** -- Primary email, phone, address
+- **Billing information** -- Payment method on file, billing address
+- **Account history** -- Timeline of key events (creation, status changes, notable orders)
+
+## How to View a Customer's Orders
+
+1. Open the customer detail panel by clicking the customer row.
+2. Click the **Orders** count badge.
+3. You will be taken to the Orders page, pre-filtered to show only that customer's orders.
+
+## How to View a Customer's Invoices
+
+1. Open the customer detail panel by clicking the customer row.
+2. Click the **Invoices** count badge.
+3. You will be taken to the Invoices page, pre-filtered for that customer.
+
+## How to View a Customer's Support Tickets
+
+1. Open the customer detail panel by clicking the customer row.
+2. Click the **Tickets** count badge.
+3. You will be taken to the Support page, pre-filtered for that customer.
+
+## Exporting Customer Data
+
+To export the customer list as a CSV file:
+
+1. Apply any desired filters (type, search query) to narrow the list.
+2. Click the **Export** button in the top-right area of the customer list.
+3. A CSV file will download containing all visible customers and their details.
+
+The export includes: name, type, status, email, user count, order count, invoice count, and creation date.
+
+> **Tip:** Use CSV exports for periodic reporting, audits, or importing data into external tools like spreadsheets or CRM systems.
+
+## Best Practices
+
+- **Regular review:** Periodically check for inactive or suspended tenants that may need follow-up.
+- **Use filters:** When working with a large customer base, combine search and type filters to quickly locate specific accounts.
+- **Check activity counts:** Before contacting a customer, review their orders, invoices, and tickets for full context.
+
+## Related Guides
+
+- [User Management](./user-management.md) -- Manage your own team members and roles
+- [Order Management](./order-management.md) -- Track and manage customer orders
+- [Billing & Invoices](./billing-invoices.md) -- Invoice management and billing overview
+- [Support Tickets](./support-tickets.md) -- Handle customer support requests

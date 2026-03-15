@@ -4,7 +4,7 @@ description: "Auto-generated API reference for provisioning-service"
 section: "api"
 service: "provisioning-service"
 auto_generated: true
-last_synced: "2026-03-15T15:39:27.419Z"
+last_synced: "2026-03-15T21:59:50.449Z"
 ---
 
 # Provisioning Service API
@@ -14,7 +14,7 @@ Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
 </Callout>
 
 **Base path:** `/api`  
-**Endpoints:** 68
+**Endpoints:** 71
 
 ---
 
@@ -758,6 +758,53 @@ Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
 
 <ApiEndpoint method="GET" path="/ready">
 </ApiEndpoint>
+
+---
+
+## Resource Metrics
+
+### Get metrics history for a provisioning request
+
+<ApiEndpoint method="GET" path="/v1/provisioning/requests/:id/metrics/history">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+  <Param name="query" type="MetricsHistoryQueryDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get metrics summary (avg/min/max) for a provisioning request
+
+<ApiEndpoint method="GET" path="/v1/provisioning/requests/:id/metrics/summary">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+  <Param name="query" type="MetricsSummaryQueryDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get fleet-wide resource utilization overview
+
+<ApiEndpoint method="GET" path="/v1/provisioning/metrics/fleet">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="FleetMetricsQueryDto" required>
+    query parameter
+  </Param>
+</ParamTable>
 
 ---
 

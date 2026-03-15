@@ -1,0 +1,271 @@
+---
+title: "Settings"
+description: "Documentation: Settings"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/settings.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/settings.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Settings
+
+The Settings area is where you configure your profile, team, branding, security, and platform-wide preferences. Access it by clicking **Settings** in the sidebar.
+
+
+
+## General
+
+### User Profile
+
+Manage your personal account information.
+
+1. Navigate to **Settings > General**.
+2. Edit your display name, email, or avatar.
+3. Click **Save Changes**.
+
+Your display name appears in the audit log, ticket responses, and team member lists, so keep it professional and recognizable.
+
+## Branding
+
+### Logo Upload
+
+Customize the platform appearance with your organization's branding.
+
+1. Navigate to **Settings > Branding**.
+2. Click **Upload Logo** in the logo section.
+3. Select an image file (PNG or SVG, recommended size: 200x50px).
+4. Preview the logo in the header.
+5. Click **Save**.
+
+The logo appears in the sidebar header, email templates, and customer-facing invoices.
+
+
+
+### Email Appearance
+
+Customize how outbound emails look to your customers.
+
+1. Navigate to **Settings > Branding** (or **Email Branding** in the sidebar).
+2. Configure:
+   - Header logo
+   - Brand colors (primary, secondary)
+   - Footer text and links
+3. Preview the email template.
+4. Click **Save**.
+
+Changes apply to all future outbound emails (invoices, notifications, support replies).
+
+## Tenant Settings
+
+### Currency
+
+1. Navigate to **Settings > Tenant**.
+2. Select your preferred currency from the dropdown.
+3. Click **Save**.
+
+The currency setting affects how prices are displayed across the platform and on customer invoices. Changing the currency does not convert existing prices -- you will need to update product pricing manually.
+
+### Timezone
+
+1. Navigate to **Settings > Tenant**.
+2. Select your timezone.
+3. Click **Save**.
+
+The timezone affects:
+
+- Timestamps displayed in the interface
+- SLA calculations for support tickets
+- Scheduled report generation
+- Invoice due date calculations
+
+## Team Members
+
+See [User Management](./user-management.md) for detailed instructions on:
+
+- Inviting new team members
+- Assigning and changing roles
+- Removing team members
+
+## Security
+
+### Two-Factor Authentication (2FA)
+
+1. Navigate to **Settings > Security**.
+2. Click **Enable Two-Factor Authentication**.
+3. Follow the setup wizard (scan QR code, verify with TOTP code).
+4. Store backup codes securely.
+
+See [User Management](./user-management.md) for the full 2FA setup procedure.
+
+### Password
+
+1. Navigate to **Settings > Security**.
+2. Click **Change Password**.
+3. Enter your current password, then enter and confirm the new one.
+4. Click **Update Password**.
+
+### Sessions
+
+View and manage your active login sessions.
+
+1. Navigate to **Settings > Security**.
+2. The active sessions list shows each session with:
+   - Device type and browser
+   - IP address
+   - Last active timestamp
+3. Click **Terminate** next to any session you do not recognize.
+
+
+
+## API Keys
+
+Manage API keys for external integrations.
+
+1. Navigate to **Settings > API Keys**.
+2. View existing keys with their names, creation dates, and last-used timestamps.
+3. Create new keys or revoke existing ones.
+
+See [User Management](./user-management.md) for detailed API key management instructions.
+
+## Notification Preferences
+
+Configure which events trigger notifications and how they are delivered.
+
+1. Navigate to **Settings > Notifications**.
+2. Toggle notifications for each event category:
+
+| Event Category       | Description                            |
+| -------------------- | -------------------------------------- |
+| New Orders           | When a customer places a new order     |
+| Provisioning Updates | When resources are provisioned or fail |
+| Payment Received     | When an invoice is paid                |
+| SLA Breaches         | When a support ticket breaches its SLA |
+| System Alerts        | Infrastructure health warnings         |
+| Security Events      | Login attempts, permission changes     |
+
+3. For each category, choose delivery method: **In-App**, **Email**, or **Both**.
+4. Click **Save Preferences**.
+
+## Email Templates
+
+Customize the content of automated emails sent to customers.
+
+1. Navigate to **Email Templates** in the sidebar (or **Settings > Email Templates**).
+2. Select a template to edit:
+   - Welcome email
+   - Order confirmation
+   - Invoice sent
+   - Payment received
+   - Password reset
+   - Support ticket updates
+3. Edit the subject line and body content.
+4. Use the available template variables (e.g., `\{\{customer_name\}\}`, `\{\{order_id\}\}`, `\{\{amount\}\}`).
+5. Preview the rendered email.
+6. Click **Save Template**.
+
+
+
+> **Tip:** Always preview templates after editing to verify that variables render correctly and the layout looks professional.
+
+## Email Branding
+
+Separate from individual templates, email branding controls the visual wrapper around all outbound emails.
+
+1. Navigate to **Email Branding** in the sidebar.
+2. Configure the header (logo, background color).
+3. Configure the footer (company address, social links, unsubscribe text).
+4. Preview with a sample email.
+5. Click **Save**.
+
+## DNS Zone Management
+
+Manage DNS zones for customer domains and platform services.
+
+1. Navigate to **DNS** in the sidebar.
+2. View existing DNS zones and their records.
+3. To add a new zone:
+   - Click **Add Zone**.
+   - Enter the domain name.
+   - Configure the required DNS records (A, AAAA, CNAME, MX, TXT).
+   - Click **Save**.
+4. To edit an existing zone, click the zone name and modify records as needed.
+
+
+
+## Compliance Settings
+
+### GDPR
+
+Configure data protection and privacy settings.
+
+1. Navigate to **Settings > Compliance**.
+2. Review and configure:
+   - Data retention periods
+   - Consent management settings
+   - Privacy policy URL
+   - Data processing agreement (DPA) link
+
+### Data Export
+
+For GDPR data subject access requests:
+
+1. Navigate to **Settings > Compliance > Data Export**.
+2. Enter the customer email or tenant ID.
+3. Click **Generate Export**.
+4. The system compiles all data associated with that customer.
+5. Download the export package when ready.
+
+> **Note:** Data exports may take several minutes for customers with extensive history.
+
+## Roles Management
+
+Create and manage custom roles beyond the default four (Admin, Manager, Support, Billing).
+
+1. Navigate to **Settings > Roles**.
+2. View existing roles and their permission sets.
+3. To create a custom role:
+   - Click **Add Role**.
+   - Enter a role name and description.
+   - Toggle permissions for each platform area (view, create, edit, delete).
+   - Click **Save Role**.
+4. Assign the new role to team members from the Team Members page.
+
+| Permission Area | Available Actions                |
+| --------------- | -------------------------------- |
+| Products        | View, Create, Edit, Delete       |
+| Orders          | View, Edit, Cancel               |
+| Invoices        | View, Create, Send, Void, Refund |
+| Support         | View, Respond, Assign, Close     |
+| Customers       | View, Edit                       |
+| Settings        | View, Edit                       |
+| Monitoring      | View, Restart Services           |
+| Audit Log       | View                             |
+| Reports         | View, Export                     |
+
+## Danger Zone
+
+Critical, irreversible actions are isolated in the Danger Zone at the bottom of the Settings page.
+
+### Delete Workspace
+
+Permanently deletes the entire workspace and all associated data.
+
+1. Scroll to the bottom of **Settings**.
+2. Click **Delete Workspace** in the Danger Zone section.
+3. Type the workspace name to confirm.
+4. Enter your password.
+5. Click **Permanently Delete**.
+
+> **Warning:** This action is irreversible. All data -- customers, orders, invoices, products, tickets, and configurations -- will be permanently deleted. Ensure you have exported all necessary data before proceeding. This action requires Admin role.
+
+## Related Guides
+
+- [Getting Started](./getting-started.md) -- Theme and language preferences
+- [User Management](./user-management.md) -- Team members, roles, API keys, and security
+- [Billing & Invoices](./billing-invoices.md) -- Currency settings and invoice configuration
+- [Reporting & Dashboard](./reporting-dashboard.md) -- Notification preferences for alerts

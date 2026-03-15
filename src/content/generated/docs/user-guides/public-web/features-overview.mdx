@@ -1,0 +1,90 @@
+---
+title: "Cloud Factory - Features Overview"
+description: "Documentation: Cloud Factory - Features Overview"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/public-web/features-overview.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/public-web/features-overview.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory - Features Overview
+
+Cloud Factory is an enterprise cloud platform designed for telecom operators. It provides a complete white-label solution for selling, provisioning, and managing cloud infrastructure services.
+
+## Cloud Infrastructure Services
+
+Cloud Factory supports a full range of cloud products:
+
+- **Enterprise VPS** - Virtual private servers with dedicated resources, SSD storage, and guaranteed uptime
+- **Private Cloud** - Isolated cloud environments with custom networking, storage, and compute configurations
+- **Managed Kubernetes** - Production-ready K8s clusters with auto-scaling, monitoring, and managed control planes
+- **AI/ML & Data** - GPU-accelerated instances and data pipeline infrastructure for machine learning workloads
+- **Managed Databases** - PostgreSQL, MySQL, MongoDB, and Redis with automated backups, replication, and failover
+- **Object Storage** - S3-compatible storage with configurable redundancy and lifecycle policies
+
+## Self-Service Customer Portal
+
+End customers manage their entire cloud lifecycle through a dedicated portal: deploy new services, monitor resources, track orders, manage billing, and submit support tickets — all without operator intervention.
+
+## Automated Provisioning
+
+Every service deployment follows a deterministic 4-step pipeline:
+
+1. **Allocate** - Reserve compute, storage, and network resources
+2. **Configure** - Apply tenant-specific settings, networking rules, and security policies
+3. **Activate** - Start the service and run initial health checks
+4. **Verify** - Confirm the service is operational and report status back to the customer
+
+The pipeline supports multiple cloud backends: OpenStack (Nova, Neutron, Cinder), OpenShift (namespace-based), and a simulation provider for development and demos.
+
+## Real-Time Monitoring and Observability
+
+Services are monitored continuously with health checks, resource utilization metrics, and alerting. The admin platform displays live status for all 7 backend microservices and 4 infrastructure components.
+
+## Billing Integration
+
+Billing is handled through Stripe integration, supporting:
+
+- Recurring subscriptions with configurable billing cycles
+- Usage-based metering for pay-as-you-go resources
+- Automated invoice generation and delivery
+- Payment method management and retry logic
+
+## Multi-Tenant Architecture
+
+Each telecom operator deployment is fully isolated. Tenant data, configurations, products, and pricing are scoped per organization. RBAC ensures users only access resources within their tenant boundary.
+
+## Support System with SLA Tracking
+
+Built-in ticketing system with priority levels, SLA timers, and escalation rules. Customers create tickets from the portal; operators manage them from the admin platform with full audit trails.
+
+## Event-Driven Architecture
+
+The platform uses Apache Kafka with 30+ topics for asynchronous communication between services. Key patterns include the saga pattern for distributed transactions and dead-letter queues (DLQ) for fault tolerance.
+
+## Security
+
+- **Authentication**: JWT tokens with refresh rotation, multi-factor authentication (TOTP)
+- **OAuth2 SSO**: Google, GitHub, and Microsoft identity providers
+- **Authorization**: Role-based access control with granular permissions
+- **Transport**: httpOnly cookies via BFF pattern — no tokens in browser storage
+- **Infrastructure**: TLS termination at Nginx gateway, rate limiting, CORS per-app, input sanitization
+
+## API-First Design
+
+Every backend service exposes a documented REST API with Swagger/OpenAPI specs. The `@cloud-factory/api-contracts` package defines shared DTOs, enums, and interfaces used across all services and frontends.
+
+## Cloud Provider Integrations
+
+| Provider   | Backend                       | Use Case                         |
+| ---------- | ----------------------------- | -------------------------------- |
+| OpenStack  | Nova, Neutron, Cinder, Glance | VPS, Private Cloud, storage      |
+| OpenShift  | Kubernetes API                | Container workloads, managed K8s |
+| Simulation | In-memory pipeline            | Development, demos, testing      |
+
+Providers are selected per resource type via the `ProviderRegistry`, making it straightforward to add new cloud backends.

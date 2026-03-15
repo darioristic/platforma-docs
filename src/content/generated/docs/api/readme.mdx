@@ -1,0 +1,41 @@
+---
+title: "Cloud Factory API Documentation"
+description: "Documentation: Cloud Factory API Documentation"
+section: "docs"
+category: "api"
+auto_generated: true
+source: "docs/api/README.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/api/README.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory API Documentation
+
+## Services
+
+| Service | Port | OpenAPI Spec | Description |
+|---------|------|-------------|-------------|
+| product-service | 3001 | [Spec](./product-service.openapi.json) | Product catalog management |
+| order-service | 3002 | [Spec](./order-service.openapi.json) | Order lifecycle management |
+| identity-service | 3003 | [Spec](./identity-service.openapi.json) | IAM & tenant management |
+| provisioning-service | 3004 | [Spec](./provisioning-service.openapi.json) | Infrastructure provisioning |
+| billing-integration | 3005 | [Spec](./billing-integration.openapi.json) | Billing, invoices & payments |
+
+## Generating Docs
+
+1. Start all services: `npm run dev:services`
+2. Generate OpenAPI specs: `npm run docs:generate`
+3. Generate Postman collections: `npm run docs:postman`
+4. Or all at once: `npm run docs:all`
+
+## Swagger UI
+
+Each service exposes Swagger UI at its `/api` endpoint:
+- http://localhost:3001/api (Product Service)
+- http://localhost:3002/api (Order Service)
+- http://localhost:3003/api (Identity Service)
+- http://localhost:3004/api (Provisioning Service)
+- http://localhost:3005/api (Billing Integration)

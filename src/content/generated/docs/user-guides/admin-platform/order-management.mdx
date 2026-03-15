@@ -1,0 +1,190 @@
+---
+title: "Order Management"
+description: "Documentation: Order Management"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/order-management.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/order-management.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Order Management
+
+The Orders page is the operational hub for tracking customer orders from creation through fulfillment. It provides real-time updates, filtering, and keyboard-driven workflows for efficient order processing.
+
+## Accessing Orders
+
+1. Click **Orders** in the sidebar.
+2. The order list loads with automatic refresh enabled (every 10 seconds).
+
+
+
+## Order Status Pipeline
+
+Every order moves through a defined sequence of statuses:
+
+```
+Draft → Pending Payment → Payment Confirmed → Validating → Provisioning → Fulfilled
+```
+
+| Status                | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| **Draft**             | Order created but not yet submitted by the customer         |
+| **Pending Payment**   | Submitted and awaiting payment                              |
+| **Payment Confirmed** | Payment received, order queued for processing               |
+| **Validating**        | System is verifying resource availability and configuration |
+| **Provisioning**      | Resources are being created and configured                  |
+| **Fulfilled**         | All resources delivered and active                          |
+
+Additionally, orders may enter these terminal states:
+
+| Status        | Description                                               |
+| ------------- | --------------------------------------------------------- |
+| **Cancelled** | Order was cancelled before fulfillment                    |
+| **Failed**    | Provisioning or validation failed; requires investigation |
+
+
+
+## Auto-Refresh
+
+The Orders page automatically refreshes every 10 seconds to show the latest status changes. This is especially useful during active provisioning periods when orders move through statuses rapidly.
+
+A small indicator in the top-right corner shows when the last refresh occurred. You can also manually refresh by pressing `R` or clicking the refresh icon.
+
+## Searching and Filtering
+
+### Search
+
+1. Use the search field at the top of the order list.
+2. Search by order ID, customer name, or product name.
+3. Results update in real time.
+
+### Filtering by Status
+
+1. Click the status filter tabs above the order list.
+2. Select one or more statuses to show only matching orders.
+3. Click **All** to reset and show every order.
+
+Combine search with status filters to quickly locate specific orders. For example, search for a customer name while filtering to "Provisioning" to see their in-progress deployments.
+
+
+
+## Order List
+
+The order table displays:
+
+- **Order ID** -- Unique identifier
+- **Customer** -- Tenant name
+- **Product** -- Ordered product name
+- **Status** -- Current pipeline stage (color-coded)
+- **Total** -- Order amount
+- **Created** -- Order creation timestamp
+
+## Order Detail Panel
+
+Click any order row to open the detail panel.
+
+### Items Section
+
+Lists all line items in the order with:
+
+- Product name and SKU
+- Configuration summary (vCPU, RAM, storage, etc.)
+- Quantity
+- Unit price and line total
+
+### Pricing Summary
+
+- Subtotal
+- Discounts (if applied)
+- Tax
+- **Total**
+
+### Timeline
+
+A chronological log of every status change with timestamps. This provides a complete audit trail for the order's lifecycle.
+
+
+
+## Bulk Actions
+
+Select multiple orders to perform actions in batch.
+
+### How to Select Multiple Orders
+
+1. Click the checkbox on each order row, or press `X` to toggle selection on the focused row.
+2. The bulk action bar appears at the top with the count of selected orders.
+
+### Available Bulk Actions
+
+| Action     | Description                                                                  |
+| ---------- | ---------------------------------------------------------------------------- |
+| **Export** | Download selected orders as a CSV file                                       |
+| **Cancel** | Cancel all selected orders (only works for Draft and Pending Payment orders) |
+
+> **Note:** Only orders in Draft or Pending Payment status can be cancelled. Orders that have progressed to Payment Confirmed or beyond cannot be bulk-cancelled.
+
+## Keyboard Shortcuts
+
+The Orders page supports keyboard navigation for power users:
+
+| Shortcut | Action                                       |
+| -------- | -------------------------------------------- |
+| `J`      | Move focus to the next order in the list     |
+| `K`      | Move focus to the previous order in the list |
+| `Enter`  | Open the detail panel for the focused order  |
+| `Escape` | Close the detail panel                       |
+| `X`      | Toggle selection on the focused order        |
+| `R`      | Manually refresh the order list              |
+
+These shortcuts work when the order list has focus. Click anywhere on the order list to ensure it is focused.
+
+## How to Investigate a Failed Order
+
+When an order enters the Failed status:
+
+1. Click the failed order to open the detail panel.
+2. Check the **Timeline** section for the failure event and error description.
+3. The error message will indicate whether the failure was due to:
+   - Resource capacity limits
+   - Configuration validation errors
+   - Provisioning infrastructure issues
+4. Resolve the underlying issue (e.g., free up capacity, correct configuration).
+5. If the order can be retried, use the **Retry** option in the order actions.
+6. If the issue is unrecoverable, cancel the order and coordinate with the customer.
+
+## How to Export Orders
+
+### Single Order
+
+1. Open the order detail panel.
+2. Click the **Export** option to download the order details.
+
+### Bulk Export
+
+1. Select multiple orders using checkboxes or the `X` shortcut.
+2. Click **Export** in the bulk action bar.
+3. A CSV file downloads containing all selected order data.
+
+### Filtered Export
+
+1. Apply status filters and/or search to narrow the list.
+2. Click the **Export** button (without selecting individual rows) to export all visible orders.
+
+## Best Practices
+
+- **Monitor Provisioning orders closely.** These are actively consuming infrastructure resources and may need intervention if they stall.
+- **Use keyboard shortcuts** for faster navigation when processing high volumes of orders.
+- **Investigate Failed orders promptly** to avoid customer dissatisfaction and resource lock-up.
+- **Export regularly** for reconciliation with billing and financial systems.
+
+## Related Guides
+
+- [Product Catalog](./product-catalog.md) -- Products that customers order
+- [Billing & Invoices](./billing-invoices.md) -- Invoices generated from fulfilled orders
+- [Tenant Management](./tenant-management.md) -- Customer accounts placing orders
+- [Support Tickets](./support-tickets.md) -- Handling order-related customer issues

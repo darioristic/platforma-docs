@@ -1,0 +1,143 @@
+---
+title: "Getting Started"
+description: "Documentation: Getting Started"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/getting-started.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/getting-started.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Getting Started
+
+Welcome to the Cloud Factory Admin Platform. This guide walks you through your first login and introduces the main interface elements so you can start managing your cloud operations right away.
+
+## First Login
+
+Your system administrator will provide you with login credentials (email and password) for the Admin Platform.
+
+1. Navigate to the Admin Platform URL provided by your organization.
+2. Enter your email address and password.
+3. Click **Sign In**.
+4. On first login, you will be prompted to change your password and optionally enable two-factor authentication (2FA).
+
+Authentication uses httpOnly cookies with a secure BFF (Backend for Frontend) pattern. Your session tokens are never exposed to browser JavaScript, providing strong protection against XSS attacks.
+
+> **Note:** If you forget your password, contact your system administrator to issue a reset. Self-service password recovery may be available depending on your organization's configuration.
+
+
+
+## Dashboard Overview
+
+After logging in, you land on the **Dashboard** -- your central command center.
+
+### KPI Cards
+
+The top section displays key performance indicators at a glance:
+
+| Card            | Description                                   |
+| --------------- | --------------------------------------------- |
+| Total Customers | Number of active customer tenants             |
+| Active Orders   | Orders currently in the provisioning pipeline |
+| Monthly Revenue | Revenue for the current billing period        |
+| Open Tickets    | Support tickets awaiting resolution           |
+
+
+
+### Recent Activities
+
+Below the KPI cards, the activity feed shows the latest actions across the platform -- new orders, customer signups, ticket updates, and provisioning events. This feed updates automatically so you always have a pulse on operations.
+
+### Connection Status
+
+A status indicator in the dashboard confirms connectivity to backend services. If any service is unreachable, you will see a warning banner with details.
+
+## Navigation
+
+### Sidebar
+
+The sidebar on the left is your primary navigation tool. It is organized into logical sections:
+
+- **Dashboard** -- Platform overview
+- **Notifications** -- System and user notifications
+- **Products** -- VPS, GPU, Storage, Kubernetes, Add-ons
+- **Customers** -- Tenant management
+- **Invoices** -- Billing and payment tracking
+- **Usage** -- Resource consumption tracking
+- **Orders** -- Order lifecycle management
+- **Clusters** -- Kubernetes cluster overview
+- **Provisioning** -- Resource provisioning status
+- **DNS** -- DNS zone management
+- **API Docs** -- Integrated API reference
+- **Support** -- Ticket management
+- **Reports** -- Analytics and reporting
+- **Monitoring** -- Service and infrastructure health
+- **Log Explorer** -- System log search
+- **Audit Log** -- Immutable action history
+- **Email Templates / Branding** -- Communication customization
+- **Settings** -- Platform configuration
+
+**Collapsing the sidebar:** Press `Ctrl+B` to toggle the sidebar between expanded and collapsed states. In collapsed mode, only icons are visible, giving you more screen space.
+
+
+
+### Topbar
+
+The topbar provides quick access to:
+
+- **Global Search** -- Click the search icon or press `Cmd+K` (macOS) / `Ctrl+K` (Windows/Linux) to open the command palette. Search for customers, orders, products, or navigate to any page instantly.
+- **Notifications Bell** -- Shows unread notification count. Click to view recent notifications with links to relevant items.
+- **User Menu** -- Access your profile, preferences, and sign out.
+
+
+
+## Global Search (Cmd+K)
+
+The command palette is one of the fastest ways to navigate the platform.
+
+1. Press `Cmd+K` to open the search dialog.
+2. Start typing a customer name, order ID, product name, or page title.
+3. Use arrow keys to navigate results.
+4. Press `Enter` to open the selected result.
+5. Press `Escape` to close the dialog.
+
+Search results are categorized by type (Customers, Orders, Products, Pages) so you can quickly identify what you are looking for.
+
+## Theme and Language
+
+### Theme Toggle
+
+Switch between **Light** and **Dark** modes from the topbar user menu or Settings page. Your preference is saved and persists across sessions.
+
+### Language Switcher
+
+The Admin Platform supports:
+
+| Language  | Code |
+| --------- | ---- |
+| English   | en   |
+| Slovenian | sl   |
+
+Switch languages from the user menu in the topbar. The interface will reload in your selected language. All system-generated content (labels, messages, tooltips) will be translated.
+
+## Notifications
+
+The bell icon in the topbar shows your unread notification count.
+
+1. Click the bell icon to open the notifications panel.
+2. Each notification includes a timestamp and a link to the relevant resource (order, ticket, customer, etc.).
+3. Click a notification to navigate to the related item.
+4. Use **Mark all as read** to clear the unread count.
+
+Notifications are generated for events such as new orders, provisioning completions, SLA breaches, and payment status changes.
+
+## Next Steps
+
+- [Tenant Management](./tenant-management.md) -- Learn how to manage customer accounts
+- [Product Catalog](./product-catalog.md) -- Set up and manage your product offerings
+- [Order Management](./order-management.md) -- Track orders through the fulfillment pipeline
+- [Settings](./settings.md) -- Configure your profile and platform preferences

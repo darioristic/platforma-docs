@@ -1,0 +1,523 @@
+---
+title: "Cloud Factory - Platform Page Content"
+description: "Documentation: Cloud Factory - Platform Page Content"
+section: "docs"
+category: "general"
+auto_generated: true
+source: "docs/PLATFORM_PAGE_CONTENT.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/PLATFORM_PAGE_CONTENT.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory - Platform Page Content
+
+> Website copy for the /platform page. Sections are ordered top-to-bottom as they would appear on the page.
+
+---
+
+## Hero Section
+
+**Headline:**
+One Platform to Run Your Entire Telecom Cloud Business
+
+**Subheadline:**
+Cloud Factory unifies service provisioning, billing, customer management, and infrastructure monitoring into a single, event-driven platform built for telecom operators and cloud service providers.
+
+**CTA Primary:** Explore Products
+**CTA Secondary:** Request a Demo
+
+---
+
+## Platform Overview
+
+**Section Title:** Built for Scale. Designed for Operators.
+
+Cloud Factory is an end-to-end cloud management platform that handles the complete lifecycle of telecom services — from product catalog and customer onboarding to automated provisioning, usage-based billing, and real-time monitoring.
+
+Instead of stitching together dozens of disconnected tools, your team operates from a single control plane with role-based access, real-time notifications, and full audit trails.
+
+---
+
+## How It Works
+
+**Section Title:** From Catalog to Live Service in Minutes
+
+Cloud Factory automates the entire journey — from the moment a customer finds your service to the moment it's running in production. Here's how a typical order flows through the platform.
+
+### Step 1: Browse & Order
+
+A customer visits your public storefront, explores the service catalog, and adds cloud products to their cart. They complete checkout with secure Stripe-powered payments. The platform creates an order and confirms payment automatically.
+
+**What happens behind the scenes:**
+The Order Service creates a tracked order with a unique number, records a product snapshot for price integrity, and publishes an `order.created` event. The customer receives an instant confirmation notification via WebSocket and email.
+
+### Step 2: Automatic Provisioning
+
+Once payment clears, the platform provisions the service without any operator intervention. A four-step workflow allocates cloud resources, configures the infrastructure, activates the service, and verifies it's healthy.
+
+**What happens behind the scenes:**
+The Order Service publishes `order.provisioning-started`. The Provisioning Service picks it up, executes four sequential steps (Allocate → Configure → Activate → Verify), and reports progress back through Kafka events. The Admin Platform shows real-time progress bars for each step.
+
+### Step 3: Billing & Subscription
+
+The moment the service goes live, billing kicks in. An invoice is generated, a recurring subscription is created, and usage metering begins tracking the customer's resource consumption.
+
+**What happens behind the scenes:**
+The Billing Service receives `provisioning.service-activated` and starts metering. On `order.fulfilled`, it generates a PDF invoice and creates a monthly Stripe subscription. The customer gets a "New Invoice Available" notification.
+
+### Step 4: Manage & Monitor
+
+The customer manages their active services, views invoices, and raises support tickets through the Customer Portal. Your operations team monitors everything from the Admin Platform — infrastructure health, order pipeline, billing status, and audit logs — with real-time dashboards that auto-refresh.
+
+**What happens behind the scenes:**
+Health checks run every 15 seconds across all services. WebSocket connections push live notifications. The audit log records every action. Role-based access ensures each team member sees only what's relevant to their role.
+
+### Step 5: Support & Resolution
+
+When issues arise, customers create support tickets directly from the portal. Your team manages tickets with comments, priority levels, and SLA tracking. Every update triggers an automatic notification to the customer.
+
+**What happens behind the scenes:**
+The Support Service publishes `ticket-created` and `comment-added` events. The Notification Service transforms them into in-app alerts and emails based on the customer's notification preferences.
+
+### The Complete Flow
+
+```text
+Customer browses catalog
+        │
+        ▼
+Places order & pays (Stripe)
+        │
+        ▼
+Order confirmed ──── notification ──── "Order received!"
+        │
+        ▼
+Provisioning starts automatically
+   1. Allocate resources
+   2. Configure infrastructure
+   3. Activate service ──── billing starts metering
+   4. Verify health
+        │
+        ▼
+Service is live ──── invoice generated ──── subscription created
+        │
+        ▼
+Customer manages via Portal ◄──── real-time notifications
+Operators monitor via Admin  ◄──── auto-refreshing dashboards
+        │
+        ▼
+If issues → Support ticket ──── SLA tracking ──── resolution
+```
+
+### What If Something Goes Wrong?
+
+The platform handles failures gracefully through saga-based compensation. If provisioning fails at any step, the system automatically rolls back — deallocating resources, voiding invoices, and processing refunds — without manual intervention. The customer and operator are both notified immediately.
+
+---
+
+## Core Modules
+
+**Section Title:** Everything You Need. Nothing You Don't.
+
+### Service Catalog & Product Management
+
+Define, price, and publish your cloud services in minutes. The product catalog supports flexible pricing plans, custom attributes, SKU management, and category-based organization. Customers browse and order directly from your branded storefront.
+
+- Unlimited products with rich specifications
+- Tiered and usage-based pricing plans
+- Real-time catalog search and filtering
+- Public API for headless commerce integrations
+
+### Order Management & Fulfillment
+
+A nine-stage order state machine tracks every order from draft to fulfillment. Payment confirmation, provisioning, and activation happen automatically through event-driven workflows — no manual handoffs required.
+
+- Automated order lifecycle (Draft → Pending Payment → Confirmed → Provisioning → Fulfilled)
+- Saga-based orchestration with automatic rollback on failure
+- Optimistic locking for safe concurrent updates
+- Full order timeline with timestamps for every state transition
+
+### Automated Service Provisioning
+
+When a customer's payment clears, provisioning kicks off immediately. A four-step workflow allocates resources, configures infrastructure, activates the service, and verifies health — all without operator intervention.
+
+- Four-step automated workflow: Allocate, Configure, Activate, Verify
+- Built-in retry logic with configurable backoff
+- Rollback support for clean failure recovery
+- Real-time step-by-step progress tracking
+
+### Billing & Payments
+
+Integrated billing handles invoicing, payment processing, usage metering, and subscriptions. Stripe-powered payment flows support cards, bank transfers, and automatic recurring charges. Download professional PDF invoices with a single click.
+
+- Automated invoice generation on order fulfillment
+- Stripe integration for secure payment processing
+- Usage-based metering for cloud resources
+- Recurring subscriptions with upgrade and cancellation handling
+- PDF invoice generation with multi-currency support (EUR, USD, GBP)
+- Refund processing with full audit trail
+
+### Identity & Access Management
+
+Enterprise-grade authentication protects every endpoint. JWT-based sessions, multi-factor authentication, account lockout policies, and role-based access control ensure that the right people see the right data.
+
+- JWT authentication with short-lived access tokens and rotating refresh tokens
+- Multi-factor authentication (TOTP) with QR code setup
+- Account lockout after failed login attempts
+- Role-based access control with customizable role groups
+- API key management for programmatic access
+- Complete audit log of all authentication and authorization events
+
+### Real-Time Notifications
+
+Stay informed without refreshing. WebSocket-powered notifications deliver instant updates when orders change status, provisioning completes, invoices are generated, or support tickets are updated. Configure per-channel preferences to control what reaches you and how.
+
+- In-app notifications with unread badges and bell icon alerts
+- Email notifications for critical events
+- Per-event-type preferences (enable/disable in-app and email independently)
+- Notification templates for consistent messaging
+- Real-time delivery via WebSocket (Socket.IO)
+
+### Customer Support & Ticketing
+
+A built-in ticketing system lets customers raise issues and track resolution. Support agents manage tickets with comments, attachments, priority levels, and SLA tracking — all within the same platform.
+
+- Ticket creation, assignment, and resolution workflow
+- Threaded comments and file attachments
+- SLA tracking with configurable response and resolution targets
+- Automatic notifications on ticket updates
+- Priority-based queue management
+
+### Infrastructure Monitoring
+
+Monitor the health of every service in your stack from a single dashboard. Auto-refreshing health checks show uptime status, response times, and connectivity for all platform services at a glance.
+
+- Real-time health status for all microservices
+- Response time monitoring with millisecond precision
+- Auto-refresh every 15 seconds
+- WebSocket connection status indicator
+- Degraded service alerts
+
+---
+
+## Platform Capabilities
+
+**Section Title:** Enterprise-Grade from Day One
+
+### API Gateway
+
+All traffic flows through a unified API gateway with TLS termination, rate limiting, CORS handling, and security headers. One origin, one set of credentials, zero CORS headaches.
+
+- Single entry point for all services (nginx-based)
+- Automatic rate limiting: 5 req/s for auth, 30 req/s general
+- TLS 1.2/1.3 with HSTS enforcement
+- Security headers: CSP, X-Frame-Options, X-Content-Type-Options
+- Request ID tracking for end-to-end correlation
+- WebSocket upgrade support for real-time features
+
+### Event-Driven Architecture
+
+Services communicate through Apache Kafka with structured domain events. Every significant action — order placed, service provisioned, invoice generated — produces a traceable event that downstream systems react to automatically.
+
+- 40+ domain events across 6 business domains
+- Saga orchestration for distributed transactions
+- Dead letter queue with configurable retry policies
+- Structured event envelope with correlation IDs and tenant context
+- At-least-once delivery guarantees
+
+### Role-Based Access Control
+
+Define who sees what across the entire platform. Admins manage everything. Sales reps see customer and order data. NOC operators monitor infrastructure. Finance teams access billing. Every role sees only what they need.
+
+- Six role groups: Admin, Sales, Operations, Finance, Security, Product
+- Path-level access control across all platform pages
+- Conditional navigation — hidden sections for unauthorized roles
+- Backend guard enforcement on every API endpoint
+- Tenant isolation for multi-organization deployments
+
+### Audit & Compliance
+
+Every action leaves a trace. Login attempts, role changes, data modifications, and system events are recorded in a tamper-evident audit log with actor identification, timestamps, and contextual metadata.
+
+- Comprehensive audit log for all user and system actions
+- Filterable by resource type, action, actor, and date range
+- Color-coded event categories for quick scanning
+- Server-side pagination for large audit histories
+- Exportable for compliance reporting
+
+### CSV & PDF Export
+
+Extract the data you need in the format you want. Export customer lists and invoice tables to CSV for spreadsheet analysis. Generate professional PDF invoices for accounting and customer delivery.
+
+- One-click CSV export for customers and invoices
+- Excel-compatible encoding (UTF-8 BOM)
+- PDF invoices with company branding, line items, and pricing summary
+- Multi-currency support in exported documents
+
+---
+
+## Architecture Highlights
+
+**Section Title:** Modern Stack. Proven Patterns.
+
+| Aspect           | Technology                                           |
+| ---------------- | ---------------------------------------------------- |
+| Backend Services | NestJS (TypeScript) microservices                    |
+| Frontend Apps    | Next.js and React with Tailwind CSS                  |
+| Event Bus        | Apache Kafka with dead letter queues                 |
+| Databases        | PostgreSQL (relational) + MongoDB (catalog)          |
+| Caching          | Redis with per-service TTL policies                  |
+| API Gateway      | nginx with rate limiting and TLS                     |
+| Payments         | Stripe (cards, subscriptions, webhooks)              |
+| Real-Time        | Socket.IO WebSocket connections                      |
+| CI/CD            | GitHub Actions with automated testing and deployment |
+| Security         | JWT + MFA + RBAC + audit logging                     |
+
+---
+
+## Three Interfaces, One Platform
+
+**Section Title:** A Dedicated Experience for Every User
+
+### Public Storefront
+
+Your customers discover and purchase cloud services through a modern, responsive storefront. Product browsing, cart management, checkout, and order confirmation — all branded to your business.
+
+### Customer Portal
+
+Customers log in to manage their active services, view order history, download invoices, track support tickets, and configure notification preferences — all from a self-service dashboard.
+
+### Admin Platform
+
+Your operations team manages the entire business from a powerful admin panel. Dashboards, customer CRM, order management, provisioning monitoring, billing oversight, infrastructure health, audit logs, and role management — with real-time updates and full RBAC.
+
+---
+
+## Integration Ready
+
+**Section Title:** Connect to Your Existing Stack
+
+Cloud Factory exposes RESTful APIs for every module, documented with OpenAPI/Swagger. Integrate with your existing BSS/OSS, ERP, or CRM systems through the API gateway or consume Kafka events directly for real-time data synchronization.
+
+- OpenAPI/Swagger documentation for all service endpoints
+- API key authentication for machine-to-machine access
+- Kafka event streams for real-time integration
+- Webhook support for payment and billing events
+- Multi-tenant architecture ready for white-label deployments
+
+---
+
+## Numbers That Matter
+
+| Metric                | Value                             |
+| --------------------- | --------------------------------- |
+| Microservices         | 7 independent services            |
+| API Endpoints         | 80+ REST endpoints                |
+| Kafka Topics          | 40+ domain events                 |
+| Provisioning Steps    | 4 automated steps per service     |
+| Order States          | 9-stage state machine             |
+| Invoice States        | 6-stage lifecycle                 |
+| Role Groups           | 6 predefined groups               |
+| Rate Limiting         | 3 zones (auth, register, general) |
+| Health Checks         | All services, every 15 seconds    |
+| Notification Channels | In-app + Email                    |
+
+---
+
+## Use Cases
+
+**Section Title:** Built for Telecom. Proven in Production.
+
+### Internet Service Providers
+
+Automate broadband and fiber service activation for residential and business customers. From order intake through provisioning to monthly billing — every step handled by the platform.
+
+**Example flow:** Customer orders 1 Gbps Fiber → payment confirmed → network port allocated → VLAN configured → ONT activated → speed test verified → invoice generated → monthly subscription starts.
+
+### Cloud & Hosting Providers
+
+Sell virtual machines, managed databases, object storage, and Kubernetes clusters through a branded storefront. Provision cloud resources on demand with automated health verification.
+
+**Example flow:** Customer orders Managed PostgreSQL → payment confirmed → VM provisioned → database engine installed → firewall rules configured → connection string delivered → usage metering starts.
+
+### Managed Service Providers (MSPs)
+
+Offer bundled IT services — backup, monitoring, security, and compliance — with automated provisioning and SLA-tracked support. Multi-tenant isolation ensures client data never crosses boundaries.
+
+**Example flow:** MSP creates new tenant → assigns services from catalog → provisioning auto-configures monitoring agents → SLA timers start → client gets self-service portal access.
+
+### MVNOs & Wholesale Carriers
+
+Manage wholesale voice, data, and SMS packages with usage-based billing. Track consumption in real time, generate CDR-based invoices, and automate subscription lifecycle management.
+
+**Example flow:** MVNO orders 10,000 SIM bundle → provisioning activates HLR profiles → usage metering tracks per-SIM data consumption → monthly invoice generated with per-SIM breakdown.
+
+---
+
+## Why Cloud Factory
+
+**Section Title:** The Advantages That Matter
+
+### Replace 6+ Tools with One Platform
+
+Most telecom operators juggle separate systems for product catalog, order management, provisioning, billing, customer support, and monitoring. Cloud Factory replaces all of them with a single, integrated platform where data flows automatically between modules.
+
+### Zero Manual Handoffs
+
+Traditional telecom operations require manual steps between order confirmation and service activation. Cloud Factory's event-driven architecture eliminates handoffs entirely — payment triggers provisioning, provisioning triggers billing, failures trigger rollback. Humans intervene only when they want to.
+
+### Minutes, Not Days
+
+Legacy provisioning workflows take days or weeks because they depend on manual processes and disconnected systems. Cloud Factory's four-step automated provisioning delivers services in minutes, with real-time progress tracking for operators and customers alike.
+
+### Built-in Compliance
+
+Every action in the platform is recorded in a tamper-evident audit log. Role-based access control ensures data segregation. TLS encryption, security headers, and rate limiting protect against common attack vectors. Export audit data for regulatory reporting at any time.
+
+### Scale Without Rearchitecting
+
+The microservice architecture means each module scales independently. High order volume? Scale the Order Service. Billing backlog? Scale the Billing Service. Kafka ensures that no events are lost during traffic spikes, and dead letter queues capture anything that needs manual attention.
+
+### Developer-Friendly from the Start
+
+Every service exposes documented REST APIs with OpenAPI/Swagger. Kafka events follow a structured envelope schema with correlation IDs. The monorepo uses TypeScript end-to-end — backend, frontend, shared contracts, and event schemas — so your team works in one language across the entire stack.
+
+---
+
+## Frequently Asked Questions
+
+**Section Title:** Common Questions
+
+### What kind of services can I sell through Cloud Factory?
+
+Any cloud or telecom service that follows a catalog → order → provision → bill lifecycle. This includes internet connectivity (fiber, broadband, wireless), cloud infrastructure (VMs, databases, storage), managed services (backup, monitoring, security), and wholesale telecom products (voice, data, SMS bundles). The product catalog is fully flexible — you define the attributes, pricing, and categories.
+
+### How long does it take to deploy?
+
+A standard deployment with Docker Compose takes under 30 minutes. The platform ships with pre-configured containers for all services, databases, and infrastructure components. For production environments with Kubernetes, expect 1-2 days including SSL certificates, DNS configuration, and environment-specific tuning.
+
+### Can I use my existing payment processor instead of Stripe?
+
+The billing module is built with Stripe as the default payment processor, but the architecture supports extension. Payment processing is isolated in the Billing Integration service — you can add adapters for other providers (Adyen, PayPal, local bank integrations) without affecting the rest of the platform.
+
+### How does multi-tenancy work?
+
+Every request carries a tenant context enforced by the TenantGuard middleware. Each tenant's data is isolated at the database level. The RBAC system ensures users only access resources within their tenant boundary. This architecture supports both single-tenant deployments and multi-tenant SaaS configurations.
+
+### Can I customize the customer-facing storefront?
+
+Yes. The public storefront is a standalone Next.js application that communicates with backend services through the API gateway. You can customize the design, branding, layout, and user flow without touching any backend code. For deeper customization, the headless commerce API lets you build entirely custom frontends.
+
+### What happens when a service fails to provision?
+
+The saga orchestrator in the Order Service detects the failure and initiates automatic compensation. This includes: rolling back allocated resources, cancelling in-progress infrastructure changes, voiding generated invoices, and processing payment refunds. Both the customer and operator receive immediate notifications. The entire sequence is recorded in the audit log for review.
+
+### Is there an API for everything?
+
+Yes. Every module exposes RESTful endpoints documented with OpenAPI/Swagger. You can manage products, create orders, query invoices, update provisioning status, and configure notifications entirely through the API. API key authentication supports machine-to-machine integrations, and Kafka event streams enable real-time data synchronization with external systems.
+
+### How do you handle high availability?
+
+Each microservice is stateless and can run multiple instances behind a load balancer. PostgreSQL supports replication for database high availability. Kafka provides durable message storage with configurable replication factors. Redis can run in cluster mode for cache redundancy. The nginx API gateway supports upstream health checks and automatic failover.
+
+---
+
+## Security Overview
+
+**Section Title:** Security at Every Layer
+
+### Network Security
+
+All external traffic enters through the nginx API gateway with TLS 1.2/1.3 encryption. HTTP requests are automatically redirected to HTTPS. HSTS headers prevent protocol downgrade attacks. Internal service-to-service communication runs within an isolated Docker network.
+
+### Authentication
+
+JWT access tokens expire after 15 minutes and refresh tokens after 7 days. Passwords are hashed with bcrypt using 12 salt rounds. Multi-factor authentication adds a TOTP-based second factor with QR code enrollment. Accounts lock automatically after 5 consecutive failed login attempts for 30 minutes.
+
+### Authorization
+
+Role-based access control (RBAC) is enforced at both the API level (NestJS guards on every endpoint) and the UI level (conditional rendering based on user roles). Six predefined role groups — Admin, Sales, Operations, Finance, Security, and Product — provide granular access control out of the box. Custom roles can be created by platform administrators.
+
+### API Protection
+
+Rate limiting prevents abuse: 5 requests/second for authentication endpoints, 2 requests/second for registration, and 30 requests/second for general API access. Per-service throttling adds a second layer of protection at 20-30 requests/minute per IP. Stripe webhook signatures are verified using raw request bodies to prevent tampering.
+
+### Data Protection
+
+Each service owns its own database schema with no cross-schema access. Tenant isolation ensures data boundaries are maintained in multi-tenant deployments. Sensitive fields (passwords, API keys) are hashed or encrypted at rest. Audit logs record all data access and modification events with actor identification.
+
+### Supply Chain Security
+
+Automated security scanning runs on every CI build. npm audit checks for known vulnerabilities in dependencies. Trivy performs filesystem-level security scans with results uploaded to GitHub Security. OWASP Dependency Check runs weekly with automatic failure on critical CVEs. License compliance blocks GPL-3.0 and AGPL-3.0 dependencies from entering the codebase.
+
+---
+
+## Deployment Options
+
+**Section Title:** Deploy Your Way
+
+### Docker Compose (Development & Small Scale)
+
+Spin up the entire platform with a single `docker compose up` command. All 7 services, 3 frontend applications, PostgreSQL, MongoDB, Redis, Kafka, and the API gateway — pre-configured and ready to run on a single machine.
+
+- Single-command deployment
+- Pre-configured environment variables
+- Database initialization scripts included
+- Ideal for development, testing, and small-scale production
+
+### Container Registry (CI/CD Pipeline)
+
+Every merge to main automatically builds Docker images for all services and pushes them to GitHub Container Registry (ghcr.io). Images are tagged with commit SHA, branch name, and semantic version. Use these images with any container orchestration platform.
+
+- Automated image builds on every commit
+- Multi-tag strategy (SHA, branch, semver, latest)
+- GitHub Actions CI/CD pipeline included
+- Migration validation before deployment
+
+### Kubernetes (Production Scale)
+
+Deploy to Kubernetes for horizontal scaling, rolling updates, and self-healing. Each microservice runs as an independent deployment with its own scaling policy. Kafka and PostgreSQL can run as managed services or self-hosted within the cluster.
+
+- Independent scaling per microservice
+- Rolling deployments with zero downtime
+- Health check endpoints for liveness and readiness probes
+- Staging → load test → production promotion pipeline
+
+---
+
+## Roadmap
+
+**Section Title:** What's Coming Next
+
+### Multi-Tenancy & SSO (Coming Soon)
+
+Full multi-tenant data isolation with per-tenant configuration, branding, and billing. Single Sign-On support via SAML 2.0 and OpenID Connect for enterprise customers.
+
+### Observability Stack
+
+Distributed tracing with OpenTelemetry, centralized logging with structured JSON, and Prometheus/Grafana dashboards for metrics visualization across all services.
+
+### Workflow Builder
+
+A visual drag-and-drop editor for building custom provisioning workflows. Define your own step sequences, approval gates, and conditional logic without writing code.
+
+### Marketplace & Partner Portal
+
+Enable third-party service providers to list their products in your catalog. Revenue sharing, partner onboarding, and co-branded storefronts — all managed within the platform.
+
+### Mobile App
+
+A native mobile application for customers to manage services, view invoices, and receive push notifications on the go. Built with React Native for iOS and Android.
+
+---
+
+## Call to Action (Footer)
+
+**Headline:** Ready to Modernize Your Telecom Operations?
+
+**Body:** Cloud Factory gives your team the tools to launch, manage, and scale cloud services — without the complexity of building it all from scratch.
+
+**CTA Primary:** Get Started
+**CTA Secondary:** Talk to Sales

@@ -1,0 +1,229 @@
+---
+title: "Error Codes Reference"
+description: "Documentation: Error Codes Reference"
+section: "docs"
+category: "reference"
+auto_generated: true
+source: "docs/reference/error-codes.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/reference/error-codes.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Error Codes Reference
+
+Cloud Factory uses a standardized error handling system based on RFC 7807 Problem Details. All error responses are returned with `Content-Type: application/problem+json`.
+
+## Error Response Format
+
+```json
+{
+  "type": "https://api.t-2.cloud/problems/entity-not-found",
+  "title": "Entity Not Found",
+  "status": 404,
+  "detail": "Order not found: 123e4567-e89b-12d3-a456-426614174000",
+  "instance": "/orders/123e4567-e89b-12d3-a456-426614174000",
+  "code": "ENTITY_NOT_FOUND",
+  "timestamp": "2026-03-15T10:30:00.000Z",
+  "correlationId": "req-abc-123",
+  "entityType": "Order",
+  "entityId": "123e4567-e89b-12d3-a456-426614174000"
+}
+```
+
+### Standard Fields
+
+| Field           | Type   | Always Present   | Description                           |
+| --------------- | ------ | ---------------- | ------------------------------------- |
+| `type`          | string | Yes              | RFC 7807 problem type URI             |
+| `title`         | string | Yes              | Short human-readable title            |
+| `status`        | number | Yes              | HTTP status code                      |
+| `detail`        | string | Yes              | Detailed error message                |
+| `instance`      | string | Yes              | Request path that generated the error |
+| `timestamp`     | string | Yes              | ISO 8601 timestamp                    |
+| `code`          | string | For DomainErrors | Internal error code                   |
+| `correlationId` | string | If provided      | From `X-Correlation-Id` header        |
+
+Additional fields from the error's `details` object are spread into the response body.
+
+---
+
+## Error Codes by Category
+
+### Validation Errors (HTTP 400)
+
+| Code                       | Problem Type URI                     | Description                              | Additional Fields                           |
+| -------------------------- | ------------------------------------ | ---------------------------------------- | ------------------------------------------- |
+| `VALIDATION_ERROR`         | `/problems/validation-error`         | Input validation failed                  | `fieldErrors[]`                             |
+| `INVALID_INPUT`            | `/problems/invalid-input`            | General invalid input                    |                                             |
+| `INVALID_STATE_TRANSITION` | `/problems/invalid-state-transition` | Cannot transition entity to target state | `currentState`, `targetState`, `entityType` |
+
+#### Validation Error with Field Details
+
+```json
+{
+  "type": "https://api.t-2.cloud/problems/validation-error",
+  "title": "Validation Error",
+  "status": 400,
+  "detail": "Validation failed",
+  "fieldErrors": [
+    {
+      "field": "email",
+      "code": "isEmail",
+      "message": "email must be a valid email address"
+    }
+  ]
+}
+```
+
+#### class-validator Errors
+
+When NestJS class-validator pipe rejects input, errors are returned as:
+
+```json
+{
+  "type": "https://api.t-2.cloud/problems/http-400",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "email must be an email; firstName should not be empty",
+  "errors": ["email must be an email", "firstName should not be empty"]
+}
+```
+
+### Authentication Errors (HTTP 401)
+
+| Code                   | Problem Type URI                 | Description                      |
+| ---------------------- | -------------------------------- | -------------------------------- |
+| `AUTHENTICATION_ERROR` | `/problems/authentication-error` | General authentication failure   |
+| `INVALID_CREDENTIALS`  | `/problems/invalid-credentials`  | Wrong email/password             |
+| `TOKEN_EXPIRED`        | `/problems/token-expired`        | JWT access/refresh token expired |
+| `INVALID_TOKEN`        | `/problems/invalid-token`        | Malformed or tampered token      |
+
+### Authorization Errors (HTTP 403)
+
+| Code                       | Problem Type URI                     | Description                         | Additional Fields            |
+| -------------------------- | ------------------------------------ | ----------------------------------- | ---------------------------- |
+| `AUTHORIZATION_ERROR`      | `/problems/authorization-error`      | General authorization failure       |                              |
+| `INSUFFICIENT_PERMISSIONS` | `/problems/insufficient-permissions` | Missing required permission         | `requiredPermission`         |
+| `TENANT_ACCESS_DENIED`     | `/problems/tenant-access-denied`     | Cannot access another tenant's data | `tenantId`                   |
+| `RESOURCE_ACCESS_DENIED`   | `/problems/resource-access-denied`   | Cannot access specific resource     | `resourceType`, `resourceId` |
+
+### Not Found Errors (HTTP 404)
+
+| Code               | Problem Type URI             | Description               | Additional Fields        |
+| ------------------ | ---------------------------- | ------------------------- | ------------------------ |
+| `NOT_FOUND`        | `/problems/not-found`        | Generic not found         |                          |
+| `ENTITY_NOT_FOUND` | `/problems/entity-not-found` | Specific entity not found | `entityType`, `entityId` |
+
+### Conflict Errors (HTTP 409)
+
+| Code                      | Problem Type URI                    | Description                           | Additional Fields                           |
+| ------------------------- | ----------------------------------- | ------------------------------------- | ------------------------------------------- |
+| `CONFLICT`                | `/problems/conflict`                | Generic conflict                      |                                             |
+| `DUPLICATE_ENTITY`        | `/problems/duplicate-entity`        | Entity with identifier already exists | `entityType`, `identifier`                  |
+| `CONCURRENCY_ERROR`       | `/problems/concurrency-error`       | Optimistic lock version mismatch      | `entityType`, `entityId`, `expectedVersion` |
+| `BUSINESS_RULE_VIOLATION` | `/problems/business-rule-violation` | Domain rule prevents operation        | `rule`                                      |
+
+### Rate Limiting Errors (HTTP 429)
+
+| Code                  | Problem Type URI                | Description             | Additional Fields               |
+| --------------------- | ------------------------------- | ----------------------- | ------------------------------- |
+| `RATE_LIMIT_EXCEEDED` | `/problems/rate-limit-exceeded` | Too many requests       | `retryAfterSeconds`             |
+| `QUOTA_EXCEEDED`      | `/problems/quota-exceeded`      | Resource quota exceeded | `quotaType`, `limit`, `current` |
+
+### Server Errors (HTTP 500/502/503)
+
+| Code                  | Problem Type URI                | HTTP | Description              | Additional Fields |
+| --------------------- | ------------------------------- | ---- | ------------------------ | ----------------- |
+| `INTERNAL_ERROR`      | `/problems/internal-error`      | 500  | Unexpected server error  |                   |
+| `INTEGRATION_ERROR`   | `/problems/integration-error`   | 502  | External system failure  | `system`, `cause` |
+| `SERVICE_UNAVAILABLE` | `/problems/service-unavailable` | 503  | Service temporarily down | `service`         |
+
+### Domain-Specific Errors
+
+| Code      | Problem Type URI                      | HTTP | Description                      | Additional Fields   |
+| --------- | ------------------------------------- | ---- | -------------------------------- | ------------------- |
+| (dynamic) | `/problems/order-error`               | 400  | Order processing error           | `orderId`           |
+| (dynamic) | `/problems/provisioning-error`        | 500  | Provisioning pipeline error      | `requestId`, `step` |
+| (dynamic) | `/problems/billing-integration-error` | 502  | Billing/Stripe integration error | `operation`         |
+| (dynamic) | `/problems/notification-error`        | 500  | Notification delivery error      | `notificationId`    |
+| (dynamic) | `/problems/support-ticket-error`      | 400  | Ticket operation error           | `ticketId`          |
+
+Domain-specific errors use dynamic codes set at instantiation (e.g., `ORDER_ITEM_NOT_FOUND`, `PROVISIONING_TIMEOUT`).
+
+---
+
+## Error Class Hierarchy
+
+```
+Error
+  └── DomainError (abstract)
+        ├── ValidationError (400)
+        ├── InvalidInputError (400)
+        ├── InvalidStateTransitionError (400)
+        ├── AuthenticationError (401)
+        │   ├── InvalidCredentialsError
+        │   ├── TokenExpiredError
+        │   └── InvalidTokenError
+        ├── AuthorizationError (403)
+        │   ├── InsufficientPermissionsError
+        │   ├── TenantAccessDeniedError
+        │   └── ResourceAccessDeniedError
+        ├── NotFoundError (404)
+        │   └── EntityNotFoundError
+        ├── ConflictError (409)
+        │   ├── DuplicateEntityError
+        │   ├── ConcurrencyError
+        │   └── BusinessRuleViolationError
+        ├── RateLimitExceededError (429)
+        ├── QuotaExceededError (429)
+        ├── InternalError (500)
+        ├── IntegrationError (502)
+        ├── ServiceUnavailableError (503)
+        ├── OrderError (400)
+        ├── ProvisioningError (500)
+        ├── BillingIntegrationError (502)
+        ├── NotificationError (500)
+        └── SupportTicketError (400)
+```
+
+---
+
+## Fallback Behavior
+
+When an error does not match a known DomainError code, the filter falls back to HTTP status-based problem types:
+
+| HTTP Status | Fallback Type URI    | Fallback Title        |
+| ----------- | -------------------- | --------------------- |
+| 400         | `/problems/http-400` | Bad Request           |
+| 401         | `/problems/http-401` | Unauthorized          |
+| 403         | `/problems/http-403` | Forbidden             |
+| 404         | `/problems/http-404` | Not Found             |
+| 409         | `/problems/http-409` | Conflict              |
+| 429         | `/problems/http-429` | Too Many Requests     |
+| 500         | `/problems/http-500` | Internal Server Error |
+| 502         | `/problems/http-502` | Bad Gateway           |
+| 503         | `/problems/http-503` | Service Unavailable   |
+
+Unhandled exceptions (non-DomainError, non-HttpException) always return:
+
+```json
+{
+  "type": "https://api.t-2.cloud/problems/http-500",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "Internal server error"
+}
+```
+
+Stack traces and internal details are never leaked to the client.
+
+---
+
+## Source Files
+
+- Error classes: `packages/common/src/errors/domain.errors.ts`
+- Problem types: `packages/common/src/errors/problem-types.ts`
+- Exception filter: `packages/common/src/infrastructure/filters/http-exception.filter.ts`

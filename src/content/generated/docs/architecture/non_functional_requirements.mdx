@@ -1,0 +1,643 @@
+---
+title: "Non-Functional Requirements"
+description: "Documentation: Non-Functional Requirements"
+section: "docs"
+category: "architecture"
+auto_generated: true
+source: "docs/architecture/NON_FUNCTIONAL_REQUIREMENTS.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/architecture/NON_FUNCTIONAL_REQUIREMENTS.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Non-Functional Requirements
+
+## Cloud Factory Platform - Enterprise NFR Specification
+
+**Document Version:** 1.0.0
+**Classification:** Internal - Architecture
+
+---
+
+## 1. Multi-Tenancy Requirements
+
+### 1.1 Tenant Isolation Model
+
+| Isolation Level | Implementation | Use Case |
+|-----------------|----------------|----------|
+| **Logical** | Row-level security, tenant_id column | Standard tenants |
+| **Schema** | Separate PostgreSQL schemas | Enterprise tenants |
+| **Database** | Dedicated database instance | Regulated industries |
+| **Compute** | Dedicated pods/namespaces | Premium SLA |
+
+### 1.2 Data Isolation Requirements
+
+```yaml
+data_isolation:
+  tenant_context:
+    - All database queries MUST include tenant_id filter
+    - Tenant context MUST be extracted from JWT token
+    - Cross-tenant data access MUST be explicitly denied
+    - Superadmin access MUST be audited separately
+
+  storage_isolation:
+    - Object storage: Tenant-prefixed paths mandatory
+    - Encryption keys: Per-tenant KEK (Key Encryption Key)
+    - Backup segregation: Tenant-specific backup policies
+
+  cache_isolation:
+    - Redis key prefix: tenant:{tenant_id}:*
+    - TTL policies: Per-tenant configurable
+    - Memory limits: Per-tenant quotas
+```
+
+### 1.3 Resource Quotas
+
+| Resource | Default Limit | Enterprise Limit |
+|----------|---------------|------------------|
+| Users per tenant | 50 | Unlimited |
+| API calls/minute | 100 | 10,000 |
+| Storage (GB) | 100 | Custom |
+| Services | 20 | Custom |
+| Concurrent sessions | 100 | 1,000 |
+
+### 1.4 Tenant Provisioning
+
+```
+Tenant Onboarding Flow:
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Request    │────►│   Create    │────►│  Configure  │────►│   Verify    │
+│  Received   │     │   Tenant    │     │   Features  │     │   & Enable  │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │  Provision  │
+                    │  Resources  │
+                    │  - Database │
+                    │  - Storage  │
+                    │  - Secrets  │
+                    └─────────────┘
+```
+
+---
+
+## 2. Audit Logging Requirements
+
+### 2.1 Audit Event Categories
+
+| Category | Retention | Storage |
+|----------|-----------|---------|
+| Authentication | 2 years | Hot: 90 days, Cold: remainder |
+| Authorization | 2 years | Hot: 90 days, Cold: remainder |
+| Data Access | 7 years | Hot: 30 days, Cold: remainder |
+| Data Modification | 7 years | Hot: 90 days, Cold: remainder |
+| System Events | 1 year | Hot: 30 days, Cold: remainder |
+| Financial Events | 10 years | Hot: 1 year, Cold: remainder |
+
+### 2.2 Audit Event Schema
+
+```typescript
+interface AuditEvent {
+  // Identifiers
+  eventId: string;           // UUID v7 (time-ordered)
+  correlationId: string;     // Request correlation
+  traceId: string;           // Distributed trace ID
+
+  // Temporal
+  timestamp: string;         // ISO 8601 with microseconds
+  timezone: string;          // Source timezone
+
+  // Actor
+  actorId: string;
+  actorType: 'user' | 'service' | 'system' | 'api_key';
+  actorEmail?: string;       // For user actors
+  actorIp: string;
+  actorUserAgent?: string;
+
+  // Context
+  tenantId: string;
+  sessionId?: string;
+  requestId: string;
+
+  // Action
+  action: string;            // e.g., 'user.login', 'order.create'
+  actionCategory: string;    // e.g., 'authentication', 'data_modification'
+  result: 'success' | 'failure' | 'partial';
+
+  // Resource
+  resourceType: string;
+  resourceId: string;
+  resourceName?: string;
+
+  // Change Data
+  previousState?: object;    // For modifications
+  newState?: object;         // For modifications
+  changedFields?: string[];  // List of modified fields
+
+  // Metadata
+  metadata: {
+    source: string;          // Service name
+    version: string;         // API version
+    environment: string;
+    datacenter: string;
+    [key: string]: unknown;
+  };
+
+  // Integrity
+  checksum: string;          // SHA-256 of event content
+  signature?: string;        // Optional cryptographic signature
+}
+```
+
+### 2.3 Audit Log Integrity
+
+```yaml
+integrity_requirements:
+  immutability:
+    - Audit logs MUST be append-only
+    - No modification or deletion of audit entries
+    - Write-once storage for compliance
+
+  chain_of_custody:
+    - Each event includes hash of previous event
+    - Periodic merkle tree computation
+    - External timestamp authority for non-repudiation
+
+  tamper_detection:
+    - Hourly integrity verification
+    - Alert on any inconsistency
+    - Separate audit of audit access
+
+  encryption:
+    - At-rest: AES-256-GCM
+    - In-transit: TLS 1.3
+    - Key rotation: 90 days
+```
+
+### 2.4 Required Audit Points
+
+| Operation | Audit Level | Details Captured |
+|-----------|-------------|------------------|
+| Login attempt | ALWAYS | Success/failure, IP, device |
+| Password change | ALWAYS | User ID, timestamp |
+| Permission change | ALWAYS | Before/after state |
+| Data export | ALWAYS | Scope, format, destination |
+| Order creation | ALWAYS | Full order details |
+| Service provisioning | ALWAYS | Request, result, resources |
+| API key usage | ALWAYS | Key ID, endpoint, result |
+| Admin operations | ALWAYS | Full operation details |
+| Data deletion | ALWAYS | What, when, who, why |
+| Configuration change | ALWAYS | Before/after, approver |
+
+---
+
+## 3. Role-Based Access Control (RBAC)
+
+### 3.1 Permission Model
+
+```yaml
+permission_structure:
+  format: "{domain}:{resource}:{action}"
+
+  examples:
+    - "product:catalog:read"
+    - "order:*:write"
+    - "admin:tenant:manage"
+    - "billing:invoice:read"
+
+  actions:
+    - create
+    - read
+    - update
+    - delete
+    - list
+    - execute
+    - manage
+    - "*" (wildcard)
+```
+
+### 3.2 Standard Roles
+
+#### Public Web & Shop
+
+| Role | Permissions |
+|------|-------------|
+| Anonymous | `product:catalog:read`, `product:pricing:read` |
+| Prospect | Anonymous + `cart:*:*`, `order:create:execute` |
+
+#### Customer Portal
+
+| Role | Permissions |
+|------|-------------|
+| Customer Viewer | `service:own:read`, `billing:own:read`, `order:own:read` |
+| Customer Admin | Customer Viewer + `service:own:manage`, `user:tenant:manage` |
+| Customer Owner | Customer Admin + `billing:own:manage`, `apikey:own:manage` |
+
+#### Admin Platform
+
+| Role | Permissions |
+|------|-------------|
+| Support Agent | Read access to customer data, ticket management |
+| Operations | Service management, monitoring, alerts |
+| Product Manager | Product catalog CRUD, pricing management |
+| Billing Admin | Invoice management, payment processing |
+| System Admin | Full platform administration |
+| Super Admin | All permissions, audit access |
+
+### 3.3 Attribute-Based Access Control (ABAC) Extensions
+
+```typescript
+interface AccessPolicy {
+  id: string;
+  name: string;
+  effect: 'allow' | 'deny';
+
+  subjects: {
+    roles?: string[];
+    users?: string[];
+    groups?: string[];
+  };
+
+  resources: {
+    type: string;
+    conditions?: AttributeCondition[];
+  };
+
+  actions: string[];
+
+  conditions?: {
+    timeRange?: { start: string; end: string };
+    ipRange?: string[];
+    mfaRequired?: boolean;
+    tenantMatch?: boolean;
+    customExpression?: string;  // CEL expression
+  };
+}
+
+interface AttributeCondition {
+  attribute: string;
+  operator: 'eq' | 'neq' | 'in' | 'contains' | 'startsWith';
+  value: unknown;
+}
+```
+
+### 3.4 Permission Inheritance
+
+```
+Organization
+    └── Tenant
+         ├── inherits: Organization policies
+         └── Roles
+              ├── inherit: Tenant permissions
+              └── Users
+                   └── inherit: Role permissions + direct grants
+```
+
+---
+
+## 4. Scalability Requirements
+
+### 4.1 Performance Targets
+
+| Metric | Target | Maximum |
+|--------|--------|---------|
+| API Response Time (p50) | &lt; 100ms | 200ms |
+| API Response Time (p95) | &lt; 300ms | 500ms |
+| API Response Time (p99) | &lt; 500ms | 1000ms |
+| Throughput (RPS) | 10,000 | 50,000 |
+| Concurrent Users | 10,000 | 100,000 |
+| Database Query Time (p95) | &lt; 50ms | 100ms |
+
+### 4.2 Scaling Dimensions
+
+```yaml
+horizontal_scaling:
+  api_services:
+    min_replicas: 3
+    max_replicas: 50
+    scaling_metric: cpu_utilization
+    target_utilization: 70%
+    scale_up_stabilization: 60s
+    scale_down_stabilization: 300s
+
+  worker_services:
+    min_replicas: 2
+    max_replicas: 20
+    scaling_metric: queue_depth
+    target_depth: 100
+
+  event_consumers:
+    min_replicas: 3
+    max_replicas: 30
+    scaling_metric: consumer_lag
+    target_lag: 1000
+
+vertical_scaling:
+  database:
+    strategy: "Managed scaling with read replicas"
+    read_replicas: 2-10
+    connection_pooling: true
+    pool_size_per_pod: 10
+
+  cache:
+    strategy: "Redis Cluster"
+    initial_nodes: 6
+    max_nodes: 30
+```
+
+### 4.3 Data Partitioning Strategy
+
+```yaml
+partitioning:
+  orders:
+    strategy: "Range by created_at"
+    partition_interval: "monthly"
+    retention: "online: 2 years, archive: 7 years"
+
+  audit_logs:
+    strategy: "Range by timestamp"
+    partition_interval: "daily"
+    retention: "hot: per category, cold: S3 Glacier"
+
+  usage_metrics:
+    strategy: "Range by timestamp"
+    partition_interval: "daily"
+    aggregation: "hourly rollups after 7 days"
+
+  tenant_data:
+    strategy: "List by tenant_id for large tenants"
+    threshold: "10GB per tenant triggers dedicated partition"
+```
+
+### 4.4 Caching Strategy
+
+| Cache Layer | Technology | TTL | Invalidation |
+|-------------|------------|-----|--------------|
+| CDN | CloudFront/Akamai | 1h | Versioned URLs |
+| API Gateway | Kong | 5min | Event-based |
+| Application | Redis | 15min | Write-through |
+| Database | PgBouncer | N/A | Connection pool |
+
+```yaml
+cache_policies:
+  product_catalog:
+    ttl: 300  # 5 minutes
+    strategy: "cache-aside"
+    invalidation: "event-driven on product.updated"
+
+  pricing:
+    ttl: 60  # 1 minute
+    strategy: "write-through"
+
+  session:
+    ttl: 3600  # 1 hour
+    strategy: "write-through"
+
+  rate_limits:
+    ttl: 60  # 1 minute
+    strategy: "sliding window"
+```
+
+---
+
+## 5. Failure Isolation
+
+### 5.1 Bulkhead Pattern Implementation
+
+```yaml
+bulkheads:
+  public_web:
+    dedicated_resources:
+      - api_gateway_pool
+      - redis_partition
+      - database_connection_pool
+    circuit_breaker:
+      failure_threshold: 5
+      timeout: 30s
+      half_open_requests: 3
+
+  customer_portal:
+    dedicated_resources:
+      - api_gateway_pool
+      - redis_partition
+      - database_connection_pool
+    circuit_breaker:
+      failure_threshold: 5
+      timeout: 30s
+
+  admin_platform:
+    dedicated_resources:
+      - api_gateway_pool
+      - redis_partition
+      - database_connection_pool
+    circuit_breaker:
+      failure_threshold: 10
+      timeout: 60s
+```
+
+### 5.2 Circuit Breaker Configuration
+
+```typescript
+interface CircuitBreakerConfig {
+  name: string;
+
+  // Thresholds
+  failureRateThreshold: number;      // Percentage (0-100)
+  slowCallRateThreshold: number;     // Percentage (0-100)
+  slowCallDurationThreshold: number; // Milliseconds
+
+  // Timing
+  waitDurationInOpenState: number;   // Milliseconds
+  permittedNumberOfCallsInHalfOpenState: number;
+
+  // Sliding window
+  slidingWindowType: 'COUNT_BASED' | 'TIME_BASED';
+  slidingWindowSize: number;
+  minimumNumberOfCalls: number;
+}
+
+const defaultConfig: CircuitBreakerConfig = {
+  name: 'default',
+  failureRateThreshold: 50,
+  slowCallRateThreshold: 80,
+  slowCallDurationThreshold: 2000,
+  waitDurationInOpenState: 30000,
+  permittedNumberOfCallsInHalfOpenState: 10,
+  slidingWindowType: 'COUNT_BASED',
+  slidingWindowSize: 100,
+  minimumNumberOfCalls: 10,
+};
+```
+
+### 5.3 Graceful Degradation Matrix
+
+| Component | Failure Mode | Degradation Strategy | User Impact |
+|-----------|--------------|---------------------|-------------|
+| Product Service | Unavailable | Serve from cache | Stale data (&lt; 5min) |
+| Order Service | Unavailable | Queue operations | Delayed processing |
+| Billing Integration | Unavailable | Queue for retry | Invoice delay |
+| Search Service | Unavailable | Fallback to DB | Slower search |
+| Notification Service | Unavailable | Queue & retry | Delayed notifications |
+| Authentication | Unavailable | Cached sessions | No new logins |
+| Database Primary | Unavailable | Promote replica | Brief disruption |
+| Redis | Unavailable | Direct DB queries | Slower response |
+
+### 5.4 Retry Policies
+
+```yaml
+retry_policies:
+  http_client:
+    max_attempts: 3
+    initial_delay: 100ms
+    max_delay: 2000ms
+    multiplier: 2.0
+    jitter: 0.1
+    retryable_status_codes: [502, 503, 504]
+
+  database:
+    max_attempts: 3
+    initial_delay: 50ms
+    max_delay: 500ms
+    retryable_errors: ["connection_refused", "timeout"]
+
+  message_queue:
+    max_attempts: 5
+    initial_delay: 1000ms
+    max_delay: 60000ms
+    dead_letter_after: 5
+
+  external_integration:
+    max_attempts: 5
+    initial_delay: 500ms
+    max_delay: 30000ms
+    circuit_breaker_enabled: true
+```
+
+---
+
+## 6. Security Requirements
+
+### 6.1 Authentication
+
+| System | Primary Auth | Secondary Auth | Session Duration |
+|--------|--------------|----------------|------------------|
+| Public Web | Anonymous/OAuth2 | N/A | N/A |
+| Customer Portal | OAuth2/OIDC | MFA (optional) | 1 hour |
+| Admin Platform | OAuth2/OIDC | MFA (required) | 30 minutes |
+| API Access | API Key/OAuth2 | IP allowlist | Per-request |
+
+### 6.2 Data Classification
+
+| Classification | Examples | Encryption | Access |
+|----------------|----------|------------|--------|
+| Public | Product catalog | TLS only | Anonymous |
+| Internal | Usage metrics | At-rest + TLS | Authenticated |
+| Confidential | Customer data | Field-level + TLS | Role-based |
+| Restricted | Payment data | HSM + TLS + Audit | PCI-DSS compliant |
+
+### 6.3 Network Security
+
+```yaml
+network_policies:
+  ingress:
+    - Allow HTTPS from API Gateway only
+    - Allow internal service mesh traffic
+    - Deny all other ingress
+
+  egress:
+    - Allow to approved external services
+    - Allow to internal services
+    - Deny to internet (except approved)
+
+  service_mesh:
+    mtls: required
+    certificate_rotation: 24h
+    authorization_policies: enabled
+```
+
+---
+
+## 7. Availability Requirements
+
+### 7.1 SLA Targets
+
+| Component | Availability | RTO | RPO |
+|-----------|--------------|-----|-----|
+| Public Web | 99.9% | 15 min | 1 hour |
+| Customer Portal | 99.95% | 10 min | 15 min |
+| Admin Platform | 99.9% | 15 min | 1 hour |
+| Order Processing | 99.99% | 5 min | 0 (sync) |
+| Billing Integration | 99.95% | 30 min | 1 hour |
+| Core APIs | 99.95% | 10 min | 15 min |
+
+### 7.2 Disaster Recovery
+
+```yaml
+disaster_recovery:
+  strategy: "Active-Passive Multi-Region"
+
+  primary_region: "eu-central-1"
+  secondary_region: "eu-west-1"
+
+  replication:
+    database: "Synchronous within region, async cross-region"
+    object_storage: "Cross-region replication"
+    secrets: "Multi-region Vault cluster"
+
+  failover:
+    automatic: false  # Requires manual confirmation
+    dns_ttl: 60s
+    estimated_time: 15 minutes
+
+  testing:
+    frequency: "Quarterly"
+    scope: "Full failover drill"
+```
+
+---
+
+## 8. Compliance Requirements
+
+### 8.1 Regulatory Framework
+
+| Regulation | Scope | Key Requirements |
+|------------|-------|------------------|
+| GDPR | All EU data | Consent, data portability, right to erasure |
+| PCI-DSS | Payment data | Encryption, access control, audit |
+| SOC 2 Type II | All systems | Security, availability, confidentiality |
+| Local Telco | Platform | Data residency, lawful intercept |
+
+### 8.2 Data Residency
+
+```yaml
+data_residency:
+  default_region: "EU"
+
+  tenant_override: true
+  allowed_regions:
+    - EU
+    - US
+    - APAC
+
+  restrictions:
+    - PII must remain in tenant's designated region
+    - Audit logs must be retained in originating region
+    - Backups must respect data residency requirements
+
+  cross_border:
+    allowed: false  # Unless explicit tenant consent
+    mechanism: "Standard Contractual Clauses"
+```
+
+### 8.3 Data Retention
+
+| Data Type | Retention | Disposal |
+|-----------|-----------|----------|
+| Transaction data | 7 years | Secure deletion |
+| Audit logs | Per category | Crypto-shredding |
+| User data | Account lifetime + 30 days | Anonymization |
+| Backups | 90 days | Secure deletion |
+| Logs (operational) | 90 days | Auto-deletion |

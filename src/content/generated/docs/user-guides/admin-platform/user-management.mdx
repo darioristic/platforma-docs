@@ -1,0 +1,155 @@
+---
+title: "User Management"
+description: "Documentation: User Management"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/user-management.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/user-management.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# User Management
+
+This guide covers managing your internal team members, roles, permissions, and security settings within the Admin Platform. Team management is accessed through the Settings area.
+
+## Accessing Team Management
+
+1. Click **Settings** in the sidebar.
+2. Select the **Team Members** tab.
+
+
+
+## Viewing Team Members
+
+The team members list shows all users who have access to the Admin Platform. Each row displays:
+
+- **Name** -- Full name of the team member
+- **Email** -- Login email address
+- **Role** -- Assigned RBAC role
+- **Status** -- Active or Invited (pending acceptance)
+- **Last Active** -- Date of most recent login
+
+## How to Invite a New Team Member
+
+1. Navigate to **Settings > Team Members**.
+2. Click the **Invite Member** button.
+3. Enter the team member's email address.
+4. Select a role from the dropdown (see roles table below).
+5. Click **Send Invitation**.
+6. The invitee will receive an email with a link to set up their account.
+
+> **Note:** Invitations expire after 48 hours. If an invitation expires, you can resend it from the team members list by clicking the options menu next to the pending member.
+
+
+
+## RBAC Roles
+
+Role-Based Access Control (RBAC) ensures team members only see and do what their responsibilities require.
+
+| Role        | Dashboard | Products | Orders | Billing | Support | Settings | Monitoring | Audit Log |
+| ----------- | --------- | -------- | ------ | ------- | ------- | -------- | ---------- | --------- |
+| **Admin**   | Full      | Full     | Full   | Full    | Full    | Full     | Full       | Full      |
+| **Manager** | Full      | Full     | Full   | View    | Full    | Limited  | Full       | View      |
+| **Support** | View      | View     | View   | View    | Full    | None     | View       | None      |
+| **Billing** | View      | View     | View   | Full    | View    | None     | View       | None      |
+
+### Role Descriptions
+
+- **Admin** -- Complete platform access. Can manage team members, configure settings, and perform all operations. Assign this role only to senior operators and system administrators.
+- **Manager** -- Broad operational access for day-to-day management. Can manage products, orders, and support but cannot change platform-wide settings like branding or security policies.
+- **Support** -- Focused on customer support. Full access to the support ticket system with read-only access to orders and billing for context when resolving issues.
+- **Billing** -- Focused on financial operations. Full access to invoices, payments, and usage data with read-only access to other areas for reference.
+
+## How to Change a Team Member's Role
+
+1. Navigate to **Settings > Team Members**.
+2. Find the team member in the list.
+3. Click the options menu (three dots) on their row.
+4. Select **Change Role**.
+5. Choose the new role from the dropdown.
+6. Click **Save**.
+
+The role change takes effect immediately. The team member may need to refresh their browser to see updated navigation options.
+
+## How to Remove a Team Member
+
+1. Navigate to **Settings > Team Members**.
+2. Click the options menu on the team member's row.
+3. Select **Remove Member**.
+4. Confirm the removal in the dialog.
+
+Removed members immediately lose access. Their past actions remain recorded in the Audit Log.
+
+## Security Settings
+
+### Two-Factor Authentication (2FA)
+
+Enabling 2FA adds a second verification step at login using a time-based one-time password (TOTP).
+
+**How to enable 2FA for your account:**
+
+1. Navigate to **Settings > Security**.
+2. Click **Enable Two-Factor Authentication**.
+3. Scan the QR code with your authenticator app (Google Authenticator, Authy, or any TOTP-compatible app).
+4. Enter the 6-digit code from your authenticator app to verify.
+5. Save the backup codes in a secure location. These are your recovery method if you lose access to your authenticator.
+
+
+
+> **Recommendation:** All Admin and Manager role users should enable 2FA.
+
+### Password Changes
+
+1. Navigate to **Settings > Security**.
+2. Click **Change Password**.
+3. Enter your current password.
+4. Enter and confirm your new password.
+5. Click **Update Password**.
+
+Password requirements:
+
+- Minimum 12 characters
+- At least one uppercase letter, one lowercase letter, and one number
+- Cannot reuse your last 5 passwords
+
+### Active Sessions
+
+The Security settings page shows your active sessions across devices. You can terminate any session you do not recognize.
+
+## API Keys
+
+API keys allow external systems to interact with the Cloud Factory API on behalf of your organization.
+
+### How to Create an API Key
+
+1. Navigate to **Settings > API Keys**.
+2. Click **Create API Key**.
+3. Enter a descriptive name (e.g., "Monitoring Integration" or "Billing Export Script").
+4. Select the permission scope for the key.
+5. Click **Generate**.
+6. **Copy the key immediately.** It will not be shown again.
+
+
+
+### Managing API Keys
+
+The API Keys list shows all active keys with:
+
+- **Name** -- Descriptive label you assigned
+- **Created** -- When the key was generated
+- **Last Used** -- Most recent API call using this key
+- **Status** -- Active or Revoked
+
+To revoke a key, click the options menu and select **Revoke**. Revoked keys stop working immediately.
+
+> **Security:** Treat API keys like passwords. Never share them in emails, chat messages, or code repositories.
+
+## Related Guides
+
+- [Getting Started](./getting-started.md) -- Platform overview and navigation
+- [Settings](./settings.md) -- Full settings reference
+- [Reporting & Dashboard](./reporting-dashboard.md) -- Audit log for tracking team activity

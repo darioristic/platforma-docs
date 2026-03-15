@@ -4,7 +4,7 @@ description: "Auto-generated API reference for reporting-service"
 section: "api"
 service: "reporting-service"
 auto_generated: true
-last_synced: "2026-03-15T15:39:27.419Z"
+last_synced: "2026-03-15T21:59:50.449Z"
 ---
 
 # Reporting Service API
@@ -14,7 +14,7 @@ Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
 </Callout>
 
 **Base path:** `/api`  
-**Endpoints:** 21
+**Endpoints:** 24
 
 ---
 
@@ -235,6 +235,58 @@ Auto-generated from NestJS controller decorators. Last synced: 2026-03-15
   </Param>
   <Param name="regionId" type="string">
     query parameter
+  </Param>
+</ParamTable>
+
+---
+
+## Resource Optimization
+
+### List optimization suggestions with filters
+
+<ApiEndpoint method="GET" path="/v1/reporting/resource-optimization">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="query" type="OptimizationQueryDto" required>
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Get optimization summary with savings estimate
+
+<ApiEndpoint method="GET" path="/v1/reporting/resource-optimization/summary">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="tenantId" type="string">
+    query parameter
+  </Param>
+</ParamTable>
+
+---
+
+### Accept or dismiss an optimization suggestion
+
+<ApiEndpoint method="PATCH" path="/v1/reporting/resource-optimization/:id">
+</ApiEndpoint>
+
+<ParamTable>
+  <Param name="id" type="string" required>
+    path parameter
+  </Param>
+</ParamTable>
+
+**Request Body:** `UpdateSuggestionDto`
+
+<ParamTable>
+  <Param name="status" type="OptimizationStatus" required>
+    —
+  </Param>
+  <Param name="dismissedReason" type="string">
+    —
   </Param>
 </ParamTable>
 

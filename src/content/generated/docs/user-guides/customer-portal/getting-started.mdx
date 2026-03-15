@@ -1,0 +1,112 @@
+---
+title: "Getting Started"
+description: "Documentation: Getting Started"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/customer-portal/getting-started.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/customer-portal/getting-started.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Getting Started
+
+Welcome to the Cloud Factory Customer Portal. This guide walks you through creating your account, logging in, and navigating the platform for the first time.
+
+## Creating Your Account
+
+Registration is a quick two-step process.
+
+
+
+1. Go to the Customer Portal login page and click **Create Account**.
+2. **Step 1 -- Account Details**: Enter your full name, email address, and choose a password (minimum 8 characters).
+3. **Step 2 -- Account Type**: Select **Individual** for personal use or **Business** for company accounts. Business accounts require a company name, VAT number, and billing address.
+4. Click **Create Account** to finish. You will receive a confirmation email.
+
+### OAuth Sign-Up
+
+Instead of email/password, you can register using a third-party provider:
+
+- **Google** -- Use your Google Workspace or personal Google account.
+- **GitHub** -- Ideal for developers who prefer GitHub-based identity.
+- **Microsoft** -- Sign in with your Microsoft 365 or Azure AD account.
+
+Click the provider icon on the login page and authorize Cloud Factory to access your basic profile information.
+
+## Logging In
+
+
+
+1. Navigate to the Customer Portal login page.
+2. Enter your email and password, then click **Sign In**.
+3. If you registered via OAuth, click the corresponding provider icon instead.
+
+Authentication uses secure httpOnly cookies. You will remain signed in until your session expires or you explicitly log out.
+
+## Dashboard Overview
+
+After logging in, you land on the **Dashboard**. It provides a snapshot of your account at a glance.
+
+
+
+The top section displays three key metrics:
+
+- **Total Orders** -- The number of orders you have placed.
+- **Active Services** -- How many cloud resources are currently running.
+- **Outstanding Balance** -- Any unpaid invoice amounts in EUR.
+
+Below the metrics you will find recent activity, quick actions, and links to your most-used services.
+
+## Projects and Workspaces
+
+Cloud Factory organizes resources in a three-level hierarchy:
+
+- **Workspace** -- Your top-level account container. Most customers have one workspace.
+- **Projects** -- Logical groupings within a workspace (e.g., "Production", "Staging", "R&D").
+- **Services** -- Individual cloud resources deployed inside a project.
+
+This structure lets you separate environments, control access, and track costs per project. You can create and manage projects from [Account Settings](./account-settings.md).
+
+## Navigating the Portal
+
+
+
+The header bar is your primary navigation tool:
+
+| Element                | Purpose                                                             |
+| ---------------------- | ------------------------------------------------------------------- |
+| **Workspace Selector** | Switch between workspaces (top-left dropdown).                      |
+| **Project Selector**   | Filter the current view to a specific project.                      |
+| **Search (Cmd+K)**     | Quickly find services, orders, or settings.                         |
+| **Create Menu**        | Deploy a new service -- choose from 6 service types.                |
+| **Notifications**      | View alerts for order updates, billing events, and service changes. |
+
+The sidebar links to all major sections: Dashboard, Projects, [Services](./my-services.md), [Orders](./ordering.md), [Invoices](./billing.md), [Support](./support.md), Usage, DNS, and [Settings](./account-settings.md).
+
+## Available Service Types
+
+When you create a new resource through the **Create Menu**, you can choose from:
+
+1. **Enterprise VPS** -- Virtual private servers with dedicated resources.
+2. **Private Cloud** -- Isolated cloud environments for your organization.
+3. **Managed Kubernetes** -- Container orchestration without the operational overhead.
+4. **AI/ML & Data** -- GPU-accelerated instances and data processing platforms.
+5. **Managed Databases** -- Fully managed PostgreSQL, MongoDB, Redis, and more.
+6. **Object Storage** -- S3-compatible storage for files, backups, and media.
+
+See the [Ordering Guide](./ordering.md) for details on how to deploy a service.
+
+## Theme and Language
+
+- **Theme Toggle** -- Click the sun/moon icon in the header to switch between light and dark mode. Your preference is saved automatically.
+- **Language Switcher** -- Select your preferred language from the dropdown in the header. The portal currently supports English and Serbian.
+
+## Next Steps
+
+- [Deploy your first service](./ordering.md)
+- [Explore your running services](./my-services.md)
+- [Set up your notification preferences](./account-settings.md)

@@ -1,0 +1,118 @@
+---
+title: "Billing and Usage"
+description: "Documentation: Billing and Usage"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/customer-portal/billing.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/customer-portal/billing.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Billing and Usage
+
+This guide covers invoices, payments, and usage tracking so you can stay on top of your cloud spending.
+
+## Invoices
+
+The Invoices page provides a complete view of your billing history.
+
+
+
+### Statistics
+
+Four summary cards appear at the top:
+
+- **Outstanding Balance** -- Total unpaid amount across all invoices (EUR).
+- **Total Paid** -- Cumulative payments you have made.
+- **Overdue** -- Number of invoices past their due date.
+- **Total Invoices** -- Total number of invoices issued to your account.
+
+### Filtering Invoices
+
+Use the tabs to filter the invoice list:
+
+- **All** -- Every invoice regardless of payment status.
+- **Unpaid** -- Invoices that still need to be paid.
+- **Paid** -- Invoices that have been settled.
+
+### Invoice Table
+
+Each row in the table shows:
+
+| Column             | Description                                                      |
+| ------------------ | ---------------------------------------------------------------- |
+| **Invoice Number** | A unique identifier (e.g., INV-2026-0042).                       |
+| **Status Badge**   | Color-coded: green for Paid, yellow for Unpaid, red for Overdue. |
+| **Due Date**       | The date by which payment is expected.                           |
+| **Amount**         | Total amount in EUR.                                             |
+
+### Invoice Detail Sheet
+
+Click any invoice to open its detail view.
+
+
+
+The detail sheet includes:
+
+- **Timeline** -- Key dates: when the invoice was issued, when it is due, and when it was paid (if applicable).
+- **Total Amount** -- The full invoice total with a breakdown of line items.
+- **Actions**:
+  1. **Download PDF** -- Save a PDF copy of the invoice for your records or accounting.
+  2. **Pay Now** -- Available for unpaid invoices. Initiates the payment flow.
+
+### Paying an Invoice
+
+1. Open an unpaid invoice from the Invoices page.
+2. Click **Pay Now**.
+3. Follow the payment instructions to complete the transaction.
+4. The invoice status updates to **Paid** once the payment is confirmed.
+
+## Usage
+
+The Usage page helps you understand your resource consumption and estimate upcoming costs.
+
+
+
+### Date Range
+
+Select a time window from the dropdown at the top of the page:
+
+- **Last 7 Days** -- Short-term view for recent activity.
+- **Last Month** -- Standard monthly review.
+- **Last 90 Days** -- Quarterly overview for trend analysis.
+
+### Usage Metrics
+
+Four metric cards show your consumption for the selected period:
+
+| Metric        | Unit       | Description                                      |
+| ------------- | ---------- | ------------------------------------------------ |
+| **CPU Hours** | vCPU-hours | Total compute time consumed across all services. |
+| **Memory**    | GB-hours   | RAM usage accumulated over time.                 |
+| **Storage**   | GB         | Average persistent storage used.                 |
+| **Bandwidth** | GB         | Network data transferred in and out.             |
+
+Each metric card also shows an **estimated cost** in EUR based on your current pricing plan.
+
+### Charts
+
+Two visual charts provide additional insight:
+
+- **Resource Consumption** -- A bar chart comparing CPU, memory, storage, and bandwidth usage across the selected period.
+- **Billing Status** -- A pie chart showing the proportion of paid, unpaid, and overdue invoices.
+
+### Usage Summary Table
+
+Below the charts, a summary table lists each service with its individual resource consumption and estimated cost. The final row shows the **Total Estimated Bill** for the selected period.
+
+> **Tip:** Compare the usage summary against your invoices to understand exactly what drives your costs. If you notice unexpected spikes, check the [Services monitoring tab](./my-services.md) for details.
+
+## Related Guides
+
+- [Ordering new services](./ordering.md)
+- [Managing your services](./my-services.md)
+- [Contacting support about billing questions](./support.md)

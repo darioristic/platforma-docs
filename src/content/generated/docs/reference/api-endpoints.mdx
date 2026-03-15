@@ -1,0 +1,468 @@
+---
+title: "API Endpoints Reference"
+description: "Documentation: API Endpoints Reference"
+section: "docs"
+category: "reference"
+auto_generated: true
+source: "docs/reference/api-endpoints.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/reference/api-endpoints.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# API Endpoints Reference
+
+All services use JWT Bearer authentication unless marked as Public. Admin endpoints require `admin` or `PLATFORM_ADMIN` roles. Service-to-service endpoints use `@ServiceOnly()` guard.
+
+Error responses follow RFC 7807 Problem Details format (`application/problem+json`).
+
+---
+
+## Identity Service (port 3003)
+
+### Authentication (`/auth`)
+
+| Method | Path                             | Auth   | Description               |
+| ------ | -------------------------------- | ------ | ------------------------- |
+| POST   | `/auth/register`                 | Public | Register a new user       |
+| POST   | `/auth/login`                    | Public | Login with email/password |
+| POST   | `/auth/refresh`                  | Public | Refresh access token      |
+| POST   | `/auth/logout`                   | JWT    | Logout current user       |
+| GET    | `/auth/oauth/google`             | Public | Initiate Google OAuth     |
+| GET    | `/auth/oauth/google/callback`    | Public | Google OAuth callback     |
+| GET    | `/auth/oauth/github`             | Public | Initiate GitHub OAuth     |
+| GET    | `/auth/oauth/github/callback`    | Public | GitHub OAuth callback     |
+| GET    | `/auth/oauth/microsoft`          | Public | Initiate Microsoft OAuth  |
+| GET    | `/auth/oauth/microsoft/callback` | Public | Microsoft OAuth callback  |
+
+Rate limits apply on all auth endpoints. OAuth callbacks set httpOnly cookies and redirect to frontend.
+
+### Users (`/users`)
+
+| Method | Path                        | Auth  | Description                            |
+| ------ | --------------------------- | ----- | -------------------------------------- |
+| GET    | `/users/me`                 | JWT   | Get current user profile               |
+| PATCH  | `/users/me`                 | JWT   | Update own profile                     |
+| POST   | `/users/me/change-password` | JWT   | Change own password                    |
+| GET    | `/users`                    | Admin | List all users (paginated, filterable) |
+| GET    | `/users/:id`                | Admin | Get user by ID                         |
+| PUT    | `/users/:id`                | Admin | Update a user (admin)                  |
+| POST   | `/users/:id/deactivate`     | Admin | Suspend a user                         |
+| POST   | `/users/:id/reactivate`     | Admin | Reactivate a user                      |
+
+### Tenants (`/tenants`)
+
+| Method | Path                               | Auth   | Description                             |
+| ------ | ---------------------------------- | ------ | --------------------------------------- |
+| POST   | `/tenants`                         | Admin  | Create a new tenant                     |
+| GET    | `/tenants`                         | Admin  | List all tenants (optional type filter) |
+| GET    | `/tenants/by-name/:name`           | Admin  | Get tenant by name                      |
+| GET    | `/tenants/:id`                     | Admin  | Get tenant by ID                        |
+| PATCH  | `/tenants/:id`                     | Admin  | Update a tenant                         |
+| DELETE | `/tenants/:id`                     | Admin  | Delete a tenant                         |
+| GET    | `/tenants/:id/user-count`          | Admin  | Get user count for tenant               |
+| GET    | `/tenants/:id/settings`            | Admin  | Get tenant settings                     |
+| PATCH  | `/tenants/:id/settings`            | Admin  | Update tenant settings (partial)        |
+| POST   | `/tenants/:id/invites`             | Admin  | Create an invite                        |
+| GET    | `/tenants/:id/invites`             | Admin  | List invites for tenant                 |
+| DELETE | `/tenants/:id/invites/:inviteId`   | Admin  | Revoke an invite                        |
+| GET    | `/tenants/invites/validate/:token` | Public | Validate invite token                   |
+
+### Roles (`/roles`)
+
+| Method | Path                          | Auth  | Description                         |
+| ------ | ----------------------------- | ----- | ----------------------------------- |
+| GET    | `/roles`                      | Admin | List all role definitions           |
+| GET    | `/roles/:id`                  | Admin | Get role by ID                      |
+| POST   | `/roles`                      | Admin | Create a role                       |
+| PUT    | `/roles/:id`                  | Admin | Update a role                       |
+| DELETE | `/roles/:id`                  | Admin | Delete a role (non-system only)     |
+| GET    | `/roles/users/:userId`        | Admin | Get roles for a user (with details) |
+| POST   | `/roles/users/:userId/assign` | Admin | Assign roles to user                |
+| POST   | `/roles/users/:userId/remove` | Admin | Remove roles from user              |
+
+### API Keys (`/api-keys`)
+
+| Method | Path            | Auth | Description                            |
+| ------ | --------------- | ---- | -------------------------------------- |
+| GET    | `/api-keys`     | JWT  | List API keys (optional userId filter) |
+| POST   | `/api-keys`     | JWT  | Create a new API key                   |
+| DELETE | `/api-keys/:id` | JWT  | Delete an API key                      |
+
+### Audit Logs (`/audit-logs`)
+
+| Method | Path          | Auth           | Description                             |
+| ------ | ------------- | -------------- | --------------------------------------- |
+| GET    | `/audit-logs` | Admin/Security | List audit logs (paginated, filterable) |
+| POST   | `/audit-logs` | Service-only   | Create audit log entry                  |
+
+### GDPR (`/users/me`)
+
+| Method | Path                        | Auth | Description                    |
+| ------ | --------------------------- | ---- | ------------------------------ |
+| GET    | `/users/me/export`          | JWT  | Export personal data (Art. 20) |
+| DELETE | `/users/me/erase`           | JWT  | Request data erasure (Art. 17) |
+| GET    | `/users/me/consent`         | JWT  | Get current consent status     |
+| GET    | `/users/me/consent/history` | JWT  | Get consent change history     |
+| POST   | `/users/me/consent`         | JWT  | Record/update consent          |
+
+### Partner API (`/api/partner`)
+
+| Method | Path                              | Auth          | Description              |
+| ------ | --------------------------------- | ------------- | ------------------------ |
+| POST   | `/api/partner/clients`            | Admin/Partner | Create OAuth2 client     |
+| GET    | `/api/partner/clients`            | Admin/Partner | List OAuth2 clients      |
+| POST   | `/api/partner/clients/:id/revoke` | Admin/Partner | Revoke client            |
+| DELETE | `/api/partner/clients/:id`        | Admin/Partner | Delete client            |
+| POST   | `/api/partner/oauth/token`        | Public        | Client credentials grant |
+
+### Service Auth (`/auth/service`)
+
+| Method | Path                  | Auth           | Description                    |
+| ------ | --------------------- | -------------- | ------------------------------ |
+| POST   | `/auth/service/token` | Service secret | Issue service-to-service token |
+
+### Health
+
+| Method | Path      | Auth   | Description               |
+| ------ | --------- | ------ | ------------------------- |
+| GET    | `/health` | Public | Health check (K8s probes) |
+
+---
+
+## Product Service (port 3001)
+
+### Products (`/products`)
+
+| Method | Path                          | Auth                  | Description                           |
+| ------ | ----------------------------- | --------------------- | ------------------------------------- |
+| POST   | `/products`                   | Admin/Product Manager | Create product                        |
+| GET    | `/products`                   | Public                | List products (paginated, filterable) |
+| GET    | `/products/search`            | Public                | Full-text search with filters         |
+| GET    | `/products/search/suggest`    | Public                | Autocomplete suggestions              |
+| GET    | `/products/search/categories` | Public                | List all categories                   |
+| GET    | `/products/:id`               | Public                | Get product by ID                     |
+| PUT    | `/products/:id`               | Admin/Product Manager | Update product                        |
+| DELETE | `/products/:id`               | Admin                 | Delete product                        |
+
+### Pricing Plans (`/pricing-plans`)
+
+| Method | Path             | Auth   | Description                     |
+| ------ | ---------------- | ------ | ------------------------------- |
+| GET    | `/pricing-plans` | Public | List products (legacy endpoint) |
+
+### Health
+
+| Method | Path      | Auth   | Description  |
+| ------ | --------- | ------ | ------------ |
+| GET    | `/health` | Public | Health check |
+
+---
+
+## Order Service (port 3002)
+
+### Orders (`/orders`)
+
+| Method | Path                                 | Auth | Description                         |
+| ------ | ------------------------------------ | ---- | ----------------------------------- |
+| POST   | `/orders`                            | JWT  | Create order and submit for payment |
+| GET    | `/orders`                            | JWT  | List orders (paginated, filterable) |
+| GET    | `/orders/analytics`                  | JWT  | Get order analytics/metrics         |
+| GET    | `/orders/stats`                      | JWT  | Get order statistics                |
+| GET    | `/orders/:id`                        | JWT  | Get order by ID                     |
+| POST   | `/orders/:id/submit`                 | JWT  | Submit order for payment            |
+| POST   | `/orders/:id/confirm-payment`        | JWT  | Confirm payment                     |
+| POST   | `/orders/:id/revert-payment`         | JWT  | Revert payment to pending           |
+| POST   | `/orders/:id/start-provisioning`     | JWT  | Start provisioning pipeline         |
+| POST   | `/orders/:id/cancel`                 | JWT  | Cancel an order                     |
+| GET    | `/orders/:id/items/:itemId/delivery` | JWT  | Get delivery info for item          |
+| POST   | `/orders/:id/items/:itemId/deliver`  | JWT  | Send/resend delivery email          |
+
+Idempotency-Key header supported on: create, submit, confirm-payment, cancel.
+
+### Health
+
+| Method | Path      | Auth   | Description  |
+| ------ | --------- | ------ | ------------ |
+| GET    | `/health` | Public | Health check |
+
+---
+
+## Provisioning Service (port 3004)
+
+### Provisioning (`/provisioning`)
+
+| Method | Path                                         | Auth         | Description                   |
+| ------ | -------------------------------------------- | ------------ | ----------------------------- |
+| POST   | `/provisioning/requests`                     | JWT          | Create provisioning request   |
+| GET    | `/provisioning/requests`                     | JWT          | List requests (paginated)     |
+| GET    | `/provisioning/requests/:id`                 | JWT          | Get request by ID             |
+| GET    | `/provisioning/requests/order/:orderId`      | JWT          | Get requests by order ID      |
+| GET    | `/provisioning/requests/:id/metrics`         | JWT          | Get real-time service metrics |
+| GET    | `/provisioning/requests/:id/audit`           | JWT          | Get audit trail               |
+| POST   | `/provisioning/requests/:id/start`           | Service-only | Start provisioning            |
+| POST   | `/provisioning/requests/:id/advance`         | Service-only | Advance to next step          |
+| POST   | `/provisioning/requests/:id/fail`            | Service-only | Mark as failed                |
+| POST   | `/provisioning/requests/:id/suspend`         | JWT          | Suspend service               |
+| POST   | `/provisioning/requests/:id/reactivate`      | JWT          | Reactivate service            |
+| PATCH  | `/provisioning/requests/:id/manual-complete` | JWT          | Complete manual provisioning  |
+| POST   | `/provisioning/requests/:id/retry`           | JWT          | Retry failed request          |
+| DELETE | `/provisioning/requests/:id`                 | JWT          | Deprovision service           |
+| GET    | `/provisioning/stats`                        | JWT          | Get provisioning statistics   |
+| GET    | `/provisioning/instances`                    | JWT          | List active service instances |
+| GET    | `/provisioning/worker-status`                | JWT          | Get worker status             |
+| GET    | `/provisioning/providers/health`             | JWT          | Check cloud provider health   |
+
+### DNS (`/dns`)
+
+| Method | Path                                   | Auth  | Description                   |
+| ------ | -------------------------------------- | ----- | ----------------------------- |
+| GET    | `/dns/zones`                           | JWT   | List DNS zones                |
+| POST   | `/dns/zones`                           | JWT   | Create zone                   |
+| GET    | `/dns/zones/:zoneId`                   | JWT   | Get zone details              |
+| PATCH  | `/dns/zones/:zoneId`                   | JWT   | Update zone settings          |
+| DELETE | `/dns/zones/:zoneId`                   | JWT   | Delete zone                   |
+| POST   | `/dns/zones/:zoneId/verify`            | JWT   | Verify NS delegation          |
+| GET    | `/dns/zones/:zoneId/export`            | JWT   | Export zone (BIND format)     |
+| GET    | `/dns/zones/:zoneId/records`           | JWT   | List records                  |
+| POST   | `/dns/zones/:zoneId/records`           | JWT   | Create record                 |
+| POST   | `/dns/zones/:zoneId/records/bulk`      | JWT   | Bulk record operations        |
+| GET    | `/dns/zones/:zoneId/records/:recordId` | JWT   | Get record                    |
+| PATCH  | `/dns/zones/:zoneId/records/:recordId` | JWT   | Update record                 |
+| DELETE | `/dns/zones/:zoneId/records/:recordId` | JWT   | Delete record                 |
+| POST   | `/dns/rdns`                            | JWT   | Set reverse DNS               |
+| GET    | `/dns/rdns/:ip`                        | JWT   | Get reverse DNS               |
+| DELETE | `/dns/rdns/:ip`                        | JWT   | Remove reverse DNS            |
+| GET    | `/dns/admin/zones`                     | Admin | List all zones (cross-tenant) |
+| GET    | `/dns/admin/stats`                     | Admin | DNS statistics                |
+| GET    | `/dns/admin/templates`                 | Admin | List zone templates           |
+| POST   | `/dns/admin/templates`                 | Admin | Create zone template          |
+| DELETE | `/dns/admin/templates/:templateId`     | Admin | Delete zone template          |
+
+### Clusters, Approvals, Quotas, Webhooks, Analytics
+
+Additional controller endpoints exist for cluster management, approval workflows, quota management, webhook integrations, and provisioning analytics.
+
+### Health
+
+| Method | Path      | Auth   | Description  |
+| ------ | --------- | ------ | ------------ |
+| GET    | `/health` | Public | Health check |
+
+---
+
+## Billing Integration Service (port 3005)
+
+### Invoices (`/invoices`)
+
+| Method | Path                              | Auth         | Description                |
+| ------ | --------------------------------- | ------------ | -------------------------- |
+| POST   | `/invoices`                       | JWT          | Create invoice             |
+| GET    | `/invoices`                       | JWT          | List invoices (filterable) |
+| GET    | `/invoices/overdue/list`          | JWT          | List overdue invoices      |
+| GET    | `/invoices/stats`                 | JWT          | Get billing statistics     |
+| GET    | `/invoices/:id`                   | JWT          | Get invoice by ID          |
+| GET    | `/invoices/:id/pdf`               | JWT          | Download invoice PDF       |
+| GET    | `/invoices/number/:invoiceNumber` | JWT          | Get invoice by number      |
+| POST   | `/invoices/:id/send`              | JWT          | Send invoice to customer   |
+| POST   | `/invoices/:id/void`              | Service-only | Void an invoice            |
+
+### Subscriptions (`/subscriptions`)
+
+| Method | Path                                  | Auth | Description                           |
+| ------ | ------------------------------------- | ---- | ------------------------------------- |
+| POST   | `/subscriptions`                      | JWT  | Create subscription                   |
+| GET    | `/subscriptions`                      | JWT  | List subscriptions (filterable)       |
+| GET    | `/subscriptions/:id`                  | JWT  | Get subscription by ID                |
+| POST   | `/subscriptions/:id/cancel`           | JWT  | Cancel subscription                   |
+| POST   | `/subscriptions/:id/pause`            | JWT  | Pause subscription                    |
+| POST   | `/subscriptions/:id/resume`           | JWT  | Resume subscription                   |
+| POST   | `/subscriptions/:id/upgrade`          | JWT  | Upgrade/downgrade                     |
+| GET    | `/subscriptions/customer/:customerId` | JWT  | Get active subscriptions for customer |
+
+### Payments (`/payments`)
+
+| Method | Path                            | Auth         | Description                  |
+| ------ | ------------------------------- | ------------ | ---------------------------- |
+| GET    | `/payments`                     | JWT          | List payment transactions    |
+| POST   | `/payments/process`             | Service-only | Process payment for invoice  |
+| POST   | `/payments/create-intent`       | JWT          | Create Stripe payment intent |
+| GET    | `/payments/methods`             | JWT          | List payment methods         |
+| POST   | `/payments/methods`             | JWT          | Add payment method           |
+| DELETE | `/payments/methods/:id`         | JWT          | Remove payment method        |
+| PUT    | `/payments/methods/:id/default` | JWT          | Set default payment method   |
+
+### Usage (`/usage`)
+
+| Method | Path                          | Auth | Description                  |
+| ------ | ----------------------------- | ---- | ---------------------------- |
+| POST   | `/usage/record`               | JWT  | Record usage                 |
+| POST   | `/usage/record-batch`         | JWT  | Batch record usage           |
+| GET    | `/usage`                      | JWT  | List usage records           |
+| GET    | `/usage/summary`              | JWT  | Get usage summary for period |
+| GET    | `/usage/customer/:customerId` | JWT  | Get customer usage           |
+| GET    | `/usage/unbilled`             | JWT  | Get unbilled usage records   |
+
+### Rating (`/rating`)
+
+| Method | Path                                       | Auth | Description           |
+| ------ | ------------------------------------------ | ---- | --------------------- |
+| POST   | `/rating/pricing-rules`                    | JWT  | Create pricing rule   |
+| PUT    | `/rating/pricing-rules/:id`                | JWT  | Update pricing rule   |
+| GET    | `/rating/pricing-rules/product/:productId` | JWT  | Get rules for product |
+| POST   | `/rating/calculate`                        | JWT  | Calculate rated usage |
+
+### Refunds (`/refunds`)
+
+| Method | Path                   | Auth | Description               |
+| ------ | ---------------------- | ---- | ------------------------- |
+| POST   | `/refunds`             | JWT  | Create refund request     |
+| POST   | `/refunds/:id/process` | JWT  | Process refund via Stripe |
+| POST   | `/refunds/dispute`     | JWT  | Handle chargeback dispute |
+| GET    | `/refunds`             | JWT  | List refunds (filterable) |
+| GET    | `/refunds/:id`         | JWT  | Get refund by ID          |
+
+### Webhooks, Analytics, Scheduler
+
+Additional endpoints for Stripe webhooks, billing analytics, and scheduler controls.
+
+### Health
+
+| Method | Path      | Auth   | Description  |
+| ------ | --------- | ------ | ------------ |
+| GET    | `/health` | Public | Health check |
+
+---
+
+## Notification Service (port 3006)
+
+### Notifications (`/notifications`)
+
+| Method | Path                      | Auth         | Description                    |
+| ------ | ------------------------- | ------------ | ------------------------------ |
+| POST   | `/notifications/send`     | Service-only | Send notification              |
+| GET    | `/notifications`          | JWT          | List notifications (paginated) |
+| GET    | `/notifications/unread`   | JWT          | Get unread count               |
+| PATCH  | `/notifications/:id/read` | JWT          | Mark as read                   |
+| PATCH  | `/notifications/read-all` | JWT          | Mark all as read               |
+| DELETE | `/notifications/:id`      | JWT          | Delete notification            |
+
+### Preferences (`/notifications/preferences`)
+
+| Method | Path                                    | Auth | Description       |
+| ------ | --------------------------------------- | ---- | ----------------- |
+| GET    | `/notifications/preferences`            | JWT  | List preferences  |
+| PUT    | `/notifications/preferences/:eventType` | JWT  | Update preference |
+
+### Templates (`/templates`)
+
+| Method | Path                          | Auth | Description             |
+| ------ | ----------------------------- | ---- | ----------------------- |
+| GET    | `/templates`                  | JWT  | List email templates    |
+| GET    | `/templates/branding/current` | JWT  | Get tenant branding     |
+| PUT    | `/templates/branding/current` | JWT  | Update tenant branding  |
+| GET    | `/templates/:id`              | JWT  | Get template            |
+| PUT    | `/templates/:id`              | JWT  | Update template         |
+| POST   | `/templates/preview`          | JWT  | Render template preview |
+| POST   | `/templates/:id/send-test`    | JWT  | Send test email         |
+
+### Health
+
+| Method | Path      | Auth   | Description  |
+| ------ | --------- | ------ | ------------ |
+| GET    | `/health` | Public | Health check |
+
+---
+
+## Support Service (port 3007)
+
+### Tickets (`/tickets`)
+
+| Method | Path                  | Auth        | Description                          |
+| ------ | --------------------- | ----------- | ------------------------------------ |
+| POST   | `/tickets`            | JWT         | Create support ticket                |
+| GET    | `/tickets`            | JWT         | List tickets (paginated, filterable) |
+| GET    | `/tickets/stats`      | JWT         | Get ticket statistics                |
+| GET    | `/tickets/:id`        | JWT         | Get ticket with comments             |
+| PATCH  | `/tickets/:id`        | Admin/Agent | Update ticket                        |
+| PATCH  | `/tickets/:id/assign` | Admin/Agent | Assign to agent                      |
+| PATCH  | `/tickets/:id/close`  | Admin/Agent | Close ticket                         |
+| PATCH  | `/tickets/:id/reopen` | Admin/Agent | Reopen ticket                        |
+
+### Comments (`/tickets/:ticketId/comments`)
+
+| Method | Path                          | Auth | Description   |
+| ------ | ----------------------------- | ---- | ------------- |
+| POST   | `/tickets/:ticketId/comments` | JWT  | Add comment   |
+| GET    | `/tickets/:ticketId/comments` | JWT  | List comments |
+
+### Analytics, Health
+
+Additional endpoints for support analytics and health checks.
+
+---
+
+## Reporting Service (port 3008)
+
+### Dashboard (`/dashboard`)
+
+| Method | Path         | Auth | Description                    |
+| ------ | ------------ | ---- | ------------------------------ |
+| GET    | `/dashboard` | JWT  | Get dashboard overview metrics |
+
+### Revenue (`/revenue`)
+
+Revenue analytics endpoints.
+
+### Customer Health (`/customer-health`)
+
+Customer health score endpoints.
+
+### Provisioning Analytics (`/provisioning-analytics`)
+
+Provisioning performance analytics.
+
+### Infrastructure (`/infrastructure`)
+
+Infrastructure monitoring endpoints.
+
+### FOCUS Cost (`/focus`)
+
+FOCUS 1.0 cost data endpoints.
+
+### Exports (`/exports`)
+
+Report export endpoints.
+
+### Schedules (`/schedules`)
+
+Scheduled report management.
+
+### Health
+
+| Method | Path      | Auth   | Description  |
+| ------ | --------- | ------ | ------------ |
+| GET    | `/health` | Public | Health check |
+
+---
+
+## Common Headers
+
+| Header             | Required            | Description                                      |
+| ------------------ | ------------------- | ------------------------------------------------ |
+| `Authorization`    | Yes (unless Public) | `Bearer &lt;jwt_token>`                             |
+| `X-Correlation-Id` | No                  | Request tracing (auto-generated if absent)       |
+| `Idempotency-Key`  | No                  | UUID v4 for idempotent operations                |
+| `X-Tenant-Id`      | No                  | Override effective tenant (platform admins only) |
+
+## Common Query Parameters
+
+| Parameter   | Type   | Description                                |
+| ----------- | ------ | ------------------------------------------ |
+| `page`      | number | Page number (default: 1)                   |
+| `limit`     | number | Items per page (default: 20, max: 100-200) |
+| `sortBy`    | string | Sort field                                 |
+| `sortOrder` | string | `ASC` or `DESC`                            |
+| `search`    | string | Full-text search query                     |

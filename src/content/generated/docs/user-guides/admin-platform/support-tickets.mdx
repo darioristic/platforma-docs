@@ -1,0 +1,175 @@
+---
+title: "Support Tickets"
+description: "Documentation: Support Tickets"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/support-tickets.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/support-tickets.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Support Tickets
+
+The Support page is your central interface for managing customer support requests. It provides real-time ticket updates, SLA tracking, and filtering tools to help your team resolve issues efficiently.
+
+## Accessing Support
+
+1. Click **Support** in the sidebar.
+2. The ticket list loads with all support tickets.
+
+The page auto-refreshes every 15 seconds to keep the list current.
+
+
+
+## Ticket List
+
+Each ticket row displays:
+
+- **Ticket ID** -- Unique identifier
+- **Subject** -- Brief description of the issue
+- **Customer** -- Tenant that submitted the ticket
+- **Status** -- Current ticket state
+- **Priority** -- Urgency level
+- **Category** -- Issue classification
+- **SLA** -- Time remaining or breach indicator
+- **Assigned To** -- Team member handling the ticket
+- **Created** -- Submission timestamp
+
+## Filtering Tickets
+
+### By Status
+
+| Status                  | Description                                       |
+| ----------------------- | ------------------------------------------------- |
+| **Open**                | Newly submitted, not yet being worked on          |
+| **In Progress**         | Actively being investigated or resolved           |
+| **Waiting on Customer** | Response needed from the customer to proceed      |
+| **Resolved**            | Solution provided, awaiting customer confirmation |
+| **Closed**              | Issue fully resolved and confirmed                |
+
+Click the status filter tabs above the list to show tickets in a specific state. Select multiple statuses or click **All** to see everything.
+
+### By Priority
+
+| Priority     | SLA Response Time | SLA Resolution Time |
+| ------------ | ----------------- | ------------------- |
+| **Critical** | 15 minutes        | 4 hours             |
+| **High**     | 1 hour            | 8 hours             |
+| **Medium**   | 4 hours           | 24 hours            |
+| **Low**      | 8 hours           | 48 hours            |
+
+Use the priority dropdown filter to focus on urgent tickets first.
+
+### By Category
+
+| Category      | Typical Issues                                          |
+| ------------- | ------------------------------------------------------- |
+| **Billing**   | Payment problems, invoice disputes, pricing questions   |
+| **Technical** | Server issues, connectivity, provisioning failures      |
+| **Account**   | Login issues, permission changes, account modifications |
+| **General**   | Feature requests, general inquiries, feedback           |
+
+### Combined Filtering
+
+All filters can be combined. For example, filter to "Open" + "Critical" + "Technical" to see the most urgent unaddressed technical issues.
+
+
+
+## SLA Tracking
+
+Each ticket has an SLA timer based on its priority level. The SLA indicator shows:
+
+- **Green** -- Within SLA, sufficient time remaining
+- **Yellow** -- Approaching SLA deadline (less than 25% time remaining)
+- **Red** -- SLA breached, immediate attention required
+
+### SLA Breach Indicators
+
+When a ticket breaches its SLA:
+
+- The SLA column shows a red breach indicator with the elapsed time past the deadline.
+- The ticket is automatically highlighted in the list.
+- A notification is generated for the assigned team member and their manager.
+
+> **Important:** SLA timers only count business hours, as configured in your organization's settings.
+
+
+
+## How to View a Ticket
+
+1. Click a ticket row to open the detail panel.
+2. The panel shows:
+   - Full ticket description and customer message
+   - Conversation thread (all messages between support and customer)
+   - Ticket metadata (status, priority, category, assigned agent)
+   - Timeline of status changes
+   - Related resources (orders, invoices, if linked)
+
+## How to Respond to a Ticket
+
+1. Open the ticket detail panel.
+2. Type your response in the message field at the bottom.
+3. Click **Send** or press `Ctrl+Enter`.
+4. The response is delivered to the customer and logged in the conversation thread.
+
+## How to Change Ticket Priority
+
+You can edit a ticket's priority directly from the list without opening the detail panel.
+
+1. Click the priority badge on the ticket row.
+2. Select the new priority from the dropdown.
+3. The change is saved immediately.
+
+This inline editing lets you quickly triage tickets during high-volume periods.
+
+
+
+## How to Assign a Ticket
+
+1. Open the ticket detail panel.
+2. Click the **Assigned To** field.
+3. Select a team member from the dropdown.
+4. The assignment is saved and the team member receives a notification.
+
+Unassigned tickets show a dash in the Assigned To column. Filter to unassigned tickets regularly to ensure nothing falls through the cracks.
+
+## How to Resolve a Ticket
+
+1. Open the ticket detail panel.
+2. Provide a resolution message explaining the solution.
+3. Click **Resolve**.
+4. The ticket status changes to Resolved.
+5. The customer receives a notification and can confirm or reopen.
+
+If the customer confirms resolution or does not respond within the configured period, the ticket automatically moves to Closed.
+
+## How to Reopen a Ticket
+
+If a customer reports that an issue persists after resolution:
+
+1. Open the closed or resolved ticket.
+2. Click **Reopen**.
+3. The ticket returns to Open status with the SLA timer reset.
+
+## Auto-Refresh
+
+The ticket list refreshes automatically every 15 seconds. This ensures you see new tickets and status changes without manual action. The refresh timer is visible in the top-right area of the page.
+
+## Best Practices
+
+- **Triage Critical tickets first.** Use the priority filter to surface urgent issues immediately.
+- **Assign tickets promptly.** Unassigned tickets are at risk of breaching SLA with no one accountable.
+- **Use categories for reporting.** Consistent categorization helps identify systemic issues -- if "Technical" tickets spike, there may be an infrastructure problem.
+- **Check SLA indicators regularly.** Yellow indicators are your warning to act before a breach occurs.
+- **Link related resources.** When a ticket relates to a specific order or invoice, link it for full context.
+
+## Related Guides
+
+- [Tenant Management](./tenant-management.md) -- Customer context for support issues
+- [Order Management](./order-management.md) -- Order-related ticket investigation
+- [Billing & Invoices](./billing-invoices.md) -- Billing dispute resolution
+- [Reporting & Dashboard](./reporting-dashboard.md) -- Support metrics and audit trail

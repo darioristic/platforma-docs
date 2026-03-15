@@ -1,0 +1,176 @@
+---
+title: "Product Service"
+description: "Documentation: Product Service"
+section: "docs"
+category: "services"
+auto_generated: true
+source: "docs/services/product-service.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/services/product-service.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Product Service
+
+**Port:** 3001 | **Database:** MongoDB | **Events:** Kafka (producer) | **Search:** MongoDB Full-Text
+
+Manages the product catalog (cloud services), search, pricing, and pricing plans. Uses MongoDB for flexible schemas and full-text search.
+
+---
+
+## 1. Architecture
+
+```text
+                    ┌─────────────────┐
+   HTTP requests    │   Products /    │     Kafka events
+  ─────────────────►│ PricingPlans    │────────────────────►
+                    │   Controllers   │     (published)
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼───┐  ┌──────▼─────┐  ┌────▼────────┐
+     │  Products  │  │   Search   │  │   Events    │
+     │  Service   │  │   Service  │  │   Module    │
+     └────────────┘  └────────────┘  └─────────────┘
+```
+
+### Modules
+
+| Module                   | Responsibility                                 |
+| ------------------------ | ---------------------------------------------- |
+| `ProductsModule`         | Product CRUD, filtering, caching               |
+| `PricingPlansModule`     | Backward compatibility endpoint for public-web |
+| `EventsModule` (@Global) | Kafka event publishing                         |
+| `HealthModule`           | Liveness/readiness probes                      |
+
+---
+
+## 2. API Endpoints
+
+### Products Controller (`/products`)
+
+| Method   | Route                         | Description                                    | Guard                          |
+| -------- | ----------------------------- | ---------------------------------------------- | ------------------------------ |
+| `POST`   | `/products`                   | Create a new product                           | @Roles(admin, product_manager) |
+| `GET`    | `/products`                   | List products (filter: category, status, tier) | @Public                        |
+| `GET`    | `/products/search`            | Full-text search with filters and pagination   | @Public                        |
+| `GET`    | `/products/search/suggest`    | Autocomplete suggestions (query: q, limit)     | @Public                        |
+| `GET`    | `/products/search/categories` | List active categories                         | @Public                        |
+| `GET`    | `/products/:id`               | Product by ID                                  | @Public                        |
+| `PUT`    | `/products/:id`               | Update product                                 | @Roles(admin, product_manager) |
+| `DELETE` | `/products/:id`               | Delete product                                 | @Roles(admin)                  |
+
+### Pricing Plans Controller (`/pricing-plans`)
+
+| Method | Route            | Description                     | Guard   |
+| ------ | ---------------- | ------------------------------- | ------- |
+| `GET`  | `/pricing-plans` | List products (backward compat) | @Public |
+
+### Health (`/`)
+
+| Method | Route     | Description                                    |
+| ------ | --------- | ---------------------------------------------- |
+| `GET`  | `/health` | Liveness probe                                 |
+| `GET`  | `/ready`  | Readiness probe (MongoDB + Redis + Resilience) |
+
+---
+
+## 3. Product Schema (MongoDB)
+
+| Field                     | Type            | Required | Description                                                                             |
+| ------------------------- | --------------- | -------- | --------------------------------------------------------------------------------------- |
+| `sku`                     | String (UNIQUE) | Yes      | SKU code (e.g. VPS-CORE-1)                                                              |
+| `name`                    | String          | Yes      | Product name                                                                            |
+| `description`             | String          | No       | Description                                                                             |
+| `category`                | String          | Yes      | vps, gpu, storage, kubernetes, addon, database, networking, ci-cd, ai-ml, private-cloud |
+| `status`                  | String (enum)   | No       | draft, active, archived                                                                 |
+| `specs`                   | Object          | No       | Technical specifications \{ vcpu, ram, storage, ... \}                                    |
+| `monthlyPrice`            | Number          | Yes      | Monthly price                                                                           |
+| `hourlyPrice`             | Number          | No       | Hourly price                                                                            |
+| `unitPrice`               | Number          | No       | Per-unit price                                                                          |
+| `currency`                | String          | No       | Default: EUR                                                                            |
+| `annualDiscount`          | Number (0-1)    | No       | Annual discount                                                                         |
+| `tier`                    | String (enum)   | No       | starter, pro, enterprise, custom                                                        |
+| `features`                | String[]        | No       | List of features for display                                                            |
+| `isPopular`               | Boolean         | No       | Marked as popular                                                                       |
+| `sortOrder`               | Number          | No       | Display order                                                                           |
+| `ctaText`                 | String          | No       | Call-to-action text (default: Deploy Now)                                               |
+| `ctaAction`               | String (enum)   | No       | configure, contact                                                                      |
+| `createdAt` / `updatedAt` | Date            | Auto     | Timestamps                                                                              |
+
+### Indexes
+
+- **Full-text search** (weighted): name(10), sku(8), category(5), description(2)
+- **Filtering**: (category, status, sortOrder), (monthlyPrice), (status), (createdAt), (tier)
+
+---
+
+## 4. Search
+
+### SearchProductsDto
+
+| Field                   | Default                      | Description                       |
+| ----------------------- | ---------------------------- | --------------------------------- |
+| `q`                     | -                            | Search query (full-text)          |
+| `category`              | -                            | Filter by category                |
+| `minPrice` / `maxPrice` | -                            | Price range filter                |
+| `status`                | -                            | Filter by status                  |
+| `tier`                  | -                            | Filter by tier                    |
+| `sortBy`                | relevance (if q) / createdAt | price, name, createdAt, relevance |
+| `sortOrder`             | desc                         | asc, desc                         |
+| `page`                  | 1                            | Page number (>= 1)                |
+| `limit`                 | 20                           | Results per page (1-100)          |
+
+### Response Format
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "total": 42,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 3,
+    "hasNext": true,
+    "hasPrevious": false
+  },
+  "meta": {
+    "query": "vps",
+    "filters": {},
+    "sortBy": "relevance",
+    "sortOrder": "desc",
+    "executionTimeMs": 12
+  }
+}
+```
+
+---
+
+## 5. Caching
+
+| Key                                          | TTL   | Description        |
+| -------------------------------------------- | ----- | ------------------ |
+| `cf:product:\{id\}`                            | 5 min | Individual product |
+| `cf:product:list:\{category\}:\{status\}:\{tier\}` | 5 min | Filtered list      |
+| `cf:product:suggest:\{prefix\}:\{limit\}`        | 1 min | Autocomplete       |
+| `cf:product:categories`                      | 5 min | Category list      |
+
+Invalidation: on create/update/delete, all related list cache keys are cleared.
+
+---
+
+## 6. Kafka Events (Published)
+
+| Topic                                           | Payload                                                |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| `cloud-factory.product.created.v1`              | productId, code, name, category, status                |
+| `cloud-factory.product.updated.v1`              | productId, code, name, category, status, updatedFields |
+| `cloud-factory.product.deleted.v1`              | productId, code, name, deletedAt                       |
+| `cloud-factory.product.pricing-plan-created.v1` | pricingPlanId, productId, name, category, status       |
+| `cloud-factory.product.pricing-plan-updated.v1` | pricingPlanId, productId, name, updatedFields          |
+| `cloud-factory.product.pricing-plan-deleted.v1` | pricingPlanId, productId, name, deletedAt              |
+
+The Product service **does not consume** Kafka topics.

@@ -3,7 +3,7 @@ title: "Changelog"
 description: "Recent changes and updates to the platform"
 section: "changelog"
 auto_generated: true
-last_synced: "2026-03-15T15:39:32.115Z"
+last_synced: "2026-03-15T21:59:55.302Z"
 ---
 
 # Changelog
@@ -12,10 +12,15 @@ last_synced: "2026-03-15T15:39:32.115Z"
 Auto-generated from git commit history. Last synced: 2026-03-15
 </Callout>
 
-**Total commits:** 101
+**Total commits:** 113
 
 ## Features
 
+- <Badge variant="POST">feat</Badge> add fleet metrics and cost optimization pages to admin panel (provisioning-service, reporting-service) — `65c8092a` 2026-03-15
+- <Badge variant="POST">feat</Badge> reorganize docs into public/internal split, add comprehensive platform documentation (provisioning-service, reporting-service) — `5c4c70c0` 2026-03-15
+- <Badge variant="POST">feat</Badge> add MCP server package, hooks, and misc updates — `dd612656` 2026-03-15
+- <Badge variant="POST">feat</Badge> add users, orders, invoices, tickets to tenant detail view — `cdfb5af0` 2026-03-15
+- <Badge variant="POST">feat</Badge> add GET /tenants/by-name/:name endpoint for tenant slug lookups (identity-service) — `a0b2cc14` 2026-03-15
 - <Badge variant="POST">feat</Badge> add DNS management with PowerDNS provider, zones, records, and rDNS (product-service, provisioning-service) — `bead8eea` 2026-03-15
 - <Badge variant="POST">feat</Badge> add reporting analytics UI to admin platform — `5785e47d` 2026-03-15
 - <Badge variant="POST">feat</Badge> add reporting-service to admin monitoring page — `39090aec` 2026-03-15
@@ -45,6 +50,12 @@ Auto-generated from git commit history. Last synced: 2026-03-15
 
 ## Bug Fixes
 
+- <Badge variant="PATCH">fix</Badge> use tenant UUIDs in reporting health scores, resolve names for display — `af5bb0d8` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> decode URL param to prevent double-encoding in tenant name lookup — `d51beb2e` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> add slug-style matching to tenant findByName lookup (identity-service) — `1abb3471` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> handle tenant slug IDs on customer detail page — `092b5cb8` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> coerce numeric fields from API response on cost-usage page — `ed0f01da` 2026-03-15
+- <Badge variant="PATCH">fix</Badge> add flex layout to PageTransition to fix scroll cutoff on report pages — `e6767c1e` 2026-03-15
 - <Badge variant="PATCH">fix</Badge> increase bottom padding on all report pages to prevent scroll cutoff — `01954a88` 2026-03-15
 - <Badge variant="PATCH">fix</Badge> move order analytics route into OrdersController to prevent :id shadowing (order-service) — `319540d9` 2026-03-15
 - <Badge variant="PATCH">fix</Badge> move AnalyticsModule before OrdersModule to prevent route shadowing (order-service) — `c6a714b6` 2026-03-15
@@ -117,6 +128,7 @@ Auto-generated from git commit history. Last synced: 2026-03-15
 
 ## Documentation
 
+- <Badge variant="GET">docs</Badge> broaden README target audience beyond telecom operators — `36a0a456` 2026-03-15
 - <Badge variant="GET">docs</Badge> add comprehensive documentation for all 7 backend services — `9aaf8f33` 2026-03-08
 
 ## Maintenance

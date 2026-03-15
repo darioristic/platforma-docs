@@ -1,0 +1,154 @@
+---
+title: "Account Settings"
+description: "Documentation: Account Settings"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/customer-portal/account-settings.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/customer-portal/account-settings.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Account Settings
+
+The Settings page lets you manage your profile, security, notifications, DNS, and projects. Access it from the sidebar or by clicking your avatar in the header.
+
+## Profile
+
+
+
+Update your personal information:
+
+1. Navigate to **Settings > Profile**.
+2. Edit your **Name** or **Email** address.
+3. Click **Save Changes**.
+
+If you change your email, you will receive a verification link at the new address. Your old email remains active until the new one is confirmed.
+
+## Security
+
+
+
+### Changing Your Password
+
+1. Go to **Settings > Security**.
+2. Enter your **Current Password**.
+3. Enter a **New Password** (minimum 8 characters).
+4. Enter the new password again in the **Confirm Password** field.
+5. Click **Update Password**.
+
+Choose a strong password that combines uppercase letters, lowercase letters, numbers, and special characters. If you signed up via OAuth (Google, GitHub, or Microsoft), you can set a password here to enable email/password login as an alternative.
+
+## Notification Preferences
+
+
+
+Control how and when you receive notifications.
+
+1. Go to **Settings > Notifications**.
+2. For each event type, toggle **In-App** and/or **Email** notifications on or off.
+
+Available event types:
+
+| Event                     | Description                                               |
+| ------------------------- | --------------------------------------------------------- |
+| **Order Created**         | A new order has been placed.                              |
+| **Order Fulfilled**       | An order has been fully provisioned.                      |
+| **Payment Received**      | A payment has been successfully processed.                |
+| **Invoice Issued**        | A new invoice is available for review.                    |
+| **Service Provisioned**   | A new service is live and ready to use.                   |
+| **Service Status Change** | A service has changed state (stopped, restarted, failed). |
+| **Ticket Updated**        | A support ticket has a new reply or status change.        |
+
+> **Tip:** Keep email notifications enabled for billing events so you never miss a payment deadline.
+
+## DNS Management
+
+
+
+Manage your domain name system records from **Settings > DNS**.
+
+### Zones
+
+1. Click **Add Zone** to register a new domain.
+2. Enter the domain name (e.g., `example.com`).
+3. Cloud Factory automatically creates default NS records.
+
+### Records
+
+1. Select a zone to view its records.
+2. Click **Add Record** and choose the record type (A, AAAA, CNAME, MX, TXT, SRV).
+3. Fill in the name, value, and TTL.
+4. Click **Save**.
+
+To edit an existing record, click the edit icon next to it. To delete, click the trash icon and confirm.
+
+### DNSSEC
+
+Enable DNSSEC for a zone to add cryptographic signatures to your DNS records, protecting against spoofing attacks.
+
+1. Select a zone and go to the **DNSSEC** tab.
+2. Click **Enable DNSSEC**.
+3. Add the provided DS record to your domain registrar.
+
+## Projects
+
+
+
+Projects help you organize services within your workspace. Manage them from **Settings > Projects**.
+
+### Creating a Project
+
+1. Click **New Project**.
+2. Enter a project name and optional description.
+3. Click **Create**.
+
+The new project appears in the workspace/project selector across the portal.
+
+### Managing Projects
+
+- **Edit** -- Click a project name to update its name or description.
+- **Archive** -- Archive a project to hide it from the selector without deleting its resources. Archived projects can be restored at any time.
+
+## Workspace Settings
+
+
+
+Workspace-level settings affect your entire account. Go to **Settings > Workspace** to configure:
+
+- **Workspace Name** -- Update how your workspace appears across the portal.
+- **Default Project** -- Choose which project is selected by default when you log in.
+- **Billing Contact** -- Set the email address for invoice delivery.
+
+## Danger Zone
+
+
+
+Destructive actions are grouped at the bottom of the Settings page under a clearly marked section.
+
+### Delete a Project
+
+1. Go to **Settings > Projects** and select the project.
+2. Scroll to the Danger Zone and click **Delete Project**.
+3. Type the project name to confirm.
+4. Click **Confirm Delete**.
+
+> **Warning:** Deleting a project permanently removes all services, data, and configurations within it. This action cannot be undone.
+
+### Delete Workspace
+
+1. Go to **Settings > Workspace**.
+2. Scroll to the Danger Zone and click **Delete Workspace**.
+3. Type your workspace name to confirm.
+4. Click **Confirm Delete**.
+
+> **Warning:** Deleting your workspace permanently removes your entire account, including all projects, services, invoices, and support tickets. This action cannot be undone.
+
+## Related Guides
+
+- [Getting started with the portal](./getting-started.md)
+- [Managing your services](./my-services.md)
+- [Understanding billing and usage](./billing.md)

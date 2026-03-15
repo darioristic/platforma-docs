@@ -1,0 +1,81 @@
+---
+title: "Cloud Factory Platform Documentation"
+description: "Documentation: Cloud Factory Platform Documentation"
+section: "docs"
+category: "general"
+auto_generated: true
+source: "docs/README.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/README.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory Platform Documentation
+
+Enterprise cloud business platform for telecom operators. This documentation covers the complete platform — architecture, services, APIs, and user guides.
+
+## User Guides
+
+### Admin Platform
+
+Step-by-step guides for platform administrators managing tenants, users, products, orders, billing, and support.
+
+- [Getting Started](user-guides/admin-platform/getting-started.md) — First login, dashboard, navigation
+- [Tenant Management](user-guides/admin-platform/tenant-management.md) — Create, edit, suspend tenants
+- [User Management](user-guides/admin-platform/user-management.md) — RBAC roles, invitations, MFA
+- [Product Catalog](user-guides/admin-platform/product-catalog.md) — Products, pricing tiers, categories
+- [Order Management](user-guides/admin-platform/order-management.md) — View, approve, cancel orders
+- [Billing & Invoices](user-guides/admin-platform/billing-invoices.md) — Invoices, payments, reports
+- [Support Tickets](user-guides/admin-platform/support-tickets.md) — Ticket management, SLA, escalation
+- [Reporting Dashboard](user-guides/admin-platform/reporting-dashboard.md) — KPIs, health scores, metrics
+- [Settings](user-guides/admin-platform/settings.md) — Notifications, integrations, preferences
+
+### Customer Portal
+
+Self-service guides for end customers managing their cloud services, orders, billing, and support.
+
+- [Getting Started](user-guides/customer-portal/getting-started.md) — Registration, first login, OAuth
+- [My Services](user-guides/customer-portal/my-services.md) — Active services, status, usage
+- [Ordering](user-guides/customer-portal/ordering.md) — Browse catalog, place orders, track provisioning
+- [Billing](user-guides/customer-portal/billing.md) — Invoices, payment history, PDF downloads
+- [Support](user-guides/customer-portal/support.md) — Open tickets, track resolution
+- [Account Settings](user-guides/customer-portal/account-settings.md) — Profile, MFA, linked OAuth accounts
+
+### Public Website
+
+- [Features Overview](user-guides/public-web/features-overview.md) — Platform capabilities
+- [Pricing Plans](user-guides/public-web/pricing-plans.md) — Service packages and pricing
+
+## Platform Architecture
+
+- [System Architecture](architecture/ARCHITECTURE.md) — High-level system overview, tech stack, deployment model
+- [Domain Model](architecture/DOMAIN_MODEL.md) — Domain-driven design boundaries
+- [Non-Functional Requirements](architecture/NON_FUNCTIONAL_REQUIREMENTS.md) — Scalability, security, multi-tenancy
+- [Event Flow & Service Interconnection](architecture/event-flow.md) — Kafka topology, saga pattern, pub/sub matrix
+
+## Services
+
+Detailed documentation for each of the 7 backend microservices — how they work, what they do, their APIs, entities, and events.
+
+- [Services Overview](services/README.md) — All services at a glance
+- [Identity Service](services/identity-service.md) — Auth, JWT, RBAC, MFA, OAuth2, tenants
+- [Product Service](services/product-service.md) — Product catalog, search, pricing
+- [Order Service](services/order-service.md) — Order lifecycle, saga orchestration
+- [Provisioning Service](services/provisioning-service.md) — Cloud infrastructure provisioning
+- [Billing Integration](services/billing-integration.md) — Stripe, invoices, subscriptions
+- [Notification Service](services/notification-service.md) — Email, WebSocket, notification preferences
+- [Support Service](services/support-service.md) — Ticketing, SLA tracking
+
+## Technical Reference
+
+- [API Endpoints](reference/api-endpoints.md) — REST API summary per service
+- [Error Codes](reference/error-codes.md) — Standard error codes and messages
+- [Database Schema](reference/database-schema.md) — ER diagrams, entities, relationships
+- [Kafka Events](reference/kafka-events.md) — All 60+ topics, event schemas, DLQ config
+- [API Documentation](api/README.md) — OpenAPI/Swagger endpoints
+
+## Other
+
+- [Demo Script](demo-script.md) — 20-minute platform demonstration

@@ -1,0 +1,178 @@
+---
+title: "Product Catalog"
+description: "Documentation: Product Catalog"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/admin-platform/product-catalog.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/admin-platform/product-catalog.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Product Catalog
+
+The Products page lets you manage the full catalog of cloud services available to your customers. Products are organized by category and can be configured with detailed specifications, pricing tiers, and availability status.
+
+## Accessing the Product Catalog
+
+1. Click **Products** in the sidebar.
+2. The product list loads showing all items across all categories.
+
+
+
+## Product Categories
+
+Products are grouped into five categories:
+
+| Category       | Description                 | Examples                                            |
+| -------------- | --------------------------- | --------------------------------------------------- |
+| **VPS**        | Virtual private servers     | General-purpose VMs, high-memory VMs                |
+| **GPU**        | GPU-accelerated instances   | AI/ML training instances, rendering nodes           |
+| **Storage**    | Block and object storage    | SSD volumes, backup storage, S3-compatible          |
+| **Kubernetes** | Managed Kubernetes clusters | Dev clusters, production clusters                   |
+| **Add-ons**    | Supplementary services      | Monitoring, CDN, managed databases, DDoS protection |
+
+### Browsing by Category
+
+1. Click the category tabs at the top of the Products page.
+2. The list filters to show only products in that category.
+3. Click **All** to return to the full catalog view.
+
+## Searching and Filtering
+
+### Search
+
+1. Use the search field at the top of the product list.
+2. Type a product name, SKU, or keyword.
+3. Results filter in real time.
+
+### Filters
+
+You can filter the product list by:
+
+- **Category** -- VPS, GPU, Storage, Kubernetes, Add-ons
+- **Status** -- Active, Draft, Archived
+- **Tier** -- Basic, Standard, Premium, Enterprise
+
+Filters can be combined for precise results. For example, filter by category "VPS" and status "Active" to see only live VPS offerings.
+
+
+
+## How to Add a New Product
+
+1. Click the **Add Product** button in the top-right corner.
+2. Fill in the product form:
+
+| Field         | Required | Description                                           |
+| ------------- | -------- | ----------------------------------------------------- |
+| Name          | Yes      | Customer-facing product name                          |
+| SKU           | Yes      | Unique stock-keeping unit identifier                  |
+| Category      | Yes      | Select from VPS, GPU, Storage, Kubernetes, or Add-ons |
+| Description   | No       | Detailed description shown to customers               |
+| Configuration | Yes      | Technical specs (vCPU, RAM, disk, etc.)               |
+| Price         | Yes      | Monthly price in your configured currency             |
+| Tier          | Yes      | Basic, Standard, Premium, or Enterprise               |
+| Status        | Yes      | Active, Draft, or Archived                            |
+| Popular       | No       | Toggle to feature the product as popular              |
+
+3. Review the configuration details.
+4. Click **Save Product**.
+
+
+
+### Configuration Specifications
+
+The configuration section varies by category:
+
+**VPS and GPU:**
+
+- vCPU count
+- RAM (GB)
+- Disk size (GB)
+- Disk type (SSD / NVMe)
+- Network bandwidth
+- GPU model and count (GPU category only)
+
+**Storage:**
+
+- Capacity (GB / TB)
+- Storage type (Block / Object)
+- IOPS limit
+- Throughput
+
+**Kubernetes:**
+
+- Worker node count
+- Node size (vCPU / RAM per node)
+- Maximum pods
+- Included storage
+
+**Add-ons:**
+
+- Varies by add-on type; free-form specification fields
+
+## How to Edit a Product
+
+1. Find the product in the list (use search or filters).
+2. Click the product row to open the detail view.
+3. Click the **Edit** button.
+4. Modify the desired fields.
+5. Click **Save Changes**.
+
+> **Note:** Changing a product's price or specifications does not retroactively affect existing orders. Only new orders will use the updated configuration.
+
+## How to Delete a Product
+
+1. Open the product detail view.
+2. Click the options menu (three dots).
+3. Select **Delete**.
+4. Confirm the deletion in the dialog.
+
+> **Warning:** Deleting a product is permanent. If the product has associated orders, consider archiving it instead to preserve historical data.
+
+## Product Status
+
+Each product has one of three statuses:
+
+| Status       | Visible to Customers | Orderable | Use Case                                                 |
+| ------------ | -------------------- | --------- | -------------------------------------------------------- |
+| **Active**   | Yes                  | Yes       | Live products available for purchase                     |
+| **Draft**    | No                   | No        | Products being configured or reviewed before launch      |
+| **Archived** | No                   | No        | Discontinued products preserved for historical reference |
+
+### Changing Product Status
+
+1. Open the product detail view.
+2. Click the status badge or the **Edit** button.
+3. Select the new status.
+4. Click **Save**.
+
+Transitioning from Active to Archived will remove the product from customer-facing pages. Existing active orders for the product will continue to completion.
+
+## Marking a Product as Popular
+
+Featured products appear prominently on the customer-facing storefront.
+
+1. Open the product detail view.
+2. Toggle the **Popular** switch to on.
+3. Click **Save**.
+
+Only Active products can be marked as popular. There is no limit to the number of popular products, but keeping the selection focused (3-5 products) provides the best customer experience.
+
+
+
+## Best Practices
+
+- **Use Draft status** for products that are not yet finalized. This lets you prepare the catalog without exposing incomplete listings.
+- **Consistent naming** -- Follow a naming convention like "[Category] [Tier] [Spec]" (e.g., "VPS Standard 4vCPU") for easy identification.
+- **SKU conventions** -- Use meaningful SKUs like `VPS-STD-4C8G` (VPS Standard, 4 CPU, 8GB RAM) for quick reference.
+- **Archive instead of delete** -- When retiring products, archive them to maintain order history integrity.
+
+## Related Guides
+
+- [Order Management](./order-management.md) -- See how products flow into orders
+- [Billing & Invoices](./billing-invoices.md) -- Product pricing and invoice generation
+- [Getting Started](./getting-started.md) -- Platform navigation overview

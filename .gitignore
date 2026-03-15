@@ -28,3 +28,5 @@ next-env.d.ts
 
 # generated content is committed (part of the build)
 # but repo-cache is not
+.generation-state.json
+.repo-cache

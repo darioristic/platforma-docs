@@ -1,5 +1,162 @@
 [
   {
+    "title": "Project Documentation",
+    "items": [
+      {
+        "title": "Cloud Factory API Documentation",
+        "href": "/generated/docs/api/readme"
+      },
+      {
+        "title": "Cloud Factory Platform - Architecture Overview",
+        "href": "/generated/docs/architecture/architecture"
+      },
+      {
+        "title": "Domain Model Reference",
+        "href": "/generated/docs/architecture/domain_model"
+      },
+      {
+        "title": "Cloud Factory - Service Interconnection Map",
+        "href": "/generated/docs/architecture/event-flow"
+      },
+      {
+        "title": "Non-Functional Requirements",
+        "href": "/generated/docs/architecture/non_functional_requirements"
+      },
+      {
+        "title": "Cloud Factory — Demo Script",
+        "href": "/generated/docs/demo-script"
+      },
+      {
+        "title": "Project Documentation",
+        "href": "/generated/docs/index"
+      },
+      {
+        "title": "Cloud Factory - Platform Page Content",
+        "href": "/generated/docs/platform_page_content"
+      },
+      {
+        "title": "Cloud Factory Platform Documentation",
+        "href": "/generated/docs/readme"
+      },
+      {
+        "title": "API Endpoints Reference",
+        "href": "/generated/docs/reference/api-endpoints"
+      },
+      {
+        "title": "Database Schema Reference",
+        "href": "/generated/docs/reference/database-schema"
+      },
+      {
+        "title": "Error Codes Reference",
+        "href": "/generated/docs/reference/error-codes"
+      },
+      {
+        "title": "Kafka Events Reference",
+        "href": "/generated/docs/reference/kafka-events"
+      },
+      {
+        "title": "Billing Integration Service",
+        "href": "/generated/docs/services/billing-integration"
+      },
+      {
+        "title": "Identity Service",
+        "href": "/generated/docs/services/identity-service"
+      },
+      {
+        "title": "Notification Service",
+        "href": "/generated/docs/services/notification-service"
+      },
+      {
+        "title": "Order Service",
+        "href": "/generated/docs/services/order-service"
+      },
+      {
+        "title": "Product Service",
+        "href": "/generated/docs/services/product-service"
+      },
+      {
+        "title": "Provisioning Service",
+        "href": "/generated/docs/services/provisioning-service"
+      },
+      {
+        "title": "Cloud Factory — Backend Services",
+        "href": "/generated/docs/services/readme"
+      },
+      {
+        "title": "Support Service",
+        "href": "/generated/docs/services/support-service"
+      },
+      {
+        "title": "Billing & Invoices",
+        "href": "/generated/docs/user-guides/admin-platform/billing-invoices"
+      },
+      {
+        "title": "Getting Started",
+        "href": "/generated/docs/user-guides/admin-platform/getting-started"
+      },
+      {
+        "title": "Order Management",
+        "href": "/generated/docs/user-guides/admin-platform/order-management"
+      },
+      {
+        "title": "Product Catalog",
+        "href": "/generated/docs/user-guides/admin-platform/product-catalog"
+      },
+      {
+        "title": "Reporting & Dashboard",
+        "href": "/generated/docs/user-guides/admin-platform/reporting-dashboard"
+      },
+      {
+        "title": "Settings",
+        "href": "/generated/docs/user-guides/admin-platform/settings"
+      },
+      {
+        "title": "Support Tickets",
+        "href": "/generated/docs/user-guides/admin-platform/support-tickets"
+      },
+      {
+        "title": "Tenant Management",
+        "href": "/generated/docs/user-guides/admin-platform/tenant-management"
+      },
+      {
+        "title": "User Management",
+        "href": "/generated/docs/user-guides/admin-platform/user-management"
+      },
+      {
+        "title": "Account Settings",
+        "href": "/generated/docs/user-guides/customer-portal/account-settings"
+      },
+      {
+        "title": "Billing and Usage",
+        "href": "/generated/docs/user-guides/customer-portal/billing"
+      },
+      {
+        "title": "Getting Started",
+        "href": "/generated/docs/user-guides/customer-portal/getting-started"
+      },
+      {
+        "title": "My Services",
+        "href": "/generated/docs/user-guides/customer-portal/my-services"
+      },
+      {
+        "title": "Ordering Services",
+        "href": "/generated/docs/user-guides/customer-portal/ordering"
+      },
+      {
+        "title": "Support",
+        "href": "/generated/docs/user-guides/customer-portal/support"
+      },
+      {
+        "title": "Cloud Factory - Features Overview",
+        "href": "/generated/docs/user-guides/public-web/features-overview"
+      },
+      {
+        "title": "Cloud Factory - Pricing Plans",
+        "href": "/generated/docs/user-guides/public-web/pricing-plans"
+      }
+    ]
+  },
+  {
     "title": "API (Auto-Generated)",
     "items": [
       {
@@ -78,12 +235,12 @@
     "title": "System Architecture",
     "items": [
       {
-        "title": "Service Map",
-        "href": "/generated/architecture/service-map"
-      },
-      {
         "title": "Dependency Graph",
         "href": "/generated/architecture/dependency-graph"
+      },
+      {
+        "title": "Service Map",
+        "href": "/generated/architecture/service-map"
       }
     ]
   },

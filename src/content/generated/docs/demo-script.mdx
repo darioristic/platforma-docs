@@ -1,0 +1,220 @@
+---
+title: "Cloud Factory — Demo Script"
+description: "Documentation: Cloud Factory — Demo Script"
+section: "docs"
+category: "general"
+auto_generated: true
+source: "docs/demo-script.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/demo-script.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Cloud Factory — Demo Script
+
+**Duration:** ~20 minutes
+**Audience:** Potential client / T-2 management
+**Goal:** Demonstrate the complete flow from product browsing to an active cloud service
+
+---
+
+## Preparation
+
+```bash
+# Start infrastructure and services
+docker compose -f docker-compose.dev.yml up -d
+npm run dev
+
+# Seed demo data (if not already done)
+npm run seed
+```
+
+Verify that all services are healthy:
+
+- Admin Platform: &lt;http://localhost:3100>
+- Customer Portal: &lt;http://localhost:3200>
+- Public Web: &lt;http://localhost:3000>
+
+---
+
+## Scenario 1: Platform Overview (Admin Perspective)
+
+**Goal:** Show the operational overview of the system
+
+1. **Log in to Admin Platform** (&lt;http://localhost:3100>)
+   - Email: `admin@cloudfactory.io`
+   - Password: `Admin123!`
+
+2. **Dashboard** — Show:
+   - KPI cards (total orders, revenue, active services)
+   - Recent activity list (audit log)
+   - Connection status indicator (green dot = WebSocket active)
+
+3. **Customers** — Show:
+   - 8 demo customers with realistic data
+   - Search by name or email
+   - CSV export button
+
+4. **Orders** — Show:
+   - Orders in various statuses (FULFILLED, PROVISIONING)
+   - Server-side filtering by status
+   - Sorting by date, amount
+   - Auto-refresh every 10 seconds
+
+5. **Provisioning** — Show:
+   - Active provisioning requests with progress bars
+   - 4 steps: Allocate -> Configure -> Activate -> Verify
+   - Status indicators (COMPLETED, IN_PROGRESS)
+
+6. **Billing** — Show:
+   - Invoices in various statuses (PAID, SENT, DRAFT)
+   - PDF download button (generates a professional PDF)
+   - Payment overview
+
+7. **Monitoring** — Show:
+   - Health status of all 7 services
+   - Response time for each service
+   - Auto-refresh every 15 seconds
+
+8. **Notifications** — Show:
+   - Bell icon in header with unread badge
+   - Real-time notifications (WebSocket)
+   - Notification preferences in Settings
+
+---
+
+## Scenario 2: Customer Experience (Customer Perspective)
+
+**Goal:** Show the self-service portal for customers
+
+1. **Log in to Customer Portal** (&lt;http://localhost:3200>)
+   - Email: `techcorp@example.com`
+   - Password: `Customer123!`
+
+2. **Dashboard** — Show:
+   - Active services with statuses
+   - Current cost overview
+   - Quick links to actions
+
+3. **Services** — Show:
+   - List of active cloud services
+   - Service details (IP address, hostname, allocation)
+
+4. **Orders** — Show:
+   - Order history
+   - Status tracking for each order
+
+5. **Invoices** — Show:
+   - Invoice list with amounts
+   - Filter: All / Unpaid / Paid
+   - "Download PDF" button — generates invoice
+   - Invoice detail sheet with all information
+
+6. **Support** — Show:
+   - Open tickets with priorities (CRITICAL, HIGH, MEDIUM, LOW)
+   - Creating a new ticket
+   - SLA tracking
+
+---
+
+## Scenario 3: New Order (End-to-End Flow)
+
+**Goal:** Demonstrate the complete flow from order to active service
+
+1. **Open Public Web** (&lt;http://localhost:3000>)
+   - Show landing page (professional design, 14 sections)
+   - Scroll to Products section
+
+2. **Browse Products**
+   - Click on VPS category
+   - Show specifications and prices (EUR)
+   - Add "Business VPS 8" to cart
+
+3. **Checkout**
+   - Open cart
+   - Review items and total amount
+   - Click "Proceed to Checkout"
+   - Fill in billing information
+   - Confirm order
+
+4. **Track Provisioning**
+   - Deploy page displays a 6-step progress bar
+   - Status progresses: DRAFT -> PENDING_PAYMENT -> PAYMENT_CONFIRMED -> PROVISIONING
+   - Provisioning Worker automatically processes the request (4 steps)
+   - Upon completion: status FULFILLED
+
+5. **Verify in Admin Platform**
+   - Switch to Admin (&lt;http://localhost:3100>)
+   - Show the new order in the Orders table
+   - Show the provisioning request in the Provisioning section
+   - Show the new invoice in the Billing section
+   - Show the notification in the bell icon
+
+---
+
+## Scenario 4: Technical Capabilities
+
+**Goal:** Show the technical maturity of the platform
+
+1. **API Documentation**
+   - Open Swagger: &lt;http://localhost:3003/api> (Identity Service)
+   - Show authentication, users, API keys
+   - Open &lt;http://localhost:3002/api> (Order Service)
+   - Show order lifecycle endpoints
+
+2. **Distributed Tracing**
+   - Open Jaeger: &lt;http://localhost:16686>
+   - Search for traces for "order-service"
+   - Show spans that pass through multiple services
+
+3. **Event-Driven Architecture**
+   - Explain the Kafka event flow:
+     - Order created -> Provisioning triggered -> Billing notified
+   - Saga pattern for distributed transactions
+   - Dead Letter Queue for failed events
+
+4. **Security**
+   - JWT authentication with refresh tokens
+   - Role-Based Access Control (RBAC)
+   - Rate limiting (nginx + application level)
+   - Helmet security headers
+   - CORS validation
+   - Swagger disabled in production
+
+---
+
+## Key Messages for the Client
+
+1. **Sovereign cloud** — The platform is fully operated in Slovenia
+2. **Enterprise-grade** — 7 microservices, event-driven, saga orchestration
+3. **Self-service** — Customers can independently manage their services
+4. **Observability** — Tracing, metrics, health monitoring built in
+5. **Extensibility** — Modular architecture, easy to add new cloud providers
+6. **Automation** — From order to active service without manual intervention
+
+---
+
+## Known Limitations (MVP)
+
+| Area                       | Status                                      | Planned                                   |
+| -------------------------- | ------------------------------------------- | ----------------------------------------- |
+| Provisioning is simulation | Simulated steps with delays                 | Phase 4: Real cloud API (OpenStack/oVirt) |
+| Stripe payment             | Server-side integration, frontend simulates | Phase 4: Stripe Elements UI               |
+| Multi-tenancy              | Logical isolation (tenant ID)               | Phase 4: True tenant isolation            |
+| SSO                        | OAuth (Google, GitHub, Microsoft)           | Phase 4: SAML 2.0, enterprise OIDC        |
+| Auto-scaling               | Not implemented                             | Phase 5: K8s operator                     |
+| i18n                       | English only                                | Phase 5: Slovenian, Serbian               |
+| Mobile                     | Responsive (not native)                     | Phase 5: Optional                         |
+| Customer Portal WebSocket  | Mock notifications                          | Phase 4: Full integration                 |
+
+---
+
+## Discussion Questions
+
+1. Which cloud provider do you currently use? (OpenStack, VMware, oVirt?)
+2. What are your most common products for customers? (VPS, K8s, databases?)
+3. What is your billing model? (Monthly, usage-based, hybrid?)
+4. Do you have an existing CRM/ERP that needs to be integrated?
+5. What level of SLA do you offer to customers?

@@ -1,6 +1,34 @@
 import type { DocFile } from "../parsers/docs-parser";
 import type { GeneratedFile } from "../types";
 
+/**
+ * Sanitize markdown content for MDX compatibility.
+ * HTML comments and raw HTML tags that aren't valid JSX will crash MDX.
+ */
+function sanitizeForMdx(content: string): string {
+  // Split by code fences to avoid mangling code blocks
+  const parts = content.split(/(```[\s\S]*?```)/g);
+
+  return parts
+    .map((part, i) => {
+      // Odd indices are code blocks — leave them untouched
+      if (i % 2 === 1) return part;
+
+      return (
+        part
+          // Remove HTML comments (<!-- ... -->)
+          .replace(/<!--[\s\S]*?-->/g, "")
+          // Escape curly braces outside code blocks (MDX treats {} as JSX expressions)
+          .replace(/\{/g, "\\{")
+          .replace(/\}/g, "\\}")
+          // Escape < that aren't part of known MDX components (Callout, etc.)
+          // This handles <->, <br>, and random HTML-like content
+          .replace(/<(?!\/?(?:Callout|Tabs|Tab|Steps|Step|Card|Cards|Note)\b)/g, "&lt;")
+      );
+    })
+    .join("");
+}
+
 const CATEGORY_LABELS: Record<string, string> = {
   general: "Documentation",
   services: "Service Documentation",
@@ -36,7 +64,7 @@ export function generateDocsMdx(
     mdx += `Imported from \`docs/${doc.relativePath}\` in cloud-factory. Last synced: ${now.split("T")[0]}\n`;
     mdx += `</Callout>\n\n`;
 
-    mdx += doc.content;
+    mdx += sanitizeForMdx(doc.content);
 
     const outPath = `${outputDir}/docs/${doc.slug}.mdx`;
     files.push({ path: outPath, content: mdx });

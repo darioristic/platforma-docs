@@ -1,0 +1,113 @@
+---
+title: "My Services"
+description: "Documentation: My Services"
+section: "docs"
+category: "user-guides"
+auto_generated: true
+source: "docs/user-guides/customer-portal/my-services.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/user-guides/customer-portal/my-services.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# My Services
+
+The Services page is your central hub for viewing, managing, and monitoring all cloud resources deployed in your workspace.
+
+## Services Overview
+
+
+
+At the top of the page, four statistics cards summarize your service portfolio:
+
+- **Total** -- All services across every project.
+- **Active** -- Services that are running and healthy.
+- **Provisioning** -- Services currently being set up.
+- **Issues** -- Services in a failed or degraded state that need attention.
+
+## Browsing Services
+
+### View Modes
+
+Toggle between two layouts using the icons in the top-right corner:
+
+- **Grid View** -- Visual cards showing each service with its key details. Best for quick scanning.
+- **List View** -- A compact table layout. Better when you have many services.
+
+### Filtering
+
+Use the status filter tabs to narrow down what you see:
+
+- **All** -- Every service regardless of status.
+- **Active** -- Only running, healthy services.
+- **Provisioning** -- Services still being deployed.
+- **Failed** -- Services that encountered errors during provisioning or operation.
+
+### Searching
+
+The search bar lets you find services by:
+
+- Resource type (e.g., "VPS", "Kubernetes")
+- Region (e.g., "eu-central", "us-east")
+- IP address
+
+## Service Cards
+
+
+
+Each service card displays:
+
+- **Resource Type** -- The kind of service (Enterprise VPS, Managed Database, etc.).
+- **Status Badge** -- Color-coded indicator (green = Active, blue = Provisioning, red = Failed).
+- **Hostname / IP** -- The primary address for connecting to your service.
+- **Specs** -- CPU cores, RAM, and storage allocated.
+
+Click any card to open the **Service Detail Sheet**.
+
+## Service Detail Sheet
+
+The detail sheet provides full information about a selected service, organized into three tabs.
+
+
+
+### Overview Tab
+
+- **Specifications** -- CPU, RAM, storage, operating system, and region.
+- **Connection Details** -- IP address and hostname with a **Copy** button for easy use in your terminal or configuration files.
+- **Timeline** -- A chronological log of events: when the service was created, provisioned, started, and any status changes.
+
+### Monitoring Tab
+
+- **System Status** -- Current uptime indicator and health state.
+- **Resource Allocation** -- Visual breakdown of how much CPU, memory, and storage your service is using relative to its limits.
+
+> **Note:** Advanced monitoring metrics (historical graphs, alerting thresholds) are planned for Q2 2026.
+
+### Settings Tab
+
+- **Firewall** -- Configure inbound and outbound rules to control network access.
+- **Security** -- Manage SSH keys and access credentials.
+- **Resize** -- Scale your service up or down by changing its resource allocation.
+- **Delete** -- Permanently remove the service and all associated data.
+
+> **Note:** Some settings features are marked "Coming Soon" and will be enabled in upcoming releases.
+
+## Service Actions
+
+You can perform the following actions on any active service from the detail sheet or the card's action menu:
+
+1. **Stop** -- Gracefully shuts down the service. It retains its configuration and data but stops consuming compute resources.
+2. **Restart** -- Stops and immediately starts the service again. Useful for applying configuration changes.
+3. **Delete** -- Permanently destroys the service. This action is irreversible and requires confirmation.
+
+## No Services Yet?
+
+If you have not deployed any services, the page displays the **Product Catalog** instead, showing all available service types with descriptions and starting prices. Click any product to begin the [deployment wizard](./ordering.md).
+
+## Related Guides
+
+- [Ordering and deploying a new service](./ordering.md)
+- [Understanding your usage and costs](./billing.md)
+- [Getting help with service issues](./support.md)

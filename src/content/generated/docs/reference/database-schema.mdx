@@ -1,0 +1,888 @@
+---
+title: "Database Schema Reference"
+description: "Documentation: Database Schema Reference"
+section: "docs"
+category: "reference"
+auto_generated: true
+source: "docs/reference/database-schema.md"
+last_synced: "2026-03-15T21:59:52.614Z"
+---
+
+<Callout type="info">
+Imported from `docs/reference/database-schema.md` in cloud-factory. Last synced: 2026-03-15
+</Callout>
+
+# Database Schema Reference
+
+Cloud Factory uses PostgreSQL 16 for six services (each with its own schema) and MongoDB 7 for the Product Service catalog.
+
+## PostgreSQL Schemas
+
+### Identity Schema (`identity`)
+
+#### `identity.users`
+
+| Column           | Type         | Constraints             | Description                                   |
+| ---------------- | ------------ | ----------------------- | --------------------------------------------- |
+| id               | uuid         | PK, generated           | User identifier                               |
+| email            | varchar      | unique                  | Login email                                   |
+| firstName        | varchar      |                         | First name                                    |
+| lastName         | varchar      |                         | Last name                                     |
+| passwordHash     | varchar      | select: false           | Bcrypt hash (excluded from queries)           |
+| roles            | simple-array |                         | Array of role names                           |
+| tenantId         | uuid         | FK -> tenants           | Owning tenant                                 |
+| status           | varchar      | default 'active'        | `active`, `suspended`, `pending_verification` |
+| mfaEnabled       | boolean      | default false           | Whether MFA is active                         |
+| mfaSecret        | varchar      | nullable, select: false | TOTP secret (encrypted)                       |
+| mfaBackupCodes   | simple-array | nullable, select: false | One-time backup codes                         |
+| lastLoginAt      | timestamp    | nullable                | Last successful login                         |
+| lastLogoutAt     | timestamp    | nullable                | Last logout                                   |
+| loginAttempts    | int          | default 0               | Failed login counter                          |
+| lockedUntil      | timestamp    | nullable                | Account lock expiry                           |
+| refreshTokenHash | varchar      | nullable, select: false | Hashed refresh token                          |
+| erasedAt         | timestamp    | nullable                | GDPR erasure timestamp                        |
+| createdAt        | timestamp    | auto                    | Creation timestamp                            |
+| updatedAt        | timestamp    | auto                    | Last update                                   |
+
+**Relationships:** ManyToOne -> `tenants`, OneToMany -> `oauth_accounts`
+
+#### `identity.tenants`
+
+| Column    | Type       | Constraints   | Description                                                             |
+| --------- | ---------- | ------------- | ----------------------------------------------------------------------- |
+| id        | uuid       | PK, generated | Tenant identifier                                                       |
+| name      | varchar    | unique        | Organization name                                                       |
+| type      | varchar    |               | `customer`, `partner`, `internal`                                       |
+| country   | varchar(2) |               | ISO 3166-1 alpha-2 code                                                 |
+| settings  | jsonb      | nullable      | TenantSettings (locale, timezone, currency, limits, features, branding) |
+| config    | jsonb      | nullable      | Arbitrary configuration                                                 |
+| createdAt | timestamp  | auto          |                                                                         |
+| updatedAt | timestamp  | auto          |                                                                         |
+
+**Relationships:** OneToMany -> `users`
+
+**TenantSettings shape:**
+
+```json
+{
+  "locale": "en",
+  "timezone": "Europe/Belgrade",
+  "currency": "EUR",
+  "dateFormat": "DD.MM.YYYY",
+  "maxUsers": 50,
+  "maxInstances": 10,
+  "features": {
+    "supportEnabled": true,
+    "billingEnabled": true,
+    "provisioningEnabled": true,
+    "mfaRequired": false
+  },
+  "rateLimitTier": "basic",
+  "branding": { "logoUrl": "", "primaryColor": "", "companyUrl": "" }
+}
+```
+
+#### `identity.roles`
+
+| Column      | Type         | Constraints      | Description                             |
+| ----------- | ------------ | ---------------- | --------------------------------------- |
+| id          | uuid         | PK               |                                         |
+| name        | varchar(100) | unique           | Machine name (e.g. `PLATFORM_ADMIN`)    |
+| displayName | varchar(200) |                  | Human-readable name                     |
+| description | text         | nullable         |                                         |
+| category    | varchar(50)  | default 'custom' | `customer`, `system`, `admin`, `custom` |
+| permissions | jsonb        | default []       | Array of permission strings             |
+| isSystem    | boolean      | default false    | Cannot be deleted if true               |
+| isActive    | boolean      | default true     |                                         |
+| createdAt   | timestamp    | auto             |                                         |
+| updatedAt   | timestamp    | auto             |                                         |
+
+#### `identity.oauth_accounts`
+
+| Column         | Type      | Constraints          | Description                     |
+| -------------- | --------- | -------------------- | ------------------------------- |
+| id             | uuid      | PK                   |                                 |
+| userId         | uuid      | FK -> users          |                                 |
+| provider       | varchar   |                      | `google`, `github`, `microsoft` |
+| providerUserId | varchar   | unique with provider |                                 |
+| email          | varchar   |                      | Provider email                  |
+| displayName    | varchar   | nullable             |                                 |
+| accessToken    | text      | nullable, encrypted  | AES-256-GCM encrypted           |
+| refreshToken   | text      | nullable, encrypted  | AES-256-GCM encrypted           |
+| createdAt      | timestamp | auto                 |                                 |
+| updatedAt      | timestamp | auto                 |                                 |
+
+**Unique constraint:** `(provider, providerUserId)`
+
+#### `identity.audit_logs`
+
+| Column        | Type         | Constraints       | Description                            |
+| ------------- | ------------ | ----------------- | -------------------------------------- |
+| id            | uuid         | PK                |                                        |
+| actorId       | varchar(100) | indexed           | Who performed the action               |
+| actorType     | varchar(20)  |                   | `user`, `service`, `system`, `api_key` |
+| action        | varchar(100) | indexed           | Action name                            |
+| resource      | varchar(100) | indexed           | Resource type                          |
+| resourceId    | varchar(100) | nullable, indexed | Resource identifier                    |
+| tenantId      | uuid         | nullable, indexed |                                        |
+| correlationId | uuid         | nullable          | Request trace ID                       |
+| previousState | jsonb        | nullable          | State before change                    |
+| newState      | jsonb        | nullable          | State after change                     |
+| metadata      | jsonb        | default \{\}        | Additional context                     |
+| description   | varchar(500) | nullable          | Human-readable description             |
+| timestamp     | timestamp    | auto              |                                        |
+
+**Indexes:** `(tenantId, timestamp)`, `(actorId, timestamp)`, `(resource, resourceId)`, `(action)`
+
+#### `identity.api_keys`
+
+| Column     | Type      | Constraints   | Description                  |
+| ---------- | --------- | ------------- | ---------------------------- |
+| id         | uuid      | PK            |                              |
+| name       | varchar   |               | Key label                    |
+| prefix     | varchar   |               | Display prefix (first chars) |
+| keyHash    | varchar   | select: false | SHA-256 hash                 |
+| userId     | uuid      |               | Key owner                    |
+| tenantId   | uuid      |               |                              |
+| isActive   | boolean   | default true  |                              |
+| lastUsedAt | timestamp | nullable      |                              |
+| createdAt  | timestamp | auto          |                              |
+| updatedAt  | timestamp | auto          |                              |
+
+#### `identity.tenant_invites`
+
+| Column    | Type      | Constraints   | Description              |
+| --------- | --------- | ------------- | ------------------------ |
+| id        | uuid      | PK            |                          |
+| token     | varchar   | unique        | Invite token             |
+| email     | varchar   |               | Invitee email            |
+| tenantId  | uuid      | FK -> tenants |                          |
+| role      | varchar   |               | Role to assign on accept |
+| invitedBy | uuid      |               | User who sent the invite |
+| expiresAt | timestamp |               |                          |
+| used      | boolean   | default false |                          |
+| createdAt | timestamp | auto          |                          |
+
+#### `identity.consent_records`
+
+| Column      | Type         | Constraints          | Description                                          |
+| ----------- | ------------ | -------------------- | ---------------------------------------------------- |
+| id          | uuid         | PK                   |                                                      |
+| userId      | uuid         | FK -> users, indexed |                                                      |
+| consentType | varchar(50)  |                      | `marketing`, `analytics`, `essential`, `third_party` |
+| granted     | boolean      |                      |                                                      |
+| ipAddress   | varchar(45)  | nullable             | Requestor IP                                         |
+| userAgent   | varchar(500) | nullable             |                                                      |
+| createdAt   | timestamp    | auto                 |                                                      |
+
+**Indexes:** `(userId, consentType)`, `(userId, createdAt)`
+
+#### `identity.oauth_clients`
+
+| Column             | Type         | Constraints   | Description               |
+| ------------------ | ------------ | ------------- | ------------------------- |
+| id                 | uuid         | PK            |                           |
+| name               | varchar(200) |               | Client display name       |
+| clientId           | varchar      | unique        | Public identifier         |
+| clientSecretHash   | varchar      | select: false | SHA-256 hashed secret     |
+| clientSecretPrefix | varchar(20)  |               | First 8 chars for display |
+| scopes             | simple-array |               | Granted scopes            |
+| tenantId           | uuid         | FK -> tenants |                           |
+| isActive           | boolean      | default true  |                           |
+| rateLimitPerMinute | int          | nullable      | Override RPM limit        |
+| allowedIps         | simple-array | nullable      | CIDR whitelist            |
+| lastUsedAt         | timestamp    | nullable      |                           |
+| tokenCount         | int          | default 0     | Total tokens issued       |
+| createdAt          | timestamp    | auto          |                           |
+| updatedAt          | timestamp    | auto          |                           |
+
+---
+
+### Orders Schema (`orders`)
+
+#### `orders.orders`
+
+| Column      | Type      | Constraints           | Description                                                                                                                              |
+| ----------- | --------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| id          | uuid      | PK                    |                                                                                                                                          |
+| orderNumber | varchar   | unique                | Auto-generated `ORD-YYYY-NNNNN`                                                                                                          |
+| tenantId    | uuid      | indexed               |                                                                                                                                          |
+| customerId  | varchar   | indexed               |                                                                                                                                          |
+| status      | varchar   | default 'DRAFT'       | `DRAFT`, `PENDING_PAYMENT`, `PAYMENT_CONFIRMED`, `VALIDATING`, `PROVISIONING`, `PARTIALLY_FULFILLED`, `FULFILLED`, `CANCELLED`, `FAILED` |
+| type        | varchar   | default 'NEW_SERVICE' | `NEW_SERVICE`, `UPGRADE`, `DOWNGRADE`, `RENEWAL`                                                                                         |
+| pricing     | jsonb     | default \{\}            | OrderPricing (subtotal, discounts, taxes, total, recurringTotal)                                                                         |
+| paymentInfo | jsonb     | nullable              | PaymentInfo (method, status, transactionRef, paidAt, amount)                                                                             |
+| timeline    | jsonb     | default \{\}            | OrderTimeline (createdAt, submittedAt, paymentConfirmedAt, ...)                                                                          |
+| metadata    | jsonb     | nullable              |                                                                                                                                          |
+| version     | int       | optimistic lock       |                                                                                                                                          |
+| createdAt   | timestamp | auto                  |                                                                                                                                          |
+| updatedAt   | timestamp | auto                  |                                                                                                                                          |
+| deletedAt   | timestamp | soft delete           |                                                                                                                                          |
+
+**Indexes:** `(tenantId, status)`, `(tenantId, customerId)`, `(status, createdAt)`
+**Relationships:** OneToMany -> `order_items` (cascade, eager)
+
+#### `orders.order_items`
+
+| Column          | Type      | Constraints           | Description                                                   |
+| --------------- | --------- | --------------------- | ------------------------------------------------------------- |
+| id              | uuid      | PK                    |                                                               |
+| orderId         | uuid      | FK -> orders, indexed |                                                               |
+| productId       | varchar   |                       | Product catalog ID                                            |
+| productSnapshot | jsonb     |                       | Product state at order time                                   |
+| quantity        | int       | default 1             |                                                               |
+| configuration   | jsonb     |                       | Service configuration (specs, region, zone)                   |
+| pricing         | jsonb     |                       | ItemPricing (unitPrice, quantity, subtotal, discounts, total) |
+| status          | varchar   | default 'PENDING'     | `PENDING`, `PROVISIONING`, `ACTIVE`, `FAILED`, `CANCELLED`    |
+| provisioningRef | jsonb     | nullable              | \{ requestId, serviceInstanceId \}                              |
+| deliveryInfo    | jsonb     | nullable              | \{ ipAddress, hostname, endpoints, credentials, resourceId \}   |
+| statusHistory   | jsonb     | default []            | Array of status changes with timestamps                       |
+| createdAt       | timestamp | auto                  |                                                               |
+| updatedAt       | timestamp | auto                  |                                                               |
+
+**Indexes:** `(orderId, status)`
+
+---
+
+### Provisioning Schema (default, no named schema)
+
+#### `provisioning_requests`
+
+| Column           | Type      | Constraints      | Description                                                                                         |
+| ---------------- | --------- | ---------------- | --------------------------------------------------------------------------------------------------- |
+| id               | uuid      | PK               |                                                                                                     |
+| tenantId         | varchar   | indexed          |                                                                                                     |
+| orderId          | varchar   | indexed          |                                                                                                     |
+| orderItemId      | varchar   | indexed          |                                                                                                     |
+| status           | varchar   | default 'QUEUED' | `QUEUED`, `IN_PROGRESS`, `AWAITING_MANUAL_INPUT`, `COMPLETED`, `FAILED`, `SUSPENDED`, `ROLLED_BACK` |
+| resourceType     | varchar   |                  | `VPS`, `KUBERNETES_CLUSTER`, `MANAGED_DATABASE`, `OBJECT_STORAGE`, `MANAGED_SUPPORT`, `ADDON`       |
+| specification    | jsonb     |                  | \{ cpu, memory, storage, region, zone, additionalSpecs \}                                             |
+| allocation       | jsonb     | nullable         | \{ resourceId, ipAddress, hostname, endpoints, credentials \}                                         |
+| steps            | jsonb     | default []       | Array of provisioning steps                                                                         |
+| retryCount       | int       | default 0        |                                                                                                     |
+| maxRetries       | int       | default 3        |                                                                                                     |
+| timeline         | jsonb     | default \{\}       | \{ queuedAt, startedAt, completedAt, failedAt \}                                                      |
+| providerType     | varchar   | nullable         | `openstack`, `openshift`, `simulation`                                                              |
+| providerMetadata | jsonb     | nullable         | Provider-specific data                                                                              |
+| clusterId        | varchar   | nullable         | Target cluster ID                                                                                   |
+| metadata         | jsonb     | nullable         |                                                                                                     |
+| dependsOn        | jsonb     | default []       | IDs of prerequisite requests                                                                        |
+| auditLog         | jsonb     | default []       | Array of audit entries                                                                              |
+| version          | int       | optimistic lock  |                                                                                                     |
+| createdAt        | timestamp | auto             |                                                                                                     |
+| updatedAt        | timestamp | auto             |                                                                                                     |
+
+**Indexes:** `(tenantId, status)`, `(orderId, orderItemId)`, `(status, createdAt)`
+
+#### `dns_zones`
+
+| Column                | Type      | Constraints       | Description                                                       |
+| --------------------- | --------- | ----------------- | ----------------------------------------------------------------- |
+| id                    | uuid      | PK                |                                                                   |
+| tenantId              | varchar   | indexed           |                                                                   |
+| provisioningRequestId | uuid      | nullable          |                                                                   |
+| name                  | varchar   |                   | Zone domain name                                                  |
+| type                  | varchar   | default 'native'  | `master`, `slave`, `native`                                       |
+| status                | varchar   | default 'pending' | `pending`, `active`, `suspended`, `deleted`                       |
+| soaContent            | varchar   | nullable          | SOA record content                                                |
+| nameservers           | jsonb     | default [...]     | NS records                                                        |
+| dnssecEnabled         | boolean   | default false     |                                                                   |
+| dnssecKeys            | jsonb     | nullable          |                                                                   |
+| serial                | bigint    | default 0         | SOA serial                                                        |
+| settings              | jsonb     |                   | \{ maxRecords, ttlMin, ttlMax, allowedRecordTypes, dnssecAllowed \} |
+| powerdnsId            | varchar   | nullable          | PowerDNS zone ID                                                  |
+| metadata              | jsonb     | nullable          |                                                                   |
+| version               | int       | optimistic lock   |                                                                   |
+| createdAt             | timestamp | auto              |                                                                   |
+| updatedAt             | timestamp | auto              |                                                                   |
+
+**Indexes:** `(tenantId, status)`
+**Relationships:** OneToMany -> `dns_records`
+
+#### `dns_records`
+
+| Column           | Type      | Constraints              | Description                                                  |
+| ---------------- | --------- | ------------------------ | ------------------------------------------------------------ |
+| id               | uuid      | PK                       |                                                              |
+| zoneId           | uuid      | FK -> dns_zones, indexed |                                                              |
+| name             | varchar   |                          | Record name (e.g. `www`)                                     |
+| type             | varchar   |                          | `A`, `AAAA`, `CNAME`, `MX`, `TXT`, `SRV`, `NS`, `PTR`, `CAA` |
+| content          | varchar   |                          | Record value                                                 |
+| ttl              | int       | default 3600             | Time to live                                                 |
+| priority         | int       | nullable                 | MX/SRV priority                                              |
+| disabled         | boolean   | default false            |                                                              |
+| powerdnsRecordId | varchar   | nullable                 |                                                              |
+| metadata         | jsonb     | nullable                 |                                                              |
+| createdAt        | timestamp | auto                     |                                                              |
+| updatedAt        | timestamp | auto                     |                                                              |
+
+**Indexes:** `(zoneId, type)`
+
+---
+
+### Billing Schema (`billing`)
+
+#### `billing.invoices`
+
+| Column           | Type      | Constraints     | Description                                                                |
+| ---------------- | --------- | --------------- | -------------------------------------------------------------------------- |
+| id               | uuid      | PK              |                                                                            |
+| invoiceNumber    | varchar   | unique          | Auto-generated `INV-YYYYMM-NNNNN`                                          |
+| tenantId         | uuid      | indexed         |                                                                            |
+| customerId       | varchar   | indexed         |                                                                            |
+| stripeCustomerId | uuid      | nullable        |                                                                            |
+| orderIds         | uuid[]    | default []      | Related order IDs                                                          |
+| status           | varchar   | default 'DRAFT' | `DRAFT`, `SENT`, `PAID`, `PARTIALLY_PAID`, `OVERDUE`, `VOIDED`, `REFUNDED` |
+| pricing          | jsonb     |                 | InvoicePricing (subtotal, discounts, taxes, total)                         |
+| timeline         | jsonb     |                 | InvoiceTimeline (issuedAt, dueAt, sentAt, paidAt, voidedAt)                |
+| paymentAttempts  | jsonb     | default []      | Array of payment attempt records                                           |
+| subscriptionId   | uuid      | nullable        |                                                                            |
+| stripeInvoiceId  | varchar   | nullable        |                                                                            |
+| metadata         | jsonb     | nullable        |                                                                            |
+| version          | int       | optimistic lock |                                                                            |
+| createdAt        | timestamp | auto            |                                                                            |
+| updatedAt        | timestamp | auto            |                                                                            |
+| deletedAt        | timestamp | soft delete     |                                                                            |
+
+**Indexes:** `(tenantId, status)`, `(tenantId, customerId)`, `(status, createdAt)`
+
+#### `billing.invoice_line_items`
+
+| Column       | Type      | Constraints             | Description                                                        |
+| ------------ | --------- | ----------------------- | ------------------------------------------------------------------ |
+| id           | uuid      | PK                      |                                                                    |
+| invoiceId    | uuid      | FK -> invoices, indexed |                                                                    |
+| description  | varchar   |                         |                                                                    |
+| type         | varchar   |                         | `SUBSCRIPTION`, `USAGE`, `ONE_TIME`, `ADDON`                       |
+| orderId      | uuid      | nullable, indexed       |                                                                    |
+| orderItemId  | uuid      | nullable                |                                                                    |
+| productId    | uuid      | nullable                |                                                                    |
+| pricing      | jsonb     |                         | LineItemPricing (unitPrice, quantity, subtotal, discounts, total)  |
+| usageDetails | jsonb     | nullable                | \{ usageRecordId, periodStart, periodEnd, quantity, unitOfMeasure \} |
+| metadata     | jsonb     | nullable                |                                                                    |
+| createdAt    | timestamp | auto                    |                                                                    |
+
+#### `billing.subscriptions`
+
+| Column                | Type      | Constraints      | Description                                            |
+| --------------------- | --------- | ---------------- | ------------------------------------------------------ |
+| id                    | uuid      | PK               |                                                        |
+| tenantId              | uuid      | indexed          |                                                        |
+| customerId            | varchar   | indexed          |                                                        |
+| orderId               | uuid      |                  |                                                        |
+| orderItemId           | uuid      |                  |                                                        |
+| productId             | uuid      |                  |                                                        |
+| status                | varchar   | default 'ACTIVE' | `ACTIVE`, `PAST_DUE`, `PAUSED`, `CANCELLED`, `EXPIRED` |
+| billingFrequency      | varchar   |                  | `MONTHLY`, `QUARTERLY`, `ANNUAL`                       |
+| pricing               | jsonb     |                  | \{ unitPrice, quantity, subtotal, currency \}            |
+| currentPeriodStart    | timestamp |                  |                                                        |
+| currentPeriodEnd      | timestamp |                  |                                                        |
+| nextBillingDate       | timestamp | indexed          |                                                        |
+| cancelledAt           | timestamp | nullable         |                                                        |
+| cancellationReason    | varchar   | nullable         |                                                        |
+| cancelAtPeriodEnd     | boolean   | default false    |                                                        |
+| stripeSubscriptionId  | varchar   | nullable         |                                                        |
+| failedPaymentAttempts | int       | default 0        |                                                        |
+| metadata              | jsonb     | nullable         |                                                        |
+| version               | int       | optimistic lock  |                                                        |
+| createdAt             | timestamp | auto             |                                                        |
+| updatedAt             | timestamp | auto             |                                                        |
+
+**Indexes:** `(tenantId, customerId)`, `(status, currentPeriodEnd)`, `(nextBillingDate, status)`
+
+#### `billing.stripe_customers`
+
+| Column                 | Type      | Constraints               | Description                                        |
+| ---------------------- | --------- | ------------------------- | -------------------------------------------------- |
+| id                     | uuid      | PK                        |                                                    |
+| tenantId               | uuid      |                           |                                                    |
+| customerId             | varchar   |                           |                                                    |
+| stripeCustomerId       | varchar   | unique                    |                                                    |
+| email                  | varchar   |                           |                                                    |
+| name                   | varchar   | nullable                  |                                                    |
+| billingAddress         | jsonb     | nullable                  | \{ line1, line2, city, state, postalCode, country \} |
+| taxInfo                | jsonb     | default \{taxExempt:false\} | \{ taxId, taxIdType, taxExempt \}                    |
+| defaultPaymentMethodId | varchar   | nullable                  |                                                    |
+| metadata               | jsonb     | nullable                  |                                                    |
+| version                | int       | optimistic lock           |                                                    |
+| createdAt              | timestamp | auto                      |                                                    |
+| updatedAt              | timestamp | auto                      |                                                    |
+
+**Unique constraint:** `(tenantId, customerId)`
+
+#### `billing.payment_methods`
+
+| Column                | Type      | Constraints   | Description                                      |
+| --------------------- | --------- | ------------- | ------------------------------------------------ |
+| id                    | uuid      | PK            |                                                  |
+| tenantId              | uuid      | indexed       |                                                  |
+| customerId            | varchar   | indexed       |                                                  |
+| stripePaymentMethodId | varchar   | unique        |                                                  |
+| type                  | varchar   |               | `credit_card`, `bank_transfer`, `sepa_debit`     |
+| cardDetails           | jsonb     | nullable      | \{ brand, last4, expMonth, expYear, fingerprint \} |
+| bankAccountDetails    | jsonb     | nullable      | \{ bankName, last4, accountHolderType \}           |
+| isDefault             | boolean   | default false |                                                  |
+| isActive              | boolean   | default true  |                                                  |
+| metadata              | jsonb     | nullable      |                                                  |
+| createdAt             | timestamp | auto          |                                                  |
+| updatedAt             | timestamp | auto          |                                                  |
+
+**Indexes:** `(tenantId, customerId)`
+
+#### `billing.usage_records`
+
+| Column              | Type      | Constraints            | Description                                           |
+| ------------------- | --------- | ---------------------- | ----------------------------------------------------- |
+| id                  | uuid      | PK                     |                                                       |
+| tenantId            | uuid      | indexed                |                                                       |
+| customerId          | varchar   | indexed                |                                                       |
+| orderId             | uuid      |                        |                                                       |
+| orderItemId         | uuid      |                        |                                                       |
+| resource            | jsonb     |                        | \{ resourceId, resourceType, provisioningRequestId \}   |
+| periodStart         | timestamp | indexed                |                                                       |
+| periodEnd           | timestamp | indexed                |                                                       |
+| metrics             | jsonb     |                        | \{ cpu, memory, storage, bandwidth, requests, custom \} |
+| billed              | boolean   | default false, indexed |                                                       |
+| invoiceId           | uuid      | nullable               |                                                       |
+| stripeUsageRecordId | varchar   | nullable               |                                                       |
+| metadata            | jsonb     | nullable               |                                                       |
+| createdAt           | timestamp | auto                   |                                                       |
+
+**Indexes:** `(tenantId, customerId, periodStart, periodEnd)`, `(resource, periodStart)`, `(billed, periodEnd)`
+
+#### `billing.pricing_rules`
+
+| Column        | Type      | Constraints       | Description                            |
+| ------------- | --------- | ----------------- | -------------------------------------- |
+| id            | uuid      | PK                |                                        |
+| productId     | uuid      | indexed           |                                        |
+| metricKey     | varchar   | indexed           | e.g. `cpu`, `memory`, `storage`        |
+| pricingModel  | varchar   |                   | `FLAT`, `TIERED`, `VOLUME`, `PER_UNIT` |
+| configuration | jsonb     |                   | Model-specific config                  |
+| description   | varchar   | nullable          |                                        |
+| effectiveFrom | timestamp | indexed           |                                        |
+| effectiveTo   | timestamp | nullable, indexed |                                        |
+| active        | boolean   | default true      |                                        |
+| metadata      | jsonb     | nullable          |                                        |
+| createdAt     | timestamp | auto              |                                        |
+| updatedAt     | timestamp | auto              |                                        |
+
+#### `billing.credit_notes`
+
+| Column           | Type      | Constraints     | Description                            |
+| ---------------- | --------- | --------------- | -------------------------------------- |
+| id               | uuid      | PK              |                                        |
+| creditNoteNumber | varchar   | unique          |                                        |
+| tenantId         | uuid      | indexed         |                                        |
+| customerId       | varchar   | indexed         |                                        |
+| invoiceId        | uuid      | indexed         |                                        |
+| refundId         | uuid      | nullable        |                                        |
+| status           | varchar   | default 'DRAFT' | `DRAFT`, `ISSUED`, `APPLIED`, `VOIDED` |
+| amount           | jsonb     |                 | \{ amount, currency \}                   |
+| lineItems        | jsonb     | default []      |                                        |
+| reason           | text      | nullable        |                                        |
+| issuedAt         | timestamp | nullable        |                                        |
+| metadata         | jsonb     | nullable        |                                        |
+| createdAt        | timestamp | auto            |                                        |
+| updatedAt        | timestamp | auto            |                                        |
+
+#### `billing.refunds`
+
+| Column                | Type      | Constraints     | Description                                                                                                     |
+| --------------------- | --------- | --------------- | --------------------------------------------------------------------------------------------------------------- |
+| id                    | uuid      | PK              |                                                                                                                 |
+| refundNumber          | varchar   | unique          |                                                                                                                 |
+| tenantId              | uuid      | indexed         |                                                                                                                 |
+| customerId            | varchar   | indexed         |                                                                                                                 |
+| invoiceId             | uuid      | indexed         |                                                                                                                 |
+| status                | varchar   |                 | `PENDING`, `APPROVED`, `PROCESSING`, `COMPLETED`, `FAILED`, `REJECTED`                                          |
+| reason                | varchar   |                 | `CUSTOMER_REQUEST`, `DUPLICATE_CHARGE`, `SERVICE_ISSUE`, `BILLING_ERROR`, `CHARGEBACK`, `COMPENSATION`, `OTHER` |
+| description           | text      | nullable        |                                                                                                                 |
+| amount                | jsonb     |                 | \{ amount, currency \}                                                                                            |
+| originalAmount        | jsonb     |                 | \{ amount, currency \}                                                                                            |
+| stripeRefundId        | varchar   | nullable        |                                                                                                                 |
+| stripePaymentIntentId | varchar   | nullable        |                                                                                                                 |
+| stripeChargeId        | varchar   | nullable        |                                                                                                                 |
+| stripeDisputeId       | varchar   | nullable        |                                                                                                                 |
+| processedAt           | timestamp | nullable        |                                                                                                                 |
+| failureReason         | varchar   | nullable        |                                                                                                                 |
+| metadata              | jsonb     | nullable        |                                                                                                                 |
+| version               | int       | optimistic lock |                                                                                                                 |
+| createdAt             | timestamp | auto            |                                                                                                                 |
+| updatedAt             | timestamp | auto            |                                                                                                                 |
+
+#### `billing.pending_payments`
+
+| Column         | Type          | Constraints | Description |
+| -------------- | ------------- | ----------- | ----------- |
+| id             | uuid          | PK          |             |
+| orderId        | varchar       | unique      |             |
+| transactionRef | varchar       |             |             |
+| amount         | decimal(12,2) |             |             |
+| currency       | varchar       |             |             |
+| paidAt         | varchar       |             |             |
+| createdAt      | timestamp     | auto        |             |
+
+---
+
+### Notifications Schema (`notifications`)
+
+#### `notifications.notifications`
+
+| Column       | Type      | Constraints            | Description                              |
+| ------------ | --------- | ---------------------- | ---------------------------------------- |
+| id           | uuid      | PK                     |                                          |
+| tenantId     | uuid      | indexed                |                                          |
+| userId       | uuid      | indexed                |                                          |
+| type         | varchar   |                        | `EMAIL`, `IN_APP`, etc.                  |
+| eventType    | varchar   |                        | Source event (e.g. `order.created`)      |
+| subject      | varchar   |                        |                                          |
+| body         | text      |                        |                                          |
+| status       | varchar   | default 'PENDING'      | `PENDING`, `SENT`, `DELIVERED`, `FAILED` |
+| metadata     | jsonb     | nullable               |                                          |
+| emailTo      | varchar   | nullable               |                                          |
+| read         | boolean   | default false, indexed |                                          |
+| readAt       | timestamp | nullable               |                                          |
+| sentAt       | timestamp | nullable               |                                          |
+| errorMessage | varchar   | nullable               |                                          |
+| createdAt    | timestamp | auto                   |                                          |
+| updatedAt    | timestamp | auto                   |                                          |
+
+**Indexes:** `(tenantId, userId)`, `(tenantId, userId, read)`
+
+#### `notifications.notification_preferences`
+
+| Column       | Type      | Constraints  | Description |
+| ------------ | --------- | ------------ | ----------- |
+| id           | uuid      | PK           |             |
+| tenantId     | uuid      |              |             |
+| userId       | uuid      |              |             |
+| eventType    | varchar   |              |             |
+| emailEnabled | boolean   | default true |             |
+| inAppEnabled | boolean   | default true |             |
+| createdAt    | timestamp | auto         |             |
+| updatedAt    | timestamp | auto         |             |
+
+**Unique constraint:** `(tenantId, userId, eventType)`
+
+#### `notifications.email_branding`
+
+| Column         | Type      | Constraints             | Description |
+| -------------- | --------- | ----------------------- | ----------- |
+| id             | uuid      | PK                      |             |
+| tenantId       | varchar   | unique                  |             |
+| logoUrl        | varchar   | nullable                |             |
+| primaryColor   | varchar   | default '#2563eb'       |             |
+| secondaryColor | varchar   | default '#6b7280'       |             |
+| footerText     | text      | nullable                |             |
+| replyToAddress | varchar   | nullable                |             |
+| companyName    | varchar   | default 'Cloud Factory' |             |
+| createdAt      | timestamp | auto                    |             |
+| updatedAt      | timestamp | auto                    |             |
+
+#### `notifications.notification_templates`
+
+| Column          | Type      | Constraints  | Description                       |
+| --------------- | --------- | ------------ | --------------------------------- |
+| id              | uuid      | PK           |                                   |
+| eventType       | varchar   |              | Event that triggers this template |
+| type            | varchar   |              | `EMAIL`, `IN_APP`                 |
+| subject         | varchar   |              | Handlebars template               |
+| body            | text      |              | Handlebars template               |
+| description     | varchar   | nullable     |                                   |
+| category        | varchar   | nullable     |                                   |
+| sampleVariables | jsonb     | nullable     | Example variable values           |
+| version         | int       | default 1    |                                   |
+| active          | boolean   | default true |                                   |
+| createdAt       | timestamp | auto         |                                   |
+| updatedAt       | timestamp | auto         |                                   |
+
+**Unique constraint:** `(eventType, type)`
+
+---
+
+### Support Schema (`support`)
+
+#### `support.tickets`
+
+| Column           | Type        | Constraints       | Description                                                        |
+| ---------------- | ----------- | ----------------- | ------------------------------------------------------------------ |
+| id               | uuid        | PK                |                                                                    |
+| ticketNumber     | varchar     | unique            | Auto-generated `TKT-YYYY-NNNNN`                                    |
+| tenantId         | uuid        | indexed           |                                                                    |
+| createdBy        | uuid        |                   | User who opened the ticket                                         |
+| assigneeId       | uuid        | nullable, indexed | Assigned support agent                                             |
+| subject          | varchar     |                   |                                                                    |
+| description      | text        |                   |                                                                    |
+| status           | varchar     | default 'OPEN'    | `OPEN`, `IN_PROGRESS`, `WAITING_ON_CUSTOMER`, `RESOLVED`, `CLOSED` |
+| priority         | varchar     | default 'MEDIUM'  | `LOW`, `MEDIUM`, `HIGH`, `URGENT`                                  |
+| category         | varchar     | default 'GENERAL' | `GENERAL`, `BILLING`, `TECHNICAL`, `PROVISIONING`, `ACCOUNT`       |
+| relatedResources | jsonb       | nullable          | \{ orderId, serviceInstanceId, invoiceId \}                          |
+| timeline         | jsonb       |                   | \{ createdAt, firstResponseAt, resolvedAt, closedAt, reopenedAt \}   |
+| metadata         | jsonb       | nullable          |                                                                    |
+| version          | int         | optimistic lock   |                                                                    |
+| createdAt        | timestamptz | auto              |                                                                    |
+| updatedAt        | timestamptz | auto              |                                                                    |
+| deletedAt        | timestamptz | soft delete       |                                                                    |
+
+**Indexes:** `(tenantId)`, `(tenantId, status)`, `(assigneeId)`, `(priority, status)`
+**Relationships:** OneToMany -> `ticket_comments`, `ticket_attachments`; OneToOne -> `ticket_slas`
+
+#### `support.ticket_comments`
+
+| Column        | Type        | Constraints            | Description                   |
+| ------------- | ----------- | ---------------------- | ----------------------------- |
+| id            | uuid        | PK                     |                               |
+| ticketId      | uuid        | FK -> tickets, indexed |                               |
+| authorId      | uuid        |                        |                               |
+| authorType    | varchar     |                        | `customer`, `agent`, `system` |
+| body          | text        |                        | Comment content               |
+| internal      | boolean     | default false          | Hidden from customers         |
+| attachmentIds | jsonb       | default []             |                               |
+| createdAt     | timestamptz | auto                   |                               |
+| updatedAt     | timestamptz | auto                   |                               |
+
+**Indexes:** `(ticketId, createdAt)`
+
+#### `support.ticket_attachments`
+
+| Column     | Type        | Constraints   | Description         |
+| ---------- | ----------- | ------------- | ------------------- |
+| id         | uuid        | PK            |                     |
+| ticketId   | uuid        | FK -> tickets |                     |
+| uploadedBy | uuid        |               |                     |
+| fileName   | varchar     |               |                     |
+| mimeType   | varchar     |               |                     |
+| fileSize   | bigint      |               |                     |
+| storageRef | varchar     |               | Object storage path |
+| metadata   | jsonb       | nullable      |                     |
+| createdAt  | timestamptz | auto          |                     |
+
+#### `support.ticket_slas`
+
+| Column                | Type        | Constraints           | Description           |
+| --------------------- | ----------- | --------------------- | --------------------- |
+| id                    | uuid        | PK                    |                       |
+| ticketId              | uuid        | unique, FK -> tickets |                       |
+| responseTimeMinutes   | int         |                       | SLA response target   |
+| resolutionTimeMinutes | int         |                       | SLA resolution target |
+| responseDueAt         | timestamptz |                       |                       |
+| resolutionDueAt       | timestamptz |                       |                       |
+| responseBreached      | boolean     | default false         |                       |
+| resolutionBreached    | boolean     | default false         |                       |
+| firstResponseAt       | timestamptz | nullable              |                       |
+| createdAt             | timestamptz | auto                  |                       |
+| updatedAt             | timestamptz | auto                  |                       |
+
+---
+
+### Reporting Schema (`reporting`)
+
+#### `reporting.revenue_summaries`
+
+Pre-computed revenue metrics rolled up by period (daily/weekly/monthly).
+
+| Column                 | Type          | Constraints   | Description                  |
+| ---------------------- | ------------- | ------------- | ---------------------------- |
+| id                     | uuid          | PK            |                              |
+| tenantId               | uuid          |               |                              |
+| period                 | varchar(10)   |               | `daily`, `weekly`, `monthly` |
+| periodStart            | timestamptz   |               |                              |
+| periodEnd              | timestamptz   |               |                              |
+| mrr                    | decimal(18,2) | default 0     | Monthly Recurring Revenue    |
+| arr                    | decimal(18,2) | default 0     | Annual Recurring Revenue     |
+| newMrr                 | decimal(18,2) | default 0     |                              |
+| expansionMrr           | decimal(18,2) | default 0     |                              |
+| contractionMrr         | decimal(18,2) | default 0     |                              |
+| churnedMrr             | decimal(18,2) | default 0     |                              |
+| totalRevenue           | decimal(18,2) | default 0     |                              |
+| revenueByProduct       | jsonb         | default \{\}    |                              |
+| revenueBySegment       | jsonb         | default \{\}    |                              |
+| activeSubscriptions    | int           | default 0     |                              |
+| newSubscriptions       | int           | default 0     |                              |
+| cancelledSubscriptions | int           | default 0     |                              |
+| churnRate              | decimal(8,4)  | default 0     |                              |
+| currency               | varchar(3)    | default 'EUR' |                              |
+| computedAt             | timestamptz   |               |                              |
+| createdAt              | timestamptz   | auto          |                              |
+| updatedAt              | timestamptz   | auto          |                              |
+
+**Unique index:** `(tenantId, period, periodStart)`
+
+#### `reporting.customer_health_scores`
+
+| Column     | Type        | Constraints | Description                                                                                  |
+| ---------- | ----------- | ----------- | -------------------------------------------------------------------------------------------- |
+| id         | uuid        | PK          |                                                                                              |
+| tenantId   | uuid        |             |                                                                                              |
+| customerId | uuid        |             |                                                                                              |
+| score      | int         | default 50  | 0-100 health score                                                                           |
+| factors    | jsonb       |             | \{ usageGrowth, paymentHistory, supportTicketFrequency, provisioningFailures, contractValue \} |
+| riskLevel  | varchar(10) | indexed     | `low`, `medium`, `high`, `critical`                                                          |
+| computedAt | timestamptz |             |                                                                                              |
+| createdAt  | timestamptz | auto        |                                                                                              |
+| updatedAt  | timestamptz | auto        |                                                                                              |
+
+**Unique index:** `(tenantId, customerId)`
+
+#### `reporting.report_definitions`
+
+Saved report configurations for scheduled generation.
+
+| Column     | Type        | Constraints  | Description                  |
+| ---------- | ----------- | ------------ | ---------------------------- |
+| id         | uuid        | PK           |                              |
+| tenantId   | uuid        | indexed      |                              |
+| name       | varchar     |              | Report name                  |
+| reportType | varchar(40) |              |                              |
+| format     | varchar(5)  |              | `csv`, `json`, `pdf`         |
+| frequency  | varchar(10) | indexed      | `daily`, `weekly`, `monthly` |
+| parameters | jsonb       | default \{\}   |                              |
+| recipients | jsonb       | default []   | Email addresses              |
+| enabled    | boolean     | default true |                              |
+| lastRunAt  | timestamptz | nullable     |                              |
+| nextRunAt  | timestamptz | nullable     |                              |
+| createdBy  | varchar     |              |                              |
+| createdAt  | timestamptz | auto         |                              |
+| updatedAt  | timestamptz | auto         |                              |
+
+#### `reporting.report_executions`
+
+| Column             | Type        | Constraints       | Description                                 |
+| ------------------ | ----------- | ----------------- | ------------------------------------------- |
+| id                 | uuid        | PK                |                                             |
+| tenantId           | uuid        | indexed           |                                             |
+| reportDefinitionId | uuid        | nullable, indexed |                                             |
+| reportType         | varchar(40) |                   |                                             |
+| format             | varchar(5)  |                   |                                             |
+| parameters         | jsonb       | default \{\}        |                                             |
+| status             | varchar(15) | default 'PENDING' | `PENDING`, `RUNNING`, `COMPLETED`, `FAILED` |
+| filePath           | varchar     | nullable          |                                             |
+| fileSize           | bigint      | nullable          |                                             |
+| error              | varchar     | nullable          |                                             |
+| completedAt        | timestamptz | nullable          |                                             |
+| triggeredBy        | varchar     | default ''        |                                             |
+| createdAt          | timestamptz | auto              |                                             |
+| updatedAt          | timestamptz | auto              |                                             |
+
+#### `reporting.focus_cost_records`
+
+FOCUS 1.0 compliant cost/usage records.
+
+| Column              | Type          | Constraints | Description       |
+| ------------------- | ------------- | ----------- | ----------------- |
+| id                  | uuid          | PK          |                   |
+| tenantId            | uuid          |             |                   |
+| billingAccountId    | uuid          |             |                   |
+| billingPeriodStart  | timestamptz   | indexed     |                   |
+| billingPeriodEnd    | timestamptz   | indexed     |                   |
+| chargeCategory      | varchar(20)   | indexed     |                   |
+| chargeClass         | varchar(20)   | nullable    |                   |
+| consumedQuantity    | decimal(18,6) | default 0   |                   |
+| consumedUnit        | varchar(30)   |             |                   |
+| contractedCost      | decimal(18,6) | default 0   |                   |
+| contractedUnitPrice | decimal(18,6) | default 0   |                   |
+| effectiveCost       | decimal(18,6) | default 0   |                   |
+| listCost            | decimal(18,6) | default 0   |                   |
+| listUnitPrice       | decimal(18,6) | default 0   |                   |
+| pricingCategory     | varchar(30)   |             |                   |
+| provider            | varchar(30)   |             |                   |
+| regionId            | varchar(50)   | default ''  |                   |
+| availabilityZone    | varchar(50)   | nullable    |                   |
+| resourceId          | varchar       | indexed     |                   |
+| resourceName        | varchar       | default ''  |                   |
+| resourceType        | varchar(50)   |             |                   |
+| serviceCategory     | varchar(20)   | indexed     |                   |
+| serviceName         | varchar       | default ''  |                   |
+| skuId               | varchar       | default ''  |                   |
+| subAccountId        | varchar       |             |                   |
+| subAccountName      | varchar       | default ''  |                   |
+| tags                | jsonb         | default \{\}  |                   |
+| usageQuantity       | decimal(18,6) | default 0   |                   |
+| usageUnit           | varchar(30)   | default ''  |                   |
+| invoiceId           | uuid          | nullable    |                   |
+| orderId             | uuid          | nullable    |                   |
+| subscriptionId      | uuid          | nullable    |                   |
+| sourceEventId       | varchar       | unique      | Deduplication key |
+| createdAt           | timestamptz   | auto        |                   |
+
+#### `reporting.provisioning_summaries`
+
+Pre-computed provisioning performance metrics.
+
+| Column             | Type          | Constraints | Description                 |
+| ------------------ | ------------- | ----------- | --------------------------- |
+| id                 | uuid          | PK          |                             |
+| tenantId           | uuid          |             |                             |
+| period             | varchar(10)   |             |                             |
+| periodStart        | timestamptz   |             |                             |
+| periodEnd          | timestamptz   |             |                             |
+| totalRequests      | int           | default 0   |                             |
+| completedRequests  | int           | default 0   |                             |
+| failedRequests     | int           | default 0   |                             |
+| averageTimeMinutes | decimal(10,2) | default 0   |                             |
+| successRate        | decimal(8,4)  | default 0   |                             |
+| slaComplianceRate  | decimal(8,4)  | default 0   |                             |
+| byResourceType     | jsonb         | default \{\}  | Breakdown per resource type |
+| computedAt         | timestamptz   |             |                             |
+| createdAt          | timestamptz   | auto        |                             |
+| updatedAt          | timestamptz   | auto        |                             |
+
+**Unique index:** `(tenantId, period, periodStart)`
+
+#### `reporting.usage_facts`
+
+Raw event audit trail for aggregation.
+
+| Column         | Type        | Constraints | Description         |
+| -------------- | ----------- | ----------- | ------------------- |
+| id             | uuid        | PK          |                     |
+| tenantId       | uuid        |             |                     |
+| domain         | varchar(20) |             | Event domain        |
+| eventType      | varchar(60) |             |                     |
+| sourceEventId  | varchar     | unique      | Deduplication       |
+| correlationId  | varchar     | nullable    |                     |
+| payload        | jsonb       |             | Full event payload  |
+| eventTimestamp | timestamptz |             | Original event time |
+| receivedAt     | timestamptz | auto        | Ingestion time      |
+
+**Indexes:** `(tenantId, eventType, receivedAt)`, `(tenantId, domain, receivedAt)`
+
+---
+
+## MongoDB Collections
+
+### Product Service (MongoDB 7)
+
+**Database:** `product_catalog`
+
+#### `products` collection
+
+| Field          | Type     | Required             | Description                                                                                                        |
+| -------------- | -------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| \_id           | ObjectId | auto                 | Document ID                                                                                                        |
+| sku            | string   | yes, unique          | Stock Keeping Unit (e.g. `VPS-CORE-1`)                                                                             |
+| name           | string   | yes                  | Display name                                                                                                       |
+| description    | string   |                      | Marketing description                                                                                              |
+| category       | string   | yes                  | `vps`, `gpu`, `storage`, `kubernetes`, `addon`, `database`, `networking`, `ci-cd`, `ai-ml`, `private-cloud`, `dns` |
+| status         | string   | default 'draft'      | `draft`, `active`, `archived`                                                                                      |
+| specs          | object   |                      | Technical specifications (e.g. `\{ vcpu: "2", ram: "2 GB" \}`)                                                       |
+| monthlyPrice   | number   | yes                  | Monthly price                                                                                                      |
+| hourlyPrice    | number   |                      | Hourly price (GPU/compute)                                                                                         |
+| unitPrice      | number   |                      | Per-unit price (storage)                                                                                           |
+| currency       | string   | default 'EUR'        | ISO currency code                                                                                                  |
+| annualDiscount | number   | default 0            | Discount factor (0.0-1.0)                                                                                          |
+| tier           | string   |                      | `starter`, `pro`, `enterprise`, `custom`                                                                           |
+| features       | string[] | default []           | Feature bullet points                                                                                              |
+| isPopular      | boolean  | default false        | Marketing highlight flag                                                                                           |
+| sortOrder      | number   | default 0            | Display ordering                                                                                                   |
+| ctaText        | string   | default 'Deploy Now' | CTA button label                                                                                                   |
+| ctaAction      | string   | default 'configure'  | `configure`, `contact`                                                                                             |
+| createdAt      | Date     | auto                 |                                                                                                                    |
+| updatedAt      | Date     | auto                 |                                                                                                                    |
+
+**Indexes:**
+
+- Text index on `(name, description, category, sku)` with weights `\{name:10, sku:8, category:5, description:2\}`
+- Compound: `(category, status, sortOrder)`
+- Single: `monthlyPrice`, `status`, `createdAt`, `tier`
