@@ -6,8 +6,12 @@
  *   npx tsx scripts/generate-docs.ts
  *   npx tsx scripts/generate-docs.ts --since=2026-03-01
  *   npx tsx scripts/generate-docs.ts --repo=/path/to/local/repo
+ *
+ * If GITHUB_TOKEN is not set and generated content already exists,
+ * the script skips generation (uses committed content from git).
  */
 
+import fs from "fs";
 import path from "path";
 import { runGenerationPipeline } from "../src/lib/doc-generator/pipeline";
 
@@ -16,13 +20,24 @@ async function main() {
   const sinceArg = args.find((a) => a.startsWith("--since="));
   const repoArg = args.find((a) => a.startsWith("--repo="));
 
+  const outputDir = path.join(process.cwd(), "src", "content", "generated");
+
+  // Skip generation if no token and content already exists (Vercel build with committed content)
+  if (!process.env.GITHUB_TOKEN && !repoArg) {
+    const hasContent = fs.existsSync(path.join(outputDir, "docs")) ||
+      fs.existsSync(path.join(outputDir, "api"));
+    if (hasContent) {
+      console.log("=== PLATFORMA Docs Generator ===");
+      console.log("Skipping: no GITHUB_TOKEN set, using committed generated content");
+      process.exit(0);
+    }
+  }
+
   const repoUrl = repoArg
     ? repoArg.split("=")[1]
     : process.env.GITHUB_REPO
     ? `https://github.com/${process.env.GITHUB_REPO}`
     : "https://github.com/darioristic/cloud-factory";
-
-  const outputDir = path.join(process.cwd(), "src", "content", "generated");
 
   console.log("=== PLATFORMA Docs Generator ===");
   console.log(`Repo: ${repoUrl}`);
